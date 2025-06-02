@@ -9,17 +9,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/genai": "^1.3.0",
+    "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta",
+    "@types/ws": "^8.18.1",
+    "next": "15.3.3",
+    "openai": "^5.0.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.3"
+    "ws": "^8.18.2"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20.17.57",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
-    "@eslint/eslintrc": "^3"
+    "typescript": "^5"
   }
 }

@@ -1,95 +1,106 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import { useState } from 'react';
+import LiveVoiceChat from "./components/LiveVoiceChat";
+import MobileHeader from "./components/MobileHeader";
+import TabNavigation, { Tab } from "./components/TabNavigation";
+import TemplatesList from "./components/TemplatesList";
+import SubmittedReports from "./components/SubmittedReports";
+import { reportTemplates, submittedReports, ReportTemplate, SubmittedReport } from './data/mockData';
+
+const tabs: Tab[] = [
+  { id: 'templates', label: 'Templates' },
+  { id: 'reports', label: 'Reports' }
+];
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<'templates' | 'reports'>('templates');
+  const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  const startReport = (template: ReportTemplate) => {
+    setSelectedTemplate(template);
+  };
+
+  const goBack = () => {
+    setSelectedTemplate(null);
+  };
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as 'templates' | 'reports');
+  };
+
+  const handleCreateTemplate = () => {
+    console.log('Create new template');
+  };
+
+  const handleViewReportDetails = (report: SubmittedReport) => {
+    console.log('View report details:', report);
+  };
+
+  // If a template is selected, show the voice chat interface
+  if (selectedTemplate) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#f8fafc',
+        padding: '0'
+      }}>
+        <MobileHeader
+          title={selectedTemplate.title}
+          subtitle="New Report"
+          showBackButton={true}
+          onBackClick={goBack}
+          sticky={true}
+        />
+
+        {/* Voice chat interface */}
+        <div style={{ padding: '20px' }}>
+          <LiveVoiceChat 
+            templateInstructions={selectedTemplate.title + "\n\n" + selectedTemplate.definition + "\n\n" + selectedTemplate.form}
+            onSessionReady={(sessionId) => console.log('Voice session ready:', sessionId)} 
+          />
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </div>
+    );
+  }
+
+  // Main interface with tabs
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#f8fafc',
+      maxWidth: '430px',
+      margin: '0 auto',
+      boxShadow: '0 0 20px rgba(0,0,0,0.1)'
+    }}>
+      <MobileHeader
+        title="VoizReport"
+        subtitle="Voice-powered reporting"
+      />
+
+      <TabNavigation
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
+
+      {/* Content */}
+      <div style={{ padding: '20px' }}>
+        {activeTab === 'templates' && (
+          <TemplatesList
+            templates={reportTemplates}
+            onStartReport={startReport}
+            onCreateTemplate={handleCreateTemplate}
           />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+        )}
+
+        {activeTab === 'reports' && (
+          <SubmittedReports
+            reports={submittedReports}
+            onViewDetails={handleViewReportDetails}
           />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        )}
+      </div>
     </div>
   );
 }
