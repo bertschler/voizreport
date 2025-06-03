@@ -418,6 +418,9 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         console.log('📤 Sent comprehensive session configuration with dynamic template properties');
         
         // Add initial conversation item to prompt AI to start talking
+        const savedUserName = localStorage.getItem('voizreport_username');
+        const greeting = savedUserName ? `Hello! I am ${savedUserName}.` : 'Hello!';
+        
         const initialPrompt = {
           type: 'conversation.item.create',
           item: {
@@ -426,7 +429,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
             content: [
               {
                 type: 'input_text',
-                text: 'Hello! I am John.'
+                text: greeting
               }
             ]
           }

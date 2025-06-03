@@ -8,6 +8,7 @@ interface MobileHeaderProps {
   showBackButton?: boolean;
   onBackClick?: () => void;
   sticky?: boolean;
+  onSettingsClick?: () => void;
 }
 
 export default function MobileHeader({ 
@@ -15,7 +16,8 @@ export default function MobileHeader({
   subtitle, 
   showBackButton = false, 
   onBackClick,
-  sticky = false 
+  sticky = false,
+  onSettingsClick
 }: MobileHeaderProps) {
   const headerStyle: React.CSSProperties = {
     backgroundColor: 'white',
@@ -66,25 +68,58 @@ export default function MobileHeader({
           </div>
         </div>
       ) : (
-        <>
-          <h1 style={{ 
-            fontSize: '24px', 
-            fontWeight: '700',
-            margin: 0,
-            color: '#1e293b'
-          }}>
-            {title}
-          </h1>
-          {subtitle && (
-            <p style={{ 
-              fontSize: '16px', 
-              color: '#64748b',
-              margin: '4px 0 0 0'
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ 
+              fontSize: '24px', 
+              fontWeight: '700',
+              margin: 0,
+              color: '#1e293b'
             }}>
-              {subtitle}
-            </p>
+              {title}
+            </h1>
+            {subtitle && (
+              <p style={{ 
+                fontSize: '16px', 
+                color: '#64748b',
+                margin: '4px 0 0 0'
+              }}>
+                {subtitle}
+              </p>
+            )}
+          </div>
+          
+          {/* Settings button - subtle and tertiary */}
+          {onSettingsClick && (
+            <button
+              onClick={onSettingsClick}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '8px',
+                color: '#94a3b8',
+                borderRadius: '6px',
+                transition: 'all 0.2s',
+                opacity: 0.7
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f1f5f9';
+                e.currentTarget.style.color = '#64748b';
+                e.currentTarget.style.opacity = '1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#94a3b8';
+                e.currentTarget.style.opacity = '0.7';
+              }}
+              title="Settings"
+            >
+              ⚙️
+            </button>
           )}
-        </>
+        </div>
       )}
     </div>
   );
