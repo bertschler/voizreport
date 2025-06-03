@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useVoiceChat, FormSummary } from '../hooks/useVoiceChat';
 import StatusIndicator from './voice-chat/StatusIndicator';
 import StatusText from './voice-chat/StatusText';
@@ -30,6 +30,11 @@ export default function LiveVoiceChat({ onSessionReady, templateInstructions, on
     onSessionReady,
     onFormCompleted
   });
+
+  // Automatically start the session when component mounts
+  useEffect(() => {
+    startSession();
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
     <div style={{

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { VOICE_AI_INSTRUCTIONS } from '@/config/voice-ai-instructions';
+import { ReportTemplate } from '@/app/data/mockData';
 
 export interface VoiceChatState {
   sessionId: string | null;
@@ -19,19 +20,19 @@ export interface VoiceChatActions {
 
 export interface FormSummary {
   plainText: string;
-  markdown: string;
   json: Record<string, any>;
   timestamp: number;
 }
 
 export interface VoiceChatOptions {
+  template?: ReportTemplate;
   templateInstructions?: string;
   onSessionReady?: (sessionId: string) => void;
   onFormCompleted?: (summary: FormSummary) => void;
 }
 
 export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & VoiceChatActions {
-  const { templateInstructions, onSessionReady, onFormCompleted } = options || {};
+  const { template, templateInstructions, onSessionReady, onFormCompleted } = options || {};
   
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -103,48 +104,6 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     }
   };
 
-  // Extract structured data from AI responses
-  const extractFormData = (aiResponse: string, transcript: string) => {
-    // Simple pattern matching for common field updates (for display purposes)
-    const fieldPatterns = [
-      { key: 'patient_name', patterns: [/patient(?:\s+is|:\s*)([^,.]+)/i, /name(?:\s+is|:\s*)([^,.]+)/i] },
-      { key: 'patient_age', patterns: [/age(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+years?\s+old/i] },
-      { key: 'blood_pressure_systolic', patterns: [/systolic(?:\s+is|:\s*)(\d+)/i, /blood\s+pressure.*?(\d{2,3})\s*\/\s*\d{2,3}/i] },
-      { key: 'blood_pressure_diastolic', patterns: [/diastolic(?:\s+is|:\s*)(\d+)/i, /blood\s+pressure.*?\d{2,3}\s*\/\s*(\d{2,3})/i] },
-      { key: 'heart_rate', patterns: [/heart\s+rate(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+(?:bpm|beats)/i] },
-      { key: 'respiratory_rate', patterns: [/respiratory\s+rate(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+breaths/i] },
-      { key: 'temperature_f', patterns: [/temperature(?:\s+is|:\s*)(\d+(?:\.\d+)?)/i, /(\d+(?:\.\d+)?)\s*°?f/i] },
-      { key: 'observations', patterns: [/observations?:?\s*(.+)/i, /noted?:?\s*(.+)/i] },
-      { key: 'patient_complaints', patterns: [/complaints?:?\s*(.+)/i, /patient\s+reported:?\s*(.+)/i] },
-      { key: 'pain_level', patterns: [/pain\s+level(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+(?:out\s+of|\/)\s*10/i] },
-    ];
-
-    const newFormData = { ...formData };
-    const newCompletedFields = new Set(completedFields);
-
-    // Check both AI response and user transcript for field updates
-    const textToAnalyze = `${aiResponse} ${transcript}`.toLowerCase();
-
-    fieldPatterns.forEach(({ key, patterns }) => {
-      patterns.forEach(pattern => {
-        const match = textToAnalyze.match(pattern);
-        if (match && match[1]) {
-          const value = match[1].trim();
-          if (value && value !== newFormData[key]) {
-            newFormData[key] = value;
-            newCompletedFields.add(key);
-            console.log(`🔍 Extracted field ${key}: ${value}`);
-          }
-        }
-      });
-    });
-
-    setFormData(newFormData);
-    setCompletedFields(newCompletedFields);
-
-    return newFormData;
-  };
-
   // Generate form summary in multiple formats
   const generateFormSummary = (formData: Record<string, any>): FormSummary => {
     const timestamp = Date.now();
@@ -158,35 +117,15 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       })
       .join('\n');
 
-    // Generate markdown summary
-    const markdown = `# Healthcare Visit Report
-
-Generated: ${new Date(timestamp).toLocaleString()}
-
-## Patient Information
-${Object.entries(formData)
-  .filter(([_, value]) => value && String(value).trim() !== '')
-  .map(([key, value]) => {
-    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    return `**${label}:** ${value}`;
-  })
-  .join('\n\n')}
-
----
-*Report completed via Voiz.report voice interface*`;
-
     // Generate JSON summary
     const json = {
       timestamp: timestamp,
       completed_at: new Date(timestamp).toISOString(),
       data: formData,
-      completed_fields: Array.from(completedFields),
-      source: 'voiz_voice_ai'
     };
 
     return {
       plainText,
-      markdown,
       json,
       timestamp
     };
@@ -206,13 +145,34 @@ ${Object.entries(formData)
         setTranscript('Speaking...');
         break;
         
+      case 'input_audio_buffer.speech_stopped':
+        console.log('🎤 User stopped speaking');
+        break;
+        
+      case 'output_audio_buffer.speech_started':
+        console.log('🔊 AI started speaking');
+        break;
+        
+      case 'output_audio_buffer.speech_stopped':
+        console.log('🔊 AI stopped speaking');
+        break;
+        
+      case 'output_audio_buffer.stopped':
+        console.warn('⚠️ AI audio buffer stopped unexpectedly - this may indicate an interruption');
+        // Log additional connection state for debugging
+        if (peerConnectionRef.current) {
+          console.log('🔗 WebRTC connection state:', peerConnectionRef.current.connectionState);
+          console.log('🔗 WebRTC ICE connection state:', peerConnectionRef.current.iceConnectionState);
+        }
+        if (dataChannelRef.current) {
+          console.log('📡 Data channel state:', dataChannelRef.current.readyState);
+        }
+        break;
+        
       case 'conversation.item.input_audio_transcription.completed':
         console.log('💬 User transcript:', message.transcript);
         const userTranscript = message.transcript || '';
         setTranscript(userTranscript);
-        
-        // Extract form data from transcript
-        extractFormData('', userTranscript);
         break;
         
       case 'response.audio_transcript.delta':
@@ -227,9 +187,6 @@ ${Object.entries(formData)
         console.log('💬 AI response complete:', message.transcript);
         const fullAiResponse = message.transcript || '';
         setAiResponse(fullAiResponse);
-        
-        // Extract form data from AI response
-        extractFormData(fullAiResponse, transcript);
         break;
 
       case 'response.function_call_arguments.delta':
@@ -245,13 +202,28 @@ ${Object.entries(formData)
         console.log('✅ Response generation complete');
         break;
         
+      case 'rate_limits.updated':
+        console.log('📊 Rate limits updated:', message);
+        // Check if we're approaching rate limits
+        if (message.rate_limits) {
+          Object.entries(message.rate_limits).forEach(([key, limit]: [string, any]) => {
+            if (limit.remaining !== undefined && limit.limit !== undefined) {
+              const percentRemaining = (limit.remaining / limit.limit) * 100;
+              if (percentRemaining < 20) {
+                console.warn(`⚠️ Rate limit warning for ${key}: ${limit.remaining}/${limit.limit} remaining (${percentRemaining.toFixed(1)}%)`);
+              }
+            }
+          });
+        }
+        break;
+        
       case 'error':
         console.error('💥 OpenAI error:', message.error);
         setError(`OpenAI error: ${message.error.message || message.error}`);
         break;
         
       default:
-        // Log other message types for debugging
+        // Log other message types for debugging but don't treat as errors
         console.log('📝 Unhandled message type:', message.type);
     }
   };
@@ -264,6 +236,7 @@ ${Object.entries(formData)
     
     if (name === 'complete_form_submission') {
       try {
+        console.log('📋 Form completion function called with args:', args);
         const parsedArgs = JSON.parse(args);
         console.log('📋 Form completion function called with:', parsedArgs);
         
@@ -273,7 +246,17 @@ ${Object.entries(formData)
           ...parsedArgs.extracted_data
         };
         
+        // Include transcription if provided
+        const transcription = parsedArgs.transcription_compact || '';
+        
         const summary = generateFormSummary(currentFormData);
+        
+        // Add transcription to the summary if available
+        if (transcription) {
+          summary.json.transcription = transcription;
+          summary.plainText += `${transcription}`;
+        }
+        
         console.log('📋 Generated form summary from function call:', summary);
         
         // Send function response back to OpenAI
@@ -336,7 +319,7 @@ ${Object.entries(formData)
   // Create combined instructions with function calling
   const getInstructions = () => {
     const baseInstructions = templateInstructions 
-      ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}`
+      ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
       : VOICE_AI_INSTRUCTIONS;
     
     // Add function calling instruction
@@ -389,6 +372,9 @@ ${Object.entries(formData)
       dataChannel.onopen = () => {
         console.log('📡 Data channel opened');
         
+        // Get the properties from the template, fallback to empty object if no template
+        const extractedDataProperties = template?.openai_properties || {};
+        
         // Send session update with comprehensive configuration including function calling
         const sessionUpdate = {
           type: 'session.update',
@@ -409,41 +395,19 @@ ${Object.entries(formData)
                     extracted_data: {
                       type: 'object',
                       description: 'All the form data that has been collected during the conversation',
-                      properties: {
-                        patient_name: { type: 'string', description: 'Patient full name' },
-                        patient_age: { type: 'number', description: 'Patient age in years' },
-                        blood_pressure_systolic: { type: 'number', description: 'Systolic blood pressure' },
-                        blood_pressure_diastolic: { type: 'number', description: 'Diastolic blood pressure' },
-                        heart_rate: { type: 'number', description: 'Heart rate in BPM' },
-                        respiratory_rate: { type: 'number', description: 'Respiratory rate in breaths per minute' },
-                        temperature_f: { type: 'number', description: 'Temperature in Fahrenheit' },
-                        observations: { type: 'string', description: 'Physical observations and notes' },
-                        patient_complaints: { type: 'string', description: 'Patient complaints or symptoms' },
-                        pain_level: { type: 'number', description: 'Pain level on 0-10 scale' },
-                        medications_administered: { 
-                          type: 'array', 
-                          description: 'List of medications given',
-                          items: {
-                            type: 'object',
-                            properties: {
-                              name: { type: 'string', description: 'Medication name' },
-                              dose: { type: 'string', description: 'Dosage amount and units' }
-                            }
-                          }
-                        },
-                        instructions_given: { type: 'string', description: 'Instructions provided to patient' },
-                        next_visit_date: { type: 'string', description: 'Next scheduled visit date' },
-                        next_visit_time: { type: 'string', description: 'Next scheduled visit time' },
-                        additional_notes: { type: 'string', description: 'Any additional notes' }
-                      }
+                      properties: extractedDataProperties
+                    },
+                    transcription_compact : {
+                      type: 'string',
+                      description: 'A compact transcription of the full conversation that has been collected.',
                     },
                     completion_reason: {
                       type: 'string',
-                      enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion'],
+                      enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion', 'user_stopped_conversation'],
                       description: 'Reason why the form is being completed'
                     }
                   },
-                  required: ['extracted_data', 'completion_reason']
+                  required: ['extracted_data', 'completion_reason', 'transcription_compact']
                 }
               }
             ]
@@ -451,7 +415,25 @@ ${Object.entries(formData)
         };
         
         dataChannel.send(JSON.stringify(sessionUpdate));
-        console.log('📤 Sent comprehensive session configuration with function calling');
+        console.log('📤 Sent comprehensive session configuration with dynamic template properties');
+        
+        // Add initial conversation item to prompt AI to start talking
+        const initialPrompt = {
+          type: 'conversation.item.create',
+          item: {
+            type: 'message',
+            role: 'user',
+            content: [
+              {
+                type: 'input_text',
+                text: 'Hello! I am John.'
+              }
+            ]
+          }
+        };
+        
+        dataChannel.send(JSON.stringify(initialPrompt));
+        console.log('📤 Sent initial prompt to trigger AI response');
       };
 
       dataChannel.onmessage = (event) => {

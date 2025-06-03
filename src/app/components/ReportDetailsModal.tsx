@@ -10,7 +10,7 @@ interface ReportDetailsModalProps {
 }
 
 export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDetailsModalProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'plaintext' | 'markdown' | 'json'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'json'>('overview');
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -76,10 +76,6 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
       action: () => handleDownload(report.plainText, `${report.title.replace(/\s+/g, '_')}.txt`, 'text/plain')
     },
     {
-      label: 'Markdown (.md)',
-      action: () => handleDownload(report.markdown, `${report.title.replace(/\s+/g, '_')}.md`, 'text/markdown')
-    },
-    {
       label: 'JSON (.json)',
       action: () => handleDownload(JSON.stringify(report.json, null, 2), `${report.title.replace(/\s+/g, '_')}.json`, 'application/json')
     }
@@ -99,6 +95,9 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
   };
 
   const statusColors = getStatusColor(report.status);
+
+  // Get compact transcription from report data
+  const compactTranscription = report.json?.compact_transcription || report.plainText;
 
   return (
     <div style={{
@@ -216,8 +215,6 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
         }}>
           {[
             { key: 'overview', label: 'Overview', icon: '📋' },
-            { key: 'plaintext', label: 'Plain Text', icon: '📄' },
-            { key: 'markdown', label: 'Markdown', icon: '📝' },
             { key: 'json', label: 'JSON', icon: '🔧' }
           ].map((tab) => (
             <button
@@ -272,57 +269,20 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
               </p>
               
               <div style={{
-                backgroundColor: '#f8fafc',
-                borderRadius: '12px',
-                padding: '20px',
-                border: '1px solid #e2e8f0'
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '16px'
               }}>
-                <h4 style={{ 
-                  fontSize: '16px', 
-                  fontWeight: '600', 
-                  marginBottom: '12px',
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '600',
                   color: '#1e293b'
                 }}>
-                  Report Information
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Report ID:</span>
-                    <p style={{ fontSize: '14px', color: '#1e293b', margin: '4px 0 0 0', fontFamily: 'monospace' }}>
-                      {`report-${report.id}-${Date.now()}`}
-                    </p>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Completed:</span>
-                    <p style={{ fontSize: '14px', color: '#1e293b', margin: '4px 0 0 0' }}>
-                      {report.json?.completed_at ? new Date(report.json.completed_at).toLocaleString() : report.date}
-                    </p>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Fields Completed:</span>
-                    <p style={{ fontSize: '14px', color: '#1e293b', margin: '4px 0 0 0' }}>
-                      {report.json?.completed_fields?.length || 'N/A'} fields
-                    </p>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Source:</span>
-                    <p style={{ fontSize: '14px', color: '#1e293b', margin: '4px 0 0 0' }}>
-                      {report.json?.source === 'voiz_voice_ai' ? 'Voice AI Interface' : 'Voice AI Interface'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'plaintext' && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>
-                  Plain Text Format
+                  Transcription
                 </h3>
                 <button
-                  onClick={() => handleCopy(report.plainText)}
+                  onClick={() => handleCopy(compactTranscription)}
                   style={{
                     backgroundColor: copied ? '#10b981' : '#8B5CF6',
                     color: 'white',
@@ -337,59 +297,26 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
                   {copied ? '✓ Copied' : '📋 Copy'}
                 </button>
               </div>
-              <pre style={{
+              
+              <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 borderRadius: '12px',
                 padding: '20px',
-                fontSize: '14px',
-                fontFamily: 'ui-monospace, monospace',
-                lineHeight: '1.6',
-                color: '#1e293b',
-                whiteSpace: 'pre-wrap',
-                overflow: 'auto'
+                maxHeight: '300px',
+                overflowY: 'auto'
               }}>
-                {report.plainText}
-              </pre>
-            </div>
-          )}
-
-          {activeTab === 'markdown' && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>
-                  Markdown Format
-                </h3>
-                <button
-                  onClick={() => handleCopy(report.markdown)}
-                  style={{
-                    backgroundColor: copied ? '#10b981' : '#8B5CF6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    fontWeight: '500'
-                  }}
-                >
-                  {copied ? '✓ Copied' : '📋 Copy'}
-                </button>
+                <pre style={{
+                  fontSize: '14px',
+                  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                  lineHeight: '1.6',
+                  color: '#1e293b',
+                  whiteSpace: 'pre-wrap',
+                  margin: 0
+                }}>
+                  {compactTranscription}
+                </pre>
               </div>
-              <pre style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '20px',
-                fontSize: '14px',
-                fontFamily: 'ui-monospace, monospace',
-                lineHeight: '1.6',
-                color: '#1e293b',
-                whiteSpace: 'pre-wrap',
-                overflow: 'auto'
-              }}>
-                {report.markdown}
-              </pre>
             </div>
           )}
 

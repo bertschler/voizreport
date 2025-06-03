@@ -17,7 +17,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'templates' | 'reports'>('templates');
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
-  const [selectedFormat, setSelectedFormat] = useState<'plain' | 'markdown' | 'json'>('plain');
+  const [selectedFormat, setSelectedFormat] = useState<'plain' | 'json'>('plain');
 
   const startReport = (template: ReportTemplate) => {
     setSelectedTemplate(template);
@@ -58,7 +58,6 @@ export default function Home() {
         ? summary.plainText.substring(0, 100) + '...' 
         : summary.plainText,
       plainText: summary.plainText,
-      markdown: summary.markdown,
       json: summary.json,
       isNew: true // Mark as new submission
     };
@@ -83,17 +82,6 @@ export default function Home() {
 
   const handleSessionReady = (sessionId: string) => {
     console.log('🎤 Voice session ready:', sessionId);
-  };
-
-  const renderSummary = (summary: FormSummary) => {
-    switch (selectedFormat) {
-      case 'markdown':
-        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '14px' }}>{summary.markdown}</pre>;
-      case 'json':
-        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '14px' }}>{JSON.stringify(summary.json, null, 2)}</pre>;
-      default:
-        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '14px' }}>{summary.plainText}</pre>;
-    }
   };
 
   // If a template is selected, show the voice chat interface

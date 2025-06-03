@@ -73,7 +73,6 @@ function MyComponent() {
 ```typescript
 interface FormSummary {
   plainText: string;     // Simple key-value pairs
-  markdown: string;      // Formatted report with headers
   json: Record<string, any>; // Structured data with metadata
   timestamp: number;     // Completion timestamp
   sessionId: string;     // Session identifier
@@ -179,7 +178,6 @@ const handleFormCompletion = async (summary: FormSummary) => {
         completedFields: summary.json.completed_fields,
         formats: {
           plainText: summary.plainText,
-          markdown: summary.markdown,
           json: summary.json
         }
       })
