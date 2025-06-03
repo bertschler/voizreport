@@ -14,6 +14,10 @@ export interface SubmittedReport {
   date: string;
   status: 'Completed' | 'Under Review' | 'Draft';
   summary: string;
+  plainText: string;
+  markdown: string;
+  json: Record<string, any>;
+  isNew?: boolean;
 }
 
 export const reportTemplates: ReportTemplate[] = [
@@ -37,8 +41,8 @@ export const reportTemplates: ReportTemplate[] = [
       "type": "string",
       "required": true,
       "freeform": true,
-      "voice:prompt": "Please say the customer’s full name.",
-      "voice:reprompt": "I didn’t catch the name. What is the customer’s full name?",
+      "voice:prompt": "Please say the customer's full name.",
+      "voice:reprompt": "I didn't catch the name. What is the customer's full name?",
       "voice:confirm": "Okay, customer is {{value}}."
     },
     {
@@ -46,8 +50,8 @@ export const reportTemplates: ReportTemplate[] = [
       "type": "string",
       "required": true,
       "freeform": true,
-      "voice:prompt": "What is the customer’s contact information?",
-      "voice:reprompt": "Please repeat the customer’s contact information.",
+      "voice:prompt": "What is the customer's contact information?",
+      "voice:reprompt": "Please repeat the customer's contact information.",
       "voice:confirm": "Recorded contact information as {{value}}."
     },
     {
@@ -55,7 +59,7 @@ export const reportTemplates: ReportTemplate[] = [
       "type": "string",
       "required": true,
       "freeform": true,
-      "voice:prompt": "Describe the customer’s issue or complaint.",
+      "voice:prompt": "Describe the customer's issue or complaint.",
       "voice:reprompt": "Can you describe the issue again?",
       "voice:confirm": "Noted issue: {{value}}."
     },
@@ -134,7 +138,7 @@ export const reportTemplates: ReportTemplate[] = [
       "required": true,
       "freeform": true,
       "voice:prompt": "Please say the location of the inspection.",
-      "voice:reprompt": "I didn’t catch the location. What is the inspection location?",
+      "voice:reprompt": "I didn't catch the location. What is the inspection location?",
       "voice:confirm": "Inspection location recorded as {{value}}."
     },
     {
@@ -224,7 +228,7 @@ export const reportTemplates: ReportTemplate[] = [
       "required": true,
       "pattern": "EQ-\\d{4}",
       "voice:prompt": "Please say the equipment ID, like E Q dash 1 2 3 4.",
-      "voice:reprompt": "I didn’t catch the equipment ID. Please say it again.",
+      "voice:reprompt": "I didn't catch the equipment ID. Please say it again.",
       "voice:confirm": "Recorded equipment ID as {{value}}."
     },
     {
@@ -232,7 +236,7 @@ export const reportTemplates: ReportTemplate[] = [
       "type": "string",
       "required": true,
       "freeform": true,
-      "voice:prompt": "Describe the equipment’s condition.",
+      "voice:prompt": "Describe the equipment's condition.",
       "voice:reprompt": "Please repeat the equipment condition assessment.",
       "voice:confirm": "Condition noted: {{value}}."
     },
@@ -286,7 +290,7 @@ export const reportTemplates: ReportTemplate[] = [
       "format": "date",
       "required": false,
       "voice:prompt": "When is the next maintenance scheduled? Say the date.",
-      "voice:reprompt": "I didn’t catch the next maintenance date. Please repeat.",
+      "voice:reprompt": "I didn't catch the next maintenance date. Please repeat.",
       "voice:confirm": "Next maintenance date set to {{value}}."
     }
   ],
@@ -314,7 +318,7 @@ export const reportTemplates: ReportTemplate[] = [
       "type": "string",
       "required": true,
       "freeform": true,
-      "voice:prompt": "Please summarize today’s key performance indicators.",
+      "voice:prompt": "Please summarize today's key performance indicators.",
       "voice:reprompt": "Can you repeat the KPIs summary?",
       "voice:confirm": "KPIs noted: {{value}}."
     },
@@ -553,7 +557,46 @@ export const submittedReports: SubmittedReport[] = [
     templateType: "Customer Service Incident Report",
     date: "2024-01-15",
     status: "Completed",
-    summary: "Multiple customers reported login difficulties..."
+    summary: "Multiple customers reported login difficulties...",
+    plainText: `Customer Name: John Smith
+Contact Information: john.smith@email.com, (555) 123-4567
+Issue Description: Unable to log into account for 3 days, receiving 'invalid credentials' error
+Actions Taken: Reset password, cleared cache, verified account status
+Resolution Status: Resolved
+Follow Up Required: false`,
+    markdown: `# Customer Service Incident Report
+
+Generated: 1/15/2024, 2:30:00 PM
+
+## Customer Information
+**Customer Name:** John Smith
+
+**Contact Information:** john.smith@email.com, (555) 123-4567
+
+**Issue Description:** Unable to log into account for 3 days, receiving 'invalid credentials' error
+
+**Actions Taken:** Reset password, cleared cache, verified account status
+
+**Resolution Status:** Resolved
+
+**Follow Up Required:** false
+
+---
+*Report completed via Voiz.report voice interface*`,
+    json: {
+      timestamp: 1642276200000,
+      completed_at: "2024-01-15T19:30:00.000Z",
+      data: {
+        customer_name: "John Smith",
+        contact_information: "john.smith@email.com, (555) 123-4567",
+        issue_description: "Unable to log into account for 3 days, receiving 'invalid credentials' error",
+        actions_taken: "Reset password, cleared cache, verified account status",
+        resolution_status: "Resolved",
+        follow_up_required: false
+      },
+      completed_fields: ["customer_name", "contact_information", "issue_description", "actions_taken", "resolution_status", "follow_up_required"],
+      source: "voiz_voice_ai"
+    }
   },
   {
     id: 2,
@@ -561,7 +604,50 @@ export const submittedReports: SubmittedReport[] = [
     templateType: "Safety Inspection Report",
     date: "2024-01-14",
     status: "Under Review",
-    summary: "Routine safety inspection identified minor issues..."
+    summary: "Routine safety inspection identified minor issues...",
+    plainText: `Inspection Location: Main Floor - Assembly Area
+Hazard Type: Trip Hazard
+Severity Level: Medium
+Immediate Actions: Placed warning cones, cordoned off area
+Recommended Solutions: Replace damaged flooring tiles, improve lighting
+Compliance Requirements: OSHA workplace safety standards
+Correction Timeline: Within 2 weeks`,
+    markdown: `# Safety Inspection Report
+
+Generated: 1/14/2024, 10:15:00 AM
+
+## Inspection Details
+**Inspection Location:** Main Floor - Assembly Area
+
+**Hazard Type:** Trip Hazard
+
+**Severity Level:** Medium
+
+**Immediate Actions:** Placed warning cones, cordoned off area
+
+**Recommended Solutions:** Replace damaged flooring tiles, improve lighting
+
+**Compliance Requirements:** OSHA workplace safety standards
+
+**Correction Timeline:** Within 2 weeks
+
+---
+*Report completed via Voiz.report voice interface*`,
+    json: {
+      timestamp: 1642161300000,
+      completed_at: "2024-01-14T15:15:00.000Z",
+      data: {
+        inspection_location: "Main Floor - Assembly Area",
+        hazard_type: "Trip Hazard",
+        severity_level: "Medium",
+        immediate_actions: "Placed warning cones, cordoned off area",
+        recommended_solutions: "Replace damaged flooring tiles, improve lighting",
+        compliance_requirements: "OSHA workplace safety standards",
+        correction_timeline: "Within 2 weeks"
+      },
+      completed_fields: ["inspection_location", "hazard_type", "severity_level", "immediate_actions", "recommended_solutions", "compliance_requirements", "correction_timeline"],
+      source: "voiz_voice_ai"
+    }
   },
   {
     id: 3,
@@ -569,6 +655,48 @@ export const submittedReports: SubmittedReport[] = [
     templateType: "Equipment Maintenance Report",
     date: "2024-01-13",
     status: "Completed",
-    summary: "Successfully updated database servers..."
+    summary: "Successfully updated database servers...",
+    plainText: `Equipment Id: EQ-3001
+Condition Assessment: Good condition, minor performance degradation noted
+Maintenance Performed: Updated database software, optimized queries, cleaned server room
+Parts Replaced: Cooling fan (Part #CF-2024), RAM module (Part #RAM-16GB-DDR4)
+Operational Status: Operational
+Next Maintenance Date: 2024-07-13`,
+    markdown: `# Equipment Maintenance Report
+
+Generated: 1/13/2024, 4:45:00 PM
+
+## Equipment Details
+**Equipment Id:** EQ-3001
+
+**Condition Assessment:** Good condition, minor performance degradation noted
+
+**Maintenance Performed:** Updated database software, optimized queries, cleaned server room
+
+**Parts Replaced:** Cooling fan (Part #CF-2024), RAM module (Part #RAM-16GB-DDR4)
+
+**Operational Status:** Operational
+
+**Next Maintenance Date:** 2024-07-13
+
+---
+*Report completed via Voiz.report voice interface*`,
+    json: {
+      timestamp: 1642089900000,
+      completed_at: "2024-01-13T21:45:00.000Z",
+      data: {
+        equipment_id: "EQ-3001",
+        condition_assessment: "Good condition, minor performance degradation noted",
+        maintenance_performed: "Updated database software, optimized queries, cleaned server room",
+        parts_replaced: [
+          { part_name: "Cooling fan", part_number: "CF-2024" },
+          { part_name: "RAM module", part_number: "RAM-16GB-DDR4" }
+        ],
+        operational_status: "Operational",
+        next_maintenance_date: "2024-07-13"
+      },
+      completed_fields: ["equipment_id", "condition_assessment", "maintenance_performed", "parts_replaced", "operational_status", "next_maintenance_date"],
+      source: "voiz_voice_ai"
+    }
   }
 ]; 

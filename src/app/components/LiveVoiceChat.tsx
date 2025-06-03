@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useVoiceChat } from '../hooks/useVoiceChat';
+import { useVoiceChat, FormSummary } from '../hooks/useVoiceChat';
 import StatusIndicator from './voice-chat/StatusIndicator';
 import StatusText from './voice-chat/StatusText';
 import RecordingAnimation from './voice-chat/RecordingAnimation';
@@ -11,9 +11,13 @@ import ErrorDisplay from './voice-chat/ErrorDisplay';
 interface LiveVoiceChatProps {
   onSessionReady?: (sessionId: string) => void;
   templateInstructions?: string;
+  onFormCompleted?: (summary: FormSummary) => void;
 }
 
-export default function LiveVoiceChat({ onSessionReady, templateInstructions }: LiveVoiceChatProps) {
+// Export the FormSummary type for external use
+export type { FormSummary };
+
+export default function LiveVoiceChat({ onSessionReady, templateInstructions, onFormCompleted }: LiveVoiceChatProps) {
   const {
     isSessionActive,
     isConnecting,
@@ -23,7 +27,8 @@ export default function LiveVoiceChat({ onSessionReady, templateInstructions }: 
     remoteAudioRef
   } = useVoiceChat({
     templateInstructions,
-    onSessionReady
+    onSessionReady,
+    onFormCompleted
   });
 
   return (

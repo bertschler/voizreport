@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import LiveVoiceChat from "./components/LiveVoiceChat";
+import React, { useState } from 'react';
+import LiveVoiceChat, { FormSummary } from './components/LiveVoiceChat';
 import MobileHeader from "./components/MobileHeader";
 import TabNavigation, { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
@@ -16,6 +16,8 @@ const tabs: Tab[] = [
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'templates' | 'reports'>('templates');
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
+  const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
+  const [selectedFormat, setSelectedFormat] = useState<'plain' | 'markdown' | 'json'>('plain');
 
   const startReport = (template: ReportTemplate) => {
     setSelectedTemplate(template);
@@ -33,8 +35,65 @@ export default function Home() {
     console.log('Create new template');
   };
 
+  const handleEditTemplate = (template: ReportTemplate) => {
+    console.log('Edit template:', template);
+  };
+
   const handleViewReportDetails = (report: SubmittedReport) => {
     console.log('View report details:', report);
+  };
+
+  const handleFormCompletion = (summary: FormSummary) => {
+    console.log('📋 Form completed!', summary);
+    setCompletedForms(prev => [...prev, summary]);
+    
+    // Convert FormSummary to SubmittedReport format and add to reports
+    const newReport: SubmittedReport = {
+      id: Date.now(),
+      title: selectedTemplate?.title || 'Voice Report',
+      status: 'Completed' as const,
+      date: new Date().toISOString().split('T')[0],
+      templateType: selectedTemplate?.title || 'Voice Report',
+      summary: summary.plainText.length > 100 
+        ? summary.plainText.substring(0, 100) + '...' 
+        : summary.plainText,
+      plainText: summary.plainText,
+      markdown: summary.markdown,
+      json: summary.json,
+      isNew: true // Mark as new submission
+    };
+    
+    // Add to submitted reports (in a real app, this would be sent to your backend)
+    submittedReports.unshift(newReport);
+    
+    // Mark the report as not new after 24 hours (simulate real-world behavior)
+    setTimeout(() => {
+      const reportIndex = submittedReports.findIndex(r => r.id === newReport.id);
+      if (reportIndex !== -1) {
+        submittedReports[reportIndex].isNew = false;
+      }
+    }, 24 * 60 * 60 * 1000); // 24 hours
+    
+    // Navigate back to main interface and switch to reports tab
+    setTimeout(() => {
+      setSelectedTemplate(null);
+      setActiveTab('reports');
+    }, 3000); // Give time for user to see completion message
+  };
+
+  const handleSessionReady = (sessionId: string) => {
+    console.log('🎤 Voice session ready:', sessionId);
+  };
+
+  const renderSummary = (summary: FormSummary) => {
+    switch (selectedFormat) {
+      case 'markdown':
+        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '14px' }}>{summary.markdown}</pre>;
+      case 'json':
+        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '14px' }}>{JSON.stringify(summary.json, null, 2)}</pre>;
+      default:
+        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '14px' }}>{summary.plainText}</pre>;
+    }
   };
 
   // If a template is selected, show the voice chat interface
@@ -57,12 +116,15 @@ export default function Home() {
         <div style={{ padding: '20px' }}>
           <LiveVoiceChat 
             templateInstructions={selectedTemplate.title + "\n\n" + selectedTemplate.definition + "\n\n" + selectedTemplate.form}
-            onSessionReady={(sessionId) => console.log('Voice session ready:', sessionId)} 
+            onSessionReady={handleSessionReady}
+            onFormCompleted={handleFormCompletion}
           />
         </div>
       </div>
     );
   }
+
+  console.log(">" + submittedReports);
 
   // Main interface with tabs
   return (
@@ -91,6 +153,7 @@ export default function Home() {
             templates={reportTemplates}
             onStartReport={startReport}
             onCreateTemplate={handleCreateTemplate}
+            onEditTemplate={handleEditTemplate}
           />
         )}
 

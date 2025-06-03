@@ -17,13 +17,21 @@ export interface VoiceChatActions {
   remoteAudioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
+export interface FormSummary {
+  plainText: string;
+  markdown: string;
+  json: Record<string, any>;
+  timestamp: number;
+}
+
 export interface VoiceChatOptions {
   templateInstructions?: string;
   onSessionReady?: (sessionId: string) => void;
+  onFormCompleted?: (summary: FormSummary) => void;
 }
 
 export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & VoiceChatActions {
-  const { templateInstructions, onSessionReady } = options || {};
+  const { templateInstructions, onSessionReady, onFormCompleted } = options || {};
   
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -32,6 +40,9 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const [transcript, setTranscript] = useState<string>('');
   const [aiResponse, setAiResponse] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [completedFields, setCompletedFields] = useState<Set<string>>(new Set());
   
   // WebRTC refs
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -92,6 +103,95 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     }
   };
 
+  // Extract structured data from AI responses
+  const extractFormData = (aiResponse: string, transcript: string) => {
+    // Simple pattern matching for common field updates (for display purposes)
+    const fieldPatterns = [
+      { key: 'patient_name', patterns: [/patient(?:\s+is|:\s*)([^,.]+)/i, /name(?:\s+is|:\s*)([^,.]+)/i] },
+      { key: 'patient_age', patterns: [/age(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+years?\s+old/i] },
+      { key: 'blood_pressure_systolic', patterns: [/systolic(?:\s+is|:\s*)(\d+)/i, /blood\s+pressure.*?(\d{2,3})\s*\/\s*\d{2,3}/i] },
+      { key: 'blood_pressure_diastolic', patterns: [/diastolic(?:\s+is|:\s*)(\d+)/i, /blood\s+pressure.*?\d{2,3}\s*\/\s*(\d{2,3})/i] },
+      { key: 'heart_rate', patterns: [/heart\s+rate(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+(?:bpm|beats)/i] },
+      { key: 'respiratory_rate', patterns: [/respiratory\s+rate(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+breaths/i] },
+      { key: 'temperature_f', patterns: [/temperature(?:\s+is|:\s*)(\d+(?:\.\d+)?)/i, /(\d+(?:\.\d+)?)\s*°?f/i] },
+      { key: 'observations', patterns: [/observations?:?\s*(.+)/i, /noted?:?\s*(.+)/i] },
+      { key: 'patient_complaints', patterns: [/complaints?:?\s*(.+)/i, /patient\s+reported:?\s*(.+)/i] },
+      { key: 'pain_level', patterns: [/pain\s+level(?:\s+is|:\s*)(\d+)/i, /(\d+)\s+(?:out\s+of|\/)\s*10/i] },
+    ];
+
+    const newFormData = { ...formData };
+    const newCompletedFields = new Set(completedFields);
+
+    // Check both AI response and user transcript for field updates
+    const textToAnalyze = `${aiResponse} ${transcript}`.toLowerCase();
+
+    fieldPatterns.forEach(({ key, patterns }) => {
+      patterns.forEach(pattern => {
+        const match = textToAnalyze.match(pattern);
+        if (match && match[1]) {
+          const value = match[1].trim();
+          if (value && value !== newFormData[key]) {
+            newFormData[key] = value;
+            newCompletedFields.add(key);
+            console.log(`🔍 Extracted field ${key}: ${value}`);
+          }
+        }
+      });
+    });
+
+    setFormData(newFormData);
+    setCompletedFields(newCompletedFields);
+
+    return newFormData;
+  };
+
+  // Generate form summary in multiple formats
+  const generateFormSummary = (formData: Record<string, any>): FormSummary => {
+    const timestamp = Date.now();
+
+    // Generate plain text summary
+    const plainText = Object.entries(formData)
+      .filter(([_, value]) => value && String(value).trim() !== '')
+      .map(([key, value]) => {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        return `${label}: ${value}`;
+      })
+      .join('\n');
+
+    // Generate markdown summary
+    const markdown = `# Healthcare Visit Report
+
+Generated: ${new Date(timestamp).toLocaleString()}
+
+## Patient Information
+${Object.entries(formData)
+  .filter(([_, value]) => value && String(value).trim() !== '')
+  .map(([key, value]) => {
+    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return `**${label}:** ${value}`;
+  })
+  .join('\n\n')}
+
+---
+*Report completed via Voiz.report voice interface*`;
+
+    // Generate JSON summary
+    const json = {
+      timestamp: timestamp,
+      completed_at: new Date(timestamp).toISOString(),
+      data: formData,
+      completed_fields: Array.from(completedFields),
+      source: 'voiz_voice_ai'
+    };
+
+    return {
+      plainText,
+      markdown,
+      json,
+      timestamp
+    };
+  };
+
   // Handle realtime messages from OpenAI
   const handleRealtimeMessage = (message: any) => {
     console.log('📨 Received message:', message.type, message);
@@ -108,7 +208,11 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         
       case 'conversation.item.input_audio_transcription.completed':
         console.log('💬 User transcript:', message.transcript);
-        setTranscript(message.transcript || '');
+        const userTranscript = message.transcript || '';
+        setTranscript(userTranscript);
+        
+        // Extract form data from transcript
+        extractFormData('', userTranscript);
         break;
         
       case 'response.audio_transcript.delta':
@@ -121,7 +225,20 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         
       case 'response.audio_transcript.done':
         console.log('💬 AI response complete:', message.transcript);
-        setAiResponse(message.transcript || '');
+        const fullAiResponse = message.transcript || '';
+        setAiResponse(fullAiResponse);
+        
+        // Extract form data from AI response
+        extractFormData(fullAiResponse, transcript);
+        break;
+
+      case 'response.function_call_arguments.delta':
+        console.log('🔧 Function call arguments delta:', message);
+        break;
+
+      case 'response.function_call_arguments.done':
+        console.log('🔧 Function call completed:', message);
+        handleFunctionCall(message);
         break;
         
       case 'response.done':
@@ -139,12 +256,93 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     }
   };
 
-  // Create combined instructions
-  const getInstructions = () => {
-    if (templateInstructions) {
-      return `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n:\n${templateInstructions}`;
+  // Handle function calls from OpenAI
+  const handleFunctionCall = async (message: any) => {
+    const { name, arguments: args, call_id } = message;
+    
+    console.log('🎯 Handling function call:', name, args);
+    
+    if (name === 'complete_form_submission') {
+      try {
+        const parsedArgs = JSON.parse(args);
+        console.log('📋 Form completion function called with:', parsedArgs);
+        
+        // Generate comprehensive summary using the function arguments
+        const currentFormData = {
+          ...formData,
+          ...parsedArgs.extracted_data
+        };
+        
+        const summary = generateFormSummary(currentFormData);
+        console.log('📋 Generated form summary from function call:', summary);
+        
+        // Send function response back to OpenAI
+        if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
+          const functionResponse = {
+            type: 'conversation.item.create',
+            item: {
+              type: 'function_call_output',
+              call_id: call_id,
+              output: JSON.stringify({
+                status: 'success',
+                message: 'Form completed successfully. Report has been generated and saved.',
+                summary: {
+                  total_fields: Object.keys(currentFormData).length,
+                  completed_fields: Object.keys(currentFormData).filter(key => 
+                    currentFormData[key] && String(currentFormData[key]).trim() !== ''
+                  ).length
+                }
+              })
+            }
+          };
+          
+          dataChannelRef.current.send(JSON.stringify(functionResponse));
+          console.log('📤 Sent function response back to OpenAI');
+        }
+        
+        // Notify parent component
+        if (onFormCompleted) {
+          onFormCompleted(summary);
+        }
+        
+        // End session after a short delay
+        setTimeout(() => {
+          endSession();
+        }, 3000); // Give time for final AI response
+        
+      } catch (error) {
+        console.error('💥 Error handling function call:', error);
+        
+        // Send error response back to OpenAI
+        if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
+          const errorResponse = {
+            type: 'conversation.item.create',
+            item: {
+              type: 'function_call_output',
+              call_id: call_id,
+              output: JSON.stringify({
+                status: 'error',
+                message: 'Failed to complete form submission'
+              })
+            }
+          };
+          
+          dataChannelRef.current.send(JSON.stringify(errorResponse));
+        }
+      }
     }
-    return VOICE_AI_INSTRUCTIONS;
+  };
+
+  // Create combined instructions with function calling
+  const getInstructions = () => {
+    const baseInstructions = templateInstructions 
+      ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}`
+      : VOICE_AI_INSTRUCTIONS;
+    
+    // Add function calling instruction
+    const functionInstruction = `\n\nIMPORTANT: When you have collected all the necessary information for the form and the conversation is complete, call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.`;
+    
+    return baseInstructions + functionInstruction;
   };
 
   // Setup WebRTC connection
@@ -191,7 +389,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       dataChannel.onopen = () => {
         console.log('📡 Data channel opened');
         
-        // Send session update with comprehensive configuration
+        // Send session update with comprehensive configuration including function calling
         const sessionUpdate = {
           type: 'session.update',
           session: {
@@ -199,12 +397,61 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
             voice: 'alloy',
             input_audio_transcription: { model: 'whisper-1' },
             turn_detection: { type: 'server_vad' },
-            modalities: ['text', 'audio']
+            modalities: ['text', 'audio'],
+            tools: [
+              {
+                type: 'function',
+                name: 'complete_form_submission',
+                description: 'Call this function when all required form fields have been collected and the form is ready to be submitted. This will generate a comprehensive report summary and end the session.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    extracted_data: {
+                      type: 'object',
+                      description: 'All the form data that has been collected during the conversation',
+                      properties: {
+                        patient_name: { type: 'string', description: 'Patient full name' },
+                        patient_age: { type: 'number', description: 'Patient age in years' },
+                        blood_pressure_systolic: { type: 'number', description: 'Systolic blood pressure' },
+                        blood_pressure_diastolic: { type: 'number', description: 'Diastolic blood pressure' },
+                        heart_rate: { type: 'number', description: 'Heart rate in BPM' },
+                        respiratory_rate: { type: 'number', description: 'Respiratory rate in breaths per minute' },
+                        temperature_f: { type: 'number', description: 'Temperature in Fahrenheit' },
+                        observations: { type: 'string', description: 'Physical observations and notes' },
+                        patient_complaints: { type: 'string', description: 'Patient complaints or symptoms' },
+                        pain_level: { type: 'number', description: 'Pain level on 0-10 scale' },
+                        medications_administered: { 
+                          type: 'array', 
+                          description: 'List of medications given',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              name: { type: 'string', description: 'Medication name' },
+                              dose: { type: 'string', description: 'Dosage amount and units' }
+                            }
+                          }
+                        },
+                        instructions_given: { type: 'string', description: 'Instructions provided to patient' },
+                        next_visit_date: { type: 'string', description: 'Next scheduled visit date' },
+                        next_visit_time: { type: 'string', description: 'Next scheduled visit time' },
+                        additional_notes: { type: 'string', description: 'Any additional notes' }
+                      }
+                    },
+                    completion_reason: {
+                      type: 'string',
+                      enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion'],
+                      description: 'Reason why the form is being completed'
+                    }
+                  },
+                  required: ['extracted_data', 'completion_reason']
+                }
+              }
+            ]
           }
         };
         
         dataChannel.send(JSON.stringify(sessionUpdate));
-        console.log('📤 Sent comprehensive session configuration');
+        console.log('📤 Sent comprehensive session configuration with function calling');
       };
 
       dataChannel.onmessage = (event) => {

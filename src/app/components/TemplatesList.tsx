@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import AiButton from './AiButton';
 import { ReportTemplate } from '../data/mockData';
 
@@ -8,13 +8,17 @@ interface TemplatesListProps {
   templates: ReportTemplate[];
   onStartReport: (template: ReportTemplate) => void;
   onCreateTemplate?: () => void;
+  onEditTemplate?: (template: ReportTemplate) => void;
 }
 
 export default function TemplatesList({ 
   templates, 
   onStartReport, 
-  onCreateTemplate 
+  onCreateTemplate,
+  onEditTemplate
 }: TemplatesListProps) {
+  const [hoveredCardId, setHoveredCardId] = useState<number | null>(null);
+
   return (
     <>
       {/* Create Template Button */}
@@ -22,23 +26,63 @@ export default function TemplatesList({
         <AiButton
           onClick={onCreateTemplate}
           size="sm"
-          variant="secondary"
+          variant="primary"
           style={{ width: '100%' }}
         >
-          ➕ Create New Template
+          <span style={{ color: '#ffffff' }}>✨</span> Create New Template
         </AiButton>
       </div>
 
       {/* Templates List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {templates.map((template) => (
-          <div key={template.id} style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '20px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            border: '1px solid #e2e8f0'
-          }}>
+          <div 
+            key={template.id} 
+            onMouseEnter={() => setHoveredCardId(template.id)}
+            onMouseLeave={() => setHoveredCardId(null)}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '20px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              border: '1px solid #e2e8f0',
+              position: 'relative'
+            }}
+          >
+            {onEditTemplate && hoveredCardId === template.id && (
+              <button
+                onClick={() => onEditTemplate(template)}
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  border: '1px solid #e2e8f0',
+                  cursor: 'pointer',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  zIndex: 1
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f8fafc';
+                  e.currentTarget.style.color = '#475569';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                  e.currentTarget.style.color = '#64748b';
+                }}
+                title="Edit template"
+              >
+                ✏️
+              </button>
+            )}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
               <span style={{ fontSize: '24px' }}>{template.icon}</span>
               <div style={{ flex: 1 }}>
@@ -70,14 +114,22 @@ export default function TemplatesList({
                 </div>
               </div>
             </div>
-            <AiButton
-              onClick={() => onStartReport(template)}
-              size="sm"
-              style={{ width: '100%' }}
-            >
-              ✨ Start Report
-            </AiButton>
-          </div>
+              <AiButton
+                onClick={() => onStartReport(template)}
+                variant="secondary"
+                size="sm"
+                style={{ 
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <div style={{ textAlign: 'center', width: '100%' }}>
+                ➡︎ Start Report
+                </div>
+              </AiButton>
+          </div>  
         ))}
       </div>
     </>
