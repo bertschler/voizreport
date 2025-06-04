@@ -1,12 +1,5 @@
 import { NextRequest } from 'next/server';
 
-// Store active sessions with ephemeral tokens
-const activeSessions = new Map<string, {
-  token: string;
-  isActive: boolean;
-  created: number;
-}>();
-
 // Create ephemeral token for WebRTC session
 async function createEphemeralToken(apiKey: string) {
   // Create minimal session - instructions will be set by client via WebRTC
@@ -61,13 +54,6 @@ export async function GET(request: NextRequest) {
     console.log('🔑 Creating ephemeral token for WebRTC session');
     const ephemeralToken = await createEphemeralToken(process.env.OPENAI_API_KEY);
     
-    // Store the session
-    activeSessions.set(sessionId, {
-      token: ephemeralToken,
-      isActive: true,
-      created: Date.now()
-    });
-
     console.log('✅ WebRTC session created successfully:', sessionId);
     
     return new Response(
@@ -101,35 +87,25 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Handle session management via POST
+// Handle session info requests via POST (optional - for getting ephemeral token info)
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId, action } = await request.json();
-    console.log('📨 Received WebRTC action for session:', sessionId, 'action:', action);
-
-    const sessionData = activeSessions.get(sessionId);
-    if (!sessionData || !sessionData.isActive) {
-      console.error('❌ WebRTC Session not found or inactive:', sessionId);
-      return Response.json({ error: 'Session not found or inactive' }, { status: 404 });
-    }
-
-    if (action === 'close_session') {
-      console.log('🔒 Closing WebRTC session:', sessionId);
-      activeSessions.delete(sessionId);
-      return Response.json({ success: true, message: 'WebRTC session closed' });
-    }
+    const { action } = await request.json();
+    console.log('📨 Received WebRTC action:', action);
 
     if (action === 'get_session_info') {
+      // For WebRTC sessions, session info is managed by OpenAI automatically
+      // This endpoint is kept for compatibility but not strictly necessary
       return Response.json({ 
         success: true, 
-        sessionId: sessionId,
-        token: sessionData.token,
-        isActive: sessionData.isActive,
-        created: sessionData.created
+        message: 'WebRTC sessions are managed automatically by OpenAI. Close the peer connection to end the session.'
       });
     }
 
-    return Response.json({ error: 'Unknown action' }, { status: 400 });
+    // Note: No server-side session closing needed for WebRTC - OpenAI handles cleanup automatically
+    // when the WebRTC peer connection is closed
+    
+    return Response.json({ error: 'Action not supported for WebRTC sessions' }, { status: 400 });
 
   } catch (error) {
     console.error('💥 WebRTC POST handler error:', error);

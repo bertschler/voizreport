@@ -22,6 +22,37 @@ export interface SubmittedReport {
 
 export const reportTemplates: ReportTemplate[] = [
   {
+    id: 0,
+    title: "Mini Report",
+    description: "Document customer complaints, issues, and resolutions",
+    definition: "Include customer details, issue description, actions taken, resolution status, and follow-up requirements. Focus on factual information and clear next steps.",
+    icon: "🎧",
+    openai_properties: {
+      customer_name: { type: 'string', description: 'Customer full name' },
+    },
+    form: `
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "c5b1f2e4-2a6d-4f32-9c3b-7f4d8b1e1234",
+  "name": "Customer Service Incident Report",
+  "version": "1.0.0",
+  "locale": "en-US",
+  "description": "Template used to capture customer service incidents including complaint details, actions, and resolutions.",
+  "fields": [
+    {
+      "key": "customer_name",
+      "type": "string",
+      "required": true,
+      "freeform": true,
+      "voice:prompt": "Please say the customer's full name.",
+      "voice:reprompt": "I didn't catch the name. What is the customer's full name?",
+      "voice:confirm": "Okay, customer is {{value}}."
+    }
+  ]
+}
+`
+  },
+  {
     id: 1,
     title: "Customer Service Incident Report",
     description: "Document customer complaints, issues, and resolutions",

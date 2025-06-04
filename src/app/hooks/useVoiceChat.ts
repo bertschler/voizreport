@@ -48,10 +48,12 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   // WebRTC refs
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
+  const allDataChannelsRef = useRef<RTCDataChannel[]>([]); // Track ALL data channels
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const isSessionActiveRef = useRef(false);
   const activeSessionIdRef = useRef<string | null>(null);
+  const currentSessionIdRef = useRef<string>(Date.now().toString()); // Unique session ID
 
   // Update refs when state changes
   useEffect(() => {
@@ -81,7 +83,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   };
 
   // Create WebRTC session with OpenAI
-  const createWebRTCSession = async (): Promise<string | null> => {
+  const createWebRTCSession = async (): Promise<{ sessionId: string; ephemeralToken: string } | null> => {
     try {
       console.log('🔗 Creating OpenAI WebRTC session...');
       
@@ -97,7 +99,10 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       const data = await response.json();
       console.log('✅ WebRTC session created:', data);
       
-      return data.sessionId;
+      return {
+        sessionId: data.sessionId,
+        ephemeralToken: data.ephemeralToken
+      };
     } catch (error) {
       console.error('💥 Error creating WebRTC session:', error);
       throw error;
@@ -132,7 +137,31 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   };
 
   // Handle realtime messages from OpenAI
-  const handleRealtimeMessage = (message: any) => {
+  const handleRealtimeMessage = (message: any, sessionId?: string) => {
+    // Add comprehensive debugging to understand what's happening
+    console.log('🔍 HANDLEREALTIMEMESSAGE CALLED:', {
+      messageType: message.type,
+      messageSessionId: sessionId,
+      currentSessionId: currentSessionIdRef.current,
+      isSessionActive: isSessionActiveRef.current,
+      dataChannelExists: !!dataChannelRef.current,
+      dataChannelState: dataChannelRef.current?.readyState || 'NO_CHANNEL',
+      hasOnMessage: !!dataChannelRef.current?.onmessage,
+      allDataChannelsCount: allDataChannelsRef.current.length
+    });
+    
+    // Ignore messages from old sessions
+    if (sessionId && sessionId !== currentSessionIdRef.current) {
+      console.log('🧟‍♂️ IGNORING MESSAGE - from old session:', message.type, `(${sessionId} !== ${currentSessionIdRef.current})`);
+      return;
+    }
+    
+    // Ignore messages if session is not active (prevents processing during/after cleanup)
+    if (!isSessionActiveRef.current) {
+      console.log('🚫 IGNORING MESSAGE - session inactive:', message.type, 'ref:', isSessionActiveRef.current);
+      return;
+    }
+    
     console.log('📨 Received message:', message.type, message);
     
     switch (message.type) {
@@ -329,26 +358,9 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   };
 
   // Setup WebRTC connection
-  const setupWebRTC = async (sessionId: string) => {
+  const setupWebRTC = async (sessionId: string, ephemeralToken: string) => {
     try {
       console.log('🎯 Setting up WebRTC connection for session:', sessionId);
-
-      // Get session info including ephemeral token
-      const sessionResponse = await fetch(`/api/voice-ai-openai`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: sessionId,
-          action: 'get_session_info'
-        }),
-      });
-
-      if (!sessionResponse.ok) {
-        throw new Error('Failed to get session info');
-      }
-
-      const sessionData = await sessionResponse.json();
-      const ephemeralToken = sessionData.token;
 
       // Create peer connection
       const pc = new RTCPeerConnection({
@@ -368,6 +380,10 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       // Create data channel for messaging
       const dataChannel = pc.createDataChannel('oai-events');
       dataChannelRef.current = dataChannel;
+      
+      // Track this data channel
+      allDataChannelsRef.current.push(dataChannel);
+      console.log('📡 Created data channel for session:', currentSessionIdRef.current, 'Total channels:', allDataChannelsRef.current.length);
 
       dataChannel.onopen = () => {
         console.log('📡 Data channel opened');
@@ -440,9 +456,17 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       };
 
       dataChannel.onmessage = (event) => {
+        const capturedSessionId = currentSessionIdRef.current; // Capture session ID in closure
+        console.log('📡 DATA CHANNEL ONMESSAGE FIRED:', {
+          dataChannelState: dataChannel.readyState,
+          isSessionActive: isSessionActiveRef.current,
+          capturedSessionId,
+          currentSessionId: currentSessionIdRef.current,
+          eventType: 'onmessage'
+        });
         try {
           const message = JSON.parse(event.data);
-          handleRealtimeMessage(message);
+          handleRealtimeMessage(message, capturedSessionId);
         } catch (error) {
           console.error('💥 Error parsing data channel message:', error);
         }
@@ -475,6 +499,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       await pc.setLocalDescription(offer);
 
       // Send offer to OpenAI's WebRTC endpoint
+      console.log('📤 Sending WebRTC offer to OpenAI...');
       const webrtcResponse = await fetch('https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17', {
         method: 'POST',
         headers: {
@@ -484,8 +509,17 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         body: offer.sdp
       });
 
+      console.log('📡 WebRTC handshake response status:', webrtcResponse.status);
+      
       if (!webrtcResponse.ok) {
-        throw new Error(`WebRTC handshake failed: ${webrtcResponse.status}`);
+        const errorText = await webrtcResponse.text();
+        console.error('💥 WebRTC handshake failed:', {
+          status: webrtcResponse.status,
+          statusText: webrtcResponse.statusText,
+          error: errorText,
+          token: ephemeralToken ? `${ephemeralToken.substring(0, 10)}...` : 'missing'
+        });
+        throw new Error(`WebRTC handshake failed: ${webrtcResponse.status} - ${errorText || webrtcResponse.statusText}`);
       }
 
       const answerSdp = await webrtcResponse.text();
@@ -526,6 +560,10 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const startSession = async () => {
     if (isConnecting || isSessionActive) return;
     
+    // Create new session ID
+    currentSessionIdRef.current = Date.now().toString();
+    console.log('🆕 Starting new session:', currentSessionIdRef.current);
+    
     setIsConnecting(true);
     setError(null);
     setTranscript('');
@@ -539,21 +577,21 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       }
 
       // Create session
-      const newSessionId = await createWebRTCSession();
-      if (!newSessionId) {
+      const newSessionData = await createWebRTCSession();
+      if (!newSessionData) {
         throw new Error('Failed to create session');
       }
 
-      setSessionId(newSessionId);
+      setSessionId(newSessionData.sessionId);
       
       // Setup WebRTC
-      await setupWebRTC(newSessionId);
+      await setupWebRTC(newSessionData.sessionId, newSessionData.ephemeralToken);
       
       setIsSessionActive(true);
       console.log('🎉 Live conversation started successfully!');
       
       if (onSessionReady) {
-        onSessionReady(newSessionId);
+        onSessionReady(newSessionData.sessionId);
       }
       
     } catch (error) {
@@ -569,47 +607,125 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const endSession = async () => {
     console.log('🔒 Ending conversation...');
     
-    // Stop local stream
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => track.stop());
-      localStreamRef.current = null;
-    }
+    // IMMEDIATELY stop all message processing - before any async operations
+    setIsSessionActive(false);
+    isSessionActiveRef.current = false;
     
-    // Close peer connection
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    
-    // Close data channel
+    // IMMEDIATELY remove the message handler to stop processing
     if (dataChannelRef.current) {
-      dataChannelRef.current.close();
-      dataChannelRef.current = null;
+      console.log('🔍 BEFORE REMOVING HANDLER:', {
+        dataChannelExists: !!dataChannelRef.current,
+        dataChannelState: dataChannelRef.current.readyState,
+        hasOnMessage: !!dataChannelRef.current.onmessage,
+        onMessageRef: dataChannelRef.current.onmessage
+      });
+      
+      dataChannelRef.current.onmessage = null;
+      
+      console.log('🔍 AFTER REMOVING HANDLER:', {
+        dataChannelExists: !!dataChannelRef.current,
+        dataChannelState: dataChannelRef.current.readyState,
+        hasOnMessage: !!dataChannelRef.current.onmessage,
+        onMessageRef: dataChannelRef.current.onmessage
+      });
+      
+      console.log('🚫 Removed data channel message handler immediately');
     }
-
-    // Clean up session on server
-    if (sessionId) {
-      try {
-        await fetch(`/api/voice-ai-openai`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: sessionId,
-            action: 'close_session'
-          }),
+    
+    // CLEAN UP ALL DATA CHANNELS (including zombie channels)
+    console.log('🧹 Cleaning up ALL data channels. Total:', allDataChannelsRef.current.length);
+    allDataChannelsRef.current.forEach((channel, index) => {
+      console.log(`🧹 Cleaning channel ${index}: state=${channel.readyState}, hasHandler=${!!channel.onmessage}`);
+      channel.onmessage = null;
+      channel.onerror = null;
+      channel.onopen = null;
+      channel.onclose = null;
+      if (channel.readyState === 'open') {
+        try {
+          channel.close();
+        } catch (error) {
+          console.log(`⚠️ Error closing channel ${index}:`, error);
+        }
+      }
+    });
+    allDataChannelsRef.current = []; // Clear the array
+    
+    try {
+      // Stop all media tracks first (as per WebRTC spec)
+      if (localStreamRef.current) {
+        console.log('🎤 Stopping local media tracks...');
+        localStreamRef.current.getTracks().forEach(track => {
+          const kind = track.kind;
+          const state = track.readyState;
+          track.stop();
+          console.log(`🎤 Stopped ${kind} track (was: ${state})`);
         });
-      } catch (error) {
-        console.error('💥 Error closing server session:', error);
+        localStreamRef.current = null;
+      }
+      
+      // Close peer connection and wait for proper closure
+      if (peerConnectionRef.current) {
+        const peerConnection = peerConnectionRef.current;
+        console.log('🔗 Peer connection state:', peerConnection.connectionState);
+        
+        // Remove all event handlers
+        peerConnection.onconnectionstatechange = null;
+        peerConnection.oniceconnectionstatechange = null;
+        peerConnection.ondatachannel = null;
+        peerConnection.ontrack = null;
+        peerConnection.onicecandidate = null;
+        
+        // Close and wait for proper closure
+        await new Promise<void>((resolve) => {
+          if (peerConnection.connectionState === 'closed') {
+            console.log('🔗 Peer connection already closed');
+            resolve();
+            return;
+          }
+          
+          // Set up state change listener
+          peerConnection.onconnectionstatechange = () => {
+            console.log('🔗 Peer connection state changed to:', peerConnection.connectionState);
+            if (peerConnection.connectionState === 'closed') {
+              peerConnection.onconnectionstatechange = null;
+              console.log('🔗 Peer connection closed properly');
+              resolve();
+            }
+          };
+          
+          // Initiate close
+          console.log('🔗 Closing peer connection...');
+          peerConnection.close();
+          
+          // Fallback timeout - per spec, close() should transition to 'closed' synchronously
+          setTimeout(() => {
+            console.log('🔗 Peer connection close timeout - forcing cleanup');
+            peerConnection.onconnectionstatechange = null;
+            resolve();
+          }, 1000);
+        });
+        
+        peerConnectionRef.current = null;
+      }
+      
+      // Clear all session state
+      setSessionId(null);
+      setTranscript('');
+      setAiResponse('');
+      setError(null);
+      
+      console.log('✅ Session ended successfully');
+      
+    } catch (error) {
+      console.error('💥 Error during session cleanup:', error);
+      // Force cleanup even if there was an error
+      dataChannelRef.current = null;
+      peerConnectionRef.current = null;
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
       }
     }
-
-    setIsSessionActive(false);
-    setSessionId(null);
-    setTranscript('');
-    setAiResponse('');
-    setError(null);
-    
-    console.log('✅ Session ended successfully');
   };
 
   return {
