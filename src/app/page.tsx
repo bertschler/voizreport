@@ -6,11 +6,12 @@ import MobileHeader from "./components/MobileHeader";
 import TabNavigation, { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
+import Settings from "./components/Settings";
 import { reportTemplates, submittedReports, ReportTemplate, SubmittedReport } from './data/mockData';
 
 const tabs: Tab[] = [
-  { id: 'templates', label: 'Templates' },
-  { id: 'reports', label: 'Reports' }
+  { id: 'templates', label: 'Create' },
+  { id: 'reports', label: 'Recent Reports' }
 ];
 
 export default function Home() {
@@ -18,6 +19,7 @@ export default function Home() {
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<'plain' | 'json'>('plain');
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const startReport = (template: ReportTemplate) => {
     setSelectedTemplate(template);
@@ -41,6 +43,14 @@ export default function Home() {
 
   const handleViewReportDetails = (report: SubmittedReport) => {
     console.log('View report details:', report);
+  };
+
+  const handleSettingsClick = () => {
+    setShowSettings(true);
+  };
+
+  const handleSettingsBack = () => {
+    setShowSettings(false);
   };
 
   const handleFormCompletion = (summary: FormSummary) => {
@@ -84,6 +94,26 @@ export default function Home() {
     console.log('🎤 Voice session ready:', sessionId);
   };
 
+  // If settings is open, show the settings page
+  if (showSettings) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#f8fafc',
+        padding: '0'
+      }}>
+        <MobileHeader
+          title="Settings"
+          subtitle="Manage your preferences"
+          showBackButton={true}
+          onBackClick={handleSettingsBack}
+          sticky={true}
+        />
+        <Settings onBack={handleSettingsBack} />
+      </div>
+    );
+  }
+
   // If a template is selected, show the voice chat interface
   if (selectedTemplate) {
     return (
@@ -117,15 +147,18 @@ export default function Home() {
   // Main interface with tabs
   return (
     <div style={{ 
-      minHeight: '100vh', 
+      height: '100vh', 
       backgroundColor: '#f8fafc',
       maxWidth: '430px',
       margin: '0 auto',
-      boxShadow: '0 0 20px rgba(0,0,0,0.1)'
+      boxShadow: '0 0 20px rgba(0,0,0,0.1)',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       <MobileHeader
         title="VoizReport"
         subtitle="Voice-powered reporting"
+        onSettingsClick={handleSettingsClick}
       />
 
       <TabNavigation
@@ -135,7 +168,12 @@ export default function Home() {
       />
 
       {/* Content */}
-      <div style={{ padding: '20px' }}>
+      <div style={{ 
+        padding: '20px',
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden'
+      }}>
         {activeTab === 'templates' && (
           <TemplatesList
             templates={reportTemplates}

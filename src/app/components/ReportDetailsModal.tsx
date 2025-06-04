@@ -299,20 +299,98 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
               </div>
               
               <div style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '20px',
-                maxHeight: '300px',
-                overflowY: 'auto'
+                position: 'relative',
+                backgroundColor: '#fefbf7',
+                backgroundImage: `
+                  linear-gradient(90deg, #f0f0f0 1px, transparent 1px),
+                  linear-gradient(180deg, #f0f0f0 1px, transparent 1px),
+                  radial-gradient(circle at 20% 80%, rgba(120,119,198,0.03) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 40% 40%, rgba(120,119,198,0.05) 0%, transparent 50%)
+                `,
+                backgroundSize: '20px 20px, 20px 20px, 100% 100%, 100% 100%, 100% 100%',
+                border: '1px solid #e8e0d6',
+                borderRadius: '2px',
+                padding: '40px 50px 40px 80px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                boxShadow: `
+                  0 1px 3px rgba(0,0,0,0.1),
+                  0 4px 6px rgba(0,0,0,0.05),
+                  inset 0 1px 0 rgba(255,255,255,0.6),
+                  0 8px 25px rgba(0,0,0,0.08)
+                `,
+                transform: 'perspective(1000px) rotateX(1deg)',
+                margin: '10px'
               }}>
+                {/* Red margin line */}
+                <div style={{
+                  position: 'absolute',
+                  left: '60px',
+                  top: '0',
+                  bottom: '0',
+                  width: '2px',
+                  backgroundColor: '#ff6b6b',
+                  opacity: '0.7'
+                }} />
+                
+                {/* Hole punch effects */}
+                <div style={{
+                  position: 'absolute',
+                  left: '15px',
+                  top: '30px',
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  border: '1px solid #ddd',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '15px',
+                  top: '80px',
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  border: '1px solid #ddd',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '15px',
+                  top: '130px',
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  border: '1px solid #ddd',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)'
+                }} />
+                
+                {/* Paper clip effect */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-5px',
+                  right: '80px',
+                  width: '30px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #c0c0c0 0%, #silver 50%, #808080 100%)',
+                  clipPath: 'polygon(20% 0%, 80% 0%, 85% 15%, 80% 30%, 75% 30%, 80% 15%, 25% 15%, 25% 85%, 80% 85%, 75% 100%, 20% 100%, 15% 85%, 20% 70%, 25% 70%, 20% 85%, 75% 85%, 75% 15%, 20% 15%)',
+                  boxShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                  transform: 'rotate(-5deg)'
+                }} />
+                
                 <pre style={{
-                  fontSize: '14px',
-                  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                  lineHeight: '1.6',
-                  color: '#1e293b',
+                  fontSize: '15px',
+                  fontFamily: '"Courier New", "Lucida Console", monospace',
+                  lineHeight: '1.8',
+                  color: '#2d3748',
                   whiteSpace: 'pre-wrap',
-                  margin: 0
+                  margin: 0,
+                  textShadow: '0 0 1px rgba(0,0,0,0.1)',
+                  letterSpacing: '0.5px'
                 }}>
                   {compactTranscription}
                 </pre>
