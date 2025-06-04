@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useVoiceChat, FormSummary } from '../hooks/useVoiceChat';
+import { useVoiceChatWithJotai, FormSummary } from '../hooks/useVoiceChatWithJotai';
 import { ReportTemplate } from '../data/mockData';
 import StatusIndicator from './voice-chat/StatusIndicator';
 import StatusText from './voice-chat/StatusText';
@@ -20,9 +20,8 @@ export type { FormSummary };
 
 export default function LiveVoiceChat({ onSessionReady, template, onFormCompleted }: LiveVoiceChatProps) {
   const componentInstanceId = React.useRef(Math.random().toString(36).substr(2, 9));
-  const hasStartedSession = React.useRef(false);
   console.log('🏗️ LiveVoiceChat component created/re-rendered. Instance ID:', componentInstanceId.current);
-  console.log('🏗️ Template:', template.title, 'Props hash:', JSON.stringify({onSessionReady: !!onSessionReady, onFormCompleted: !!onFormCompleted}).slice(0, 50));
+  console.log('🏗️ Template:', template.title);
   
   const templateInstructions = template.title + "\n\n" + template.definition + "\n\n" + template.form;
   
@@ -33,31 +32,19 @@ export default function LiveVoiceChat({ onSessionReady, template, onFormComplete
     startSession,
     endSession,
     remoteAudioRef
-  } = useVoiceChat({
+  } = useVoiceChatWithJotai({
+    template,
     templateInstructions,
     onSessionReady,
     onFormCompleted
   });
 
-  // Automatically start the session when component mounts
+  // Cleanup effect only
   useEffect(() => {
-    console.log('🎯 LiveVoiceChat useEffect (startSession) triggered. Instance:', componentInstanceId.current);
-    console.log('🎯 Current state - isConnecting:', isConnecting, 'isSessionActive:', isSessionActive);
-    console.log('🎯 Has already started session:', hasStartedSession.current);
-    
-    if (!hasStartedSession.current) {
-      console.log('🚀 Starting session for the first time');
-      startSession();
-      hasStartedSession.current = true;
-    } else {
-      console.log('⚠️ Session already started, skipping');
-    }
-    
     return () => {
-      console.log('🗑️ LiveVoiceChat useEffect cleanup. Instance:', componentInstanceId.current);
-      hasStartedSession.current = false; // Reset for potential remount
+      console.log('🗑️ LiveVoiceChat cleanup. Instance:', componentInstanceId.current);
     };
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   // Parse form fields from template for instructions
   const getFormFields = () => {
