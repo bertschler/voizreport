@@ -28,13 +28,12 @@ class WebRTCServiceClass {
   private isConnecting: boolean = false;
   private callbacks: WebRTCServiceCallbacks | null = null;
   
-  // Audio management - completely independent of React
+  // Audio element - will be initialized lazily
   private audioElement: HTMLAudioElement | null = null;
 
   private constructor() {
     console.log('🏗️ WebRTC Service singleton initialized');
-    // Create audio element once, never recreate
-    this.initializeAudioElement();
+    // Don't initialize audio element in constructor - wait for browser context
   }
 
   static getInstance(): WebRTCServiceClass {
@@ -45,6 +44,17 @@ class WebRTCServiceClass {
   }
 
   private initializeAudioElement() {
+    // Only initialize if we're in a browser environment and haven't already initialized
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      console.warn('🎧 Cannot initialize audio element: not in browser environment');
+      return;
+    }
+    
+    if (this.audioElement) {
+      console.log('🎧 Audio element already initialized');
+      return;
+    }
+
     console.log('🎧 Initializing audio element in service');
     this.audioElement = document.createElement('audio');
     this.audioElement.autoplay = true;
@@ -64,6 +74,12 @@ class WebRTCServiceClass {
   }
 
   async requestMicrophonePermission(): Promise<boolean> {
+    // Ensure we're in browser environment
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices) {
+      console.error('🎤 Navigator.mediaDevices not available');
+      return false;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(track => track.stop());
@@ -167,6 +183,9 @@ class WebRTCServiceClass {
 
     console.log('🎯 Setting up WebRTC connection for session:', sessionData.sessionId);
 
+    // Initialize audio element now that we're in a browser context
+    this.initializeAudioElement();
+
     // Create peer connection
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -177,6 +196,12 @@ class WebRTCServiceClass {
     // Handle incoming audio
     pc.ontrack = (event) => {
       console.log('🎧 Received remote audio track');
+      
+      // Ensure audio element is available before using it
+      if (!this.audioElement) {
+        console.warn('🎧 Audio element not available, reinitializing...');
+        this.initializeAudioElement();
+      }
       
       // Set audio source directly in service - no React involvement
       if (this.audioElement && event.streams[0]) {
@@ -484,5 +509,8 @@ class WebRTCServiceClass {
   }
 }
 
-// Export singleton instance
-export const WebRTCService = WebRTCServiceClass.getInstance(); 
+// Export the class and a getter function instead of the instance
+export { WebRTCServiceClass };
+export const WebRTCService = {
+  getInstance: () => WebRTCServiceClass.getInstance()
+}; 

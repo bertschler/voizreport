@@ -105,7 +105,7 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
         console.log('📋 Generated form summary:', summary);
         
         // Send success response
-        WebRTCService.sendFunctionResponse(call_id, {
+        WebRTCService.getInstance().sendFunctionResponse(call_id, {
           status: 'success',
           message: 'Form completed successfully. Report has been generated and saved.',
           summary: {
@@ -129,7 +129,7 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
       } catch (error) {
         console.error('💥 Error handling function call:', error);
         
-        WebRTCService.sendFunctionResponse(call_id, {
+        WebRTCService.getInstance().sendFunctionResponse(call_id, {
           status: 'error',
           message: 'Failed to complete form submission'
         });
@@ -211,15 +211,15 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
     console.log('🚀 Starting session...');
     
     // Sync local state with service state first
-    if (WebRTCService.isSessionActive()) {
+    if (WebRTCService.getInstance().isSessionActive()) {
       console.log('📋 Service already has active session, syncing state');
-      setSessionId(WebRTCService.getCurrentSessionId());
+      setSessionId(WebRTCService.getInstance().getCurrentSessionId());
       setIsSessionActive(true);
       setIsConnecting(false);
       return;
     }
 
-    if (WebRTCService.isSessionConnecting()) {
+    if (WebRTCService.getInstance().isSessionConnecting()) {
       console.log('⏳ Service is already connecting, waiting...');
       setIsConnecting(true);
       return;
@@ -231,7 +231,7 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
     setAiResponse('');
 
     try {
-      const newSessionId = await WebRTCService.startSession(
+      const newSessionId = await WebRTCService.getInstance().startSession(
         webrtcCallbacks,
         template,
         templateInstructions
@@ -261,7 +261,7 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
     setIsConnecting(false);
 
     try {
-      await WebRTCService.cleanup();
+      await WebRTCService.getInstance().cleanup();
       
       // Reset state
       setSessionId(null);
