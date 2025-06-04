@@ -24,13 +24,17 @@ class WebRTCServiceClass {
   private peerConnection: RTCPeerConnection | null = null;
   private dataChannel: RTCDataChannel | null = null;
   private localStream: MediaStream | null = null;
-  private callbacks: WebRTCServiceCallbacks | null = null;
-  private currentSessionId: string = '';
-  private isActive: boolean = false;
+  private sessionId: string | null = null;
   private isConnecting: boolean = false;
+  private callbacks: WebRTCServiceCallbacks | null = null;
+  
+  // Audio management - completely independent of React
+  private audioElement: HTMLAudioElement | null = null;
 
   private constructor() {
     console.log('🏗️ WebRTC Service singleton initialized');
+    // Create audio element once, never recreate
+    this.initializeAudioElement();
   }
 
   static getInstance(): WebRTCServiceClass {
@@ -38,6 +42,25 @@ class WebRTCServiceClass {
       WebRTCServiceClass.instance = new WebRTCServiceClass();
     }
     return WebRTCServiceClass.instance;
+  }
+
+  private initializeAudioElement() {
+    console.log('🎧 Initializing audio element in service');
+    this.audioElement = document.createElement('audio');
+    this.audioElement.autoplay = true;
+    // playsInline is not a standard property, use setAttribute instead
+    this.audioElement.setAttribute('playsinline', 'true');
+    
+    // Add to DOM but keep hidden
+    this.audioElement.style.display = 'none';
+    document.body.appendChild(this.audioElement);
+    
+    // Add event listeners for debugging
+    this.audioElement.addEventListener('loadstart', () => console.log('🎧 Audio loadstart'));
+    this.audioElement.addEventListener('canplay', () => console.log('🎧 Audio canplay'));
+    this.audioElement.addEventListener('play', () => console.log('🎧 Audio play'));
+    this.audioElement.addEventListener('pause', () => console.log('🎧 Audio pause'));
+    this.audioElement.addEventListener('error', (e) => console.error('🎧 Audio error:', e));
   }
 
   async requestMicrophonePermission(): Promise<boolean> {
@@ -84,14 +107,14 @@ class WebRTCServiceClass {
         await globalSessionPromise;
       }
       // Return existing session if available
-      if (this.isActive) {
-        return this.currentSessionId;
+      if (this.sessionId) {
+        return this.sessionId;
       }
     }
 
-    if (this.isConnecting || this.isActive) {
-      console.log('⚠️ Session already active/connecting:', this.currentSessionId);
-      return this.currentSessionId;
+    if (this.isConnecting || this.sessionId) {
+      console.log('⚠️ Session already active/connecting:', this.sessionId);
+      return this.sessionId || '';
     }
 
     // Set global lock
@@ -101,7 +124,7 @@ class WebRTCServiceClass {
     try {
       globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions);
       await globalSessionPromise;
-      return this.currentSessionId;
+      return this.sessionId || '';
     } finally {
       globalSessionLock = false;
       globalSessionPromise = null;
@@ -115,9 +138,9 @@ class WebRTCServiceClass {
     templateInstructions?: string
   ): Promise<void> {
     // Clean up any existing session first
-    if (this.isActive) {
+    if (this.sessionId) {
       console.log('🔄 Cleaning up existing session before starting new one');
-      await this._performCleanup();
+      await this.cleanup();
     }
 
     // Request microphone permission
@@ -140,8 +163,7 @@ class WebRTCServiceClass {
     templateInstructions?: string
   ): Promise<void> {
     this.callbacks = callbacks;
-    this.currentSessionId = sessionData.sessionId;
-    this.isActive = true;
+    this.sessionId = sessionData.sessionId;
 
     console.log('🎯 Setting up WebRTC connection for session:', sessionData.sessionId);
 
@@ -155,7 +177,17 @@ class WebRTCServiceClass {
     // Handle incoming audio
     pc.ontrack = (event) => {
       console.log('🎧 Received remote audio track');
-      callbacks.onTrack(event);
+      
+      // Set audio source directly in service - no React involvement
+      if (this.audioElement && event.streams[0]) {
+        this.audioElement.srcObject = event.streams[0];
+        console.log('🎧 Audio stream set on service-managed element');
+      }
+      
+      // Still notify React for UI updates if needed
+      if (this.callbacks?.onTrack) {
+        this.callbacks.onTrack(event);
+      }
     };
 
     // Create data channel for messaging
@@ -171,7 +203,7 @@ class WebRTCServiceClass {
     dataChannel.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        callbacks.onRealtimeMessage(message, this.currentSessionId);
+        callbacks.onRealtimeMessage(message, this.sessionId || undefined);
       } catch (error) {
         console.error('💥 Error parsing data channel message:', error);
       }
@@ -370,64 +402,65 @@ class WebRTCServiceClass {
   }
 
   async cleanup(): Promise<void> {
-    if (globalSessionLock && globalSessionPromise) {
-      console.log('🔒 Waiting for session start to complete before cleanup...');
-      await globalSessionPromise;
+    console.log('🧹 WebRTC Service cleanup starting...');
+
+    try {
+      // Stop local media tracks
+      if (this.localStream) {
+        console.log('🎤 Stopping local media tracks...');
+        this.localStream.getTracks().forEach(track => {
+          track.stop();
+          console.log('🎤 Stopped audio track');
+        });
+        this.localStream = null;
+      }
+
+      // Clean up audio element
+      if (this.audioElement) {
+        console.log('🎧 Cleaning up audio element...');
+        this.audioElement.srcObject = null;
+        this.audioElement.pause();
+      }
+
+      // Close data channel
+      if (this.dataChannel) {
+        console.log('📡 Closing data channel...');
+        this.dataChannel.close();
+        this.dataChannel = null;
+      }
+
+      // Close peer connection
+      if (this.peerConnection) {
+        console.log('🔗 Closing peer connection...');
+        this.peerConnection.close();
+        this.peerConnection = null;
+      }
+
+      // Reset state
+      this.sessionId = null;
+      this.isConnecting = false;
+      this.callbacks = null;
+
+      console.log('✅ WebRTC Service cleanup completed');
+    } catch (error) {
+      console.error('💥 Error during WebRTC service cleanup:', error);
+      throw error;
     }
-    await this._performCleanup();
   }
 
-  private async _performCleanup(): Promise<void> {
-    console.log('🧹 WebRTC Service cleanup starting...');
+  // Cleanup method for complete service shutdown (call on app unmount)
+  destroy(): void {
+    console.log('🗑️ Destroying WebRTC service...');
     
-    this.isActive = false;
-    this.isConnecting = false;
+    this.cleanup().catch(console.error);
     
-    // Stop local stream
-    if (this.localStream) {
-      console.log('🎤 Stopping local media tracks...');
-      this.localStream.getTracks().forEach(track => {
-        console.log(`🎤 Stopped ${track.kind} track`);
-        track.stop();
-      });
-      this.localStream = null;
-    }
-    
-    // Close data channel
-    if (this.dataChannel) {
-      this.dataChannel.onmessage = null;
-      this.dataChannel.onerror = null;
-      this.dataChannel.onopen = null;
-      this.dataChannel.onclose = null;
-      if (this.dataChannel.readyState === 'open') {
-        this.dataChannel.close();
+    // Remove audio element from DOM
+    if (this.audioElement) {
+      if (this.audioElement.parentNode) {
+        this.audioElement.parentNode.removeChild(this.audioElement);
       }
-      this.dataChannel = null;
+      this.audioElement = null;
     }
-    
-    // Close peer connection
-    if (this.peerConnection) {
-      const pc = this.peerConnection;
-      
-      // Remove event handlers
-      pc.onconnectionstatechange = null;
-      pc.oniceconnectionstatechange = null;
-      pc.ondatachannel = null;
-      pc.ontrack = null;
-      pc.onicecandidate = null;
-      
-      // Close connection
-      if (pc.connectionState !== 'closed') {
-        pc.close();
-      }
-      
-      this.peerConnection = null;
-    }
-    
-    this.callbacks = null;
-    this.currentSessionId = '';
-    
-    console.log('✅ WebRTC Service cleanup completed');
   }
 
   getConnectionState(): string {
@@ -439,11 +472,11 @@ class WebRTCServiceClass {
   }
 
   getCurrentSessionId(): string {
-    return this.currentSessionId;
+    return this.sessionId || '';
   }
 
   isSessionActive(): boolean {
-    return this.isActive;
+    return !!this.sessionId;
   }
 
   isSessionConnecting(): boolean {

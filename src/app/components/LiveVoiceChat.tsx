@@ -18,7 +18,7 @@ interface LiveVoiceChatProps {
 // Export the FormSummary type for external use
 export type { FormSummary };
 
-export default function LiveVoiceChat({ onSessionReady, template, onFormCompleted }: LiveVoiceChatProps) {
+const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, template, onFormCompleted }: LiveVoiceChatProps) {
   const componentInstanceId = React.useRef(Math.random().toString(36).substr(2, 9));
   console.log('🏗️ LiveVoiceChat component created/re-rendered. Instance ID:', componentInstanceId.current);
   console.log('🏗️ Template:', template.title);
@@ -30,8 +30,7 @@ export default function LiveVoiceChat({ onSessionReady, template, onFormComplete
     isConnecting,
     error,
     startSession,
-    endSession,
-    remoteAudioRef
+    endSession
   } = useVoiceChatWithJotai({
     template,
     templateInstructions,
@@ -172,14 +171,8 @@ export default function LiveVoiceChat({ onSessionReady, template, onFormComplete
       }}>
         <RecordingAnimation isVisible={isSessionActive} />
       </div>
-
-      {/* Hidden Audio Element */}
-      <audio 
-        ref={remoteAudioRef} 
-        autoPlay 
-        playsInline
-        style={{ display: 'none' }}
-      />
     </div>
   );
-} 
+});
+
+export default LiveVoiceChat; 

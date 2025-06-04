@@ -30,7 +30,6 @@ export interface VoiceChatState {
 export interface VoiceChatActions {
   startSession: () => Promise<void>;
   endSession: () => Promise<void>;
-  remoteAudioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
 export interface VoiceChatOptions {
@@ -54,7 +53,6 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
   const [formData, setFormData] = useAtom(formDataAtom);
   
   // Refs
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const hookInstanceId = useRef(Math.random().toString(36).substr(2, 9));
   
   console.log('🏗️ useVoiceChatWithJotai hook created. Instance:', hookInstanceId.current);
@@ -194,10 +192,8 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
   const webrtcCallbacks: WebRTCServiceCallbacks = {
     onRealtimeMessage: handleRealtimeMessage,
     onTrack: (event) => {
-      console.log('🎧 Received remote audio track');
-      if (remoteAudioRef.current && event.streams[0]) {
-        remoteAudioRef.current.srcObject = event.streams[0];
-      }
+      console.log('🎧 Received remote audio track (handled by service)');
+      // Audio is now handled entirely by the service
     },
     onDataChannelOpen: () => {
       console.log('📡 Data channel opened - session ready');
@@ -292,7 +288,6 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
     
     // Actions
     startSession,
-    endSession,
-    remoteAudioRef
+    endSession
   };
 } 
