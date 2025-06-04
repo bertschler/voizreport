@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import LiveVoiceChat, { FormSummary } from './components/LiveVoiceChat';
 import MobileHeader from "./components/MobileHeader";
 import TabNavigation, { Tab } from "./components/TabNavigation";
@@ -15,17 +15,29 @@ const tabs: Tab[] = [
 ];
 
 export default function Home() {
+  console.log('🏠 Home component render. Timestamp:', Date.now());
+  
   const [activeTab, setActiveTab] = useState<'templates' | 'reports'>('templates');
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<'plain' | 'json'>('plain');
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  
+  console.log('🏠 Home state:', { 
+    activeTab, 
+    selectedTemplate: selectedTemplate?.title || 'none', 
+    completedFormsCount: completedForms.length,
+    showSettings 
+  });
 
   const startReport = (template: ReportTemplate) => {
+    console.log('📋 startReport called with template:', template.title);
+    console.log('📋 Previous selectedTemplate:', selectedTemplate?.title || 'none');
     setSelectedTemplate(template);
   };
 
   const goBack = () => {
+    console.log('🔙 goBack called, clearing selectedTemplate:', selectedTemplate?.title || 'none');
     setSelectedTemplate(null);
   };
 
@@ -53,7 +65,7 @@ export default function Home() {
     setShowSettings(false);
   };
 
-  const handleFormCompletion = (summary: FormSummary) => {
+  const handleFormCompletion = useCallback((summary: FormSummary) => {
     console.log('📋 Form completed!', summary);
     setCompletedForms(prev => [...prev, summary]);
     
@@ -68,11 +80,11 @@ export default function Home() {
       // Dispatch custom event to refresh reports list
       window.dispatchEvent(new CustomEvent('reportsUpdated'));
     }, 3000); // Give time for user to see completion message
-  };
+  }, []);
 
-  const handleSessionReady = (sessionId: string) => {
+  const handleSessionReady = useCallback((sessionId: string) => {
     console.log('🎤 Voice session ready:', sessionId);
-  };
+  }, []);
 
   // If settings is open, show the settings page
   if (showSettings) {
@@ -113,6 +125,7 @@ export default function Home() {
         {/* Voice chat interface */}
         <div style={{ padding: '20px' }}>
           <LiveVoiceChat 
+            key={`voice-chat-${selectedTemplate.id}`}
             template={selectedTemplate}
             onSessionReady={handleSessionReady}
             onFormCompleted={handleFormCompletion}

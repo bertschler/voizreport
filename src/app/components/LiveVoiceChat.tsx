@@ -19,6 +19,11 @@ interface LiveVoiceChatProps {
 export type { FormSummary };
 
 export default function LiveVoiceChat({ onSessionReady, template, onFormCompleted }: LiveVoiceChatProps) {
+  const componentInstanceId = React.useRef(Math.random().toString(36).substr(2, 9));
+  const hasStartedSession = React.useRef(false);
+  console.log('🏗️ LiveVoiceChat component created/re-rendered. Instance ID:', componentInstanceId.current);
+  console.log('🏗️ Template:', template.title, 'Props hash:', JSON.stringify({onSessionReady: !!onSessionReady, onFormCompleted: !!onFormCompleted}).slice(0, 50));
+  
   const templateInstructions = template.title + "\n\n" + template.definition + "\n\n" + template.form;
   
   const {
@@ -36,7 +41,22 @@ export default function LiveVoiceChat({ onSessionReady, template, onFormComplete
 
   // Automatically start the session when component mounts
   useEffect(() => {
-    startSession();
+    console.log('🎯 LiveVoiceChat useEffect (startSession) triggered. Instance:', componentInstanceId.current);
+    console.log('🎯 Current state - isConnecting:', isConnecting, 'isSessionActive:', isSessionActive);
+    console.log('🎯 Has already started session:', hasStartedSession.current);
+    
+    if (!hasStartedSession.current) {
+      console.log('🚀 Starting session for the first time');
+      startSession();
+      hasStartedSession.current = true;
+    } else {
+      console.log('⚠️ Session already started, skipping');
+    }
+    
+    return () => {
+      console.log('🗑️ LiveVoiceChat useEffect cleanup. Instance:', componentInstanceId.current);
+      hasStartedSession.current = false; // Reset for potential remount
+    };
   }, []); // Empty dependency array means this runs once on mount
 
   // Parse form fields from template for instructions

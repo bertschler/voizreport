@@ -31,13 +31,65 @@ export interface VoiceChatOptions {
   onFormCompleted?: (summary: FormSummary) => void;
 }
 
+// GLOBAL MODULE-LEVEL STATE - shared across all hook instances
+// This ensures only 1 WebRTC connection regardless of component re-renders
+let globalPeerConnection: RTCPeerConnection | null = null;
+let globalDataChannel: RTCDataChannel | null = null;
+let globalAllDataChannels: RTCDataChannel[] = [];
+let globalLocalStream: MediaStream | null = null;
+let globalIsSessionActive = false;
+let globalActiveSessionId: string | null = null;
+let globalCurrentSessionId: string = '';
+let globalIsStartingSession = false; // Global synchronous guard
+let globalSessionCallbacks: {
+  onSessionReady?: (sessionId: string) => void;
+  onFormCompleted?: (summary: FormSummary) => void;
+  handleRealtimeMessage?: (message: any, sessionId?: string) => void;
+  setError?: (error: string | null) => void;
+  setTranscript?: (transcript: string) => void;
+  setAiResponse?: (response: string | ((prev: string) => string)) => void;
+} = {};
+
+// Global session tracking to prevent duplicates across component remounts
+const startedSessions = new Map<string, boolean>();
+
+console.log('🌍 Global WebRTC state initialized');
+
 export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & VoiceChatActions {
   const { template, templateInstructions, onSessionReady, onFormCompleted } = options || {};
   
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [isSessionActive, setIsSessionActive] = useState(false);
+  // Add hook instance tracking
+  const hookInstanceId = useRef(Math.random().toString(36).substr(2, 9));
+  
+  // Add development environment detection
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isStrictMode = useRef(false);
+  
+  // Detect if we're in React Strict Mode (development only)
+  useEffect(() => {
+    if (isDevelopment) {
+      // In Strict Mode, this effect runs twice
+      if (isStrictMode.current) {
+        console.log('🔄 REACT STRICT MODE DETECTED - Effects running twice');
+      } else {
+        isStrictMode.current = true;
+      }
+    }
+  }, []);
+  
+  console.log('🏗️ useVoiceChat hook created/re-rendered.', {
+    instanceId: hookInstanceId.current,
+    isDevelopment,
+    nodeEnv: process.env.NODE_ENV,
+    globalSessionActive: globalIsSessionActive,
+    globalSessionId: globalActiveSessionId
+  });
+  
+  // Local state (each hook instance has its own UI state)
+  const [sessionId, setSessionId] = useState<string | null>(globalActiveSessionId);
+  const [isSessionActive, setIsSessionActive] = useState(globalIsSessionActive);
   const [hasPermission, setHasPermission] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(globalIsStartingSession);
   const [transcript, setTranscript] = useState<string>('');
   const [aiResponse, setAiResponse] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -45,26 +97,72 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [completedFields, setCompletedFields] = useState<Set<string>>(new Set());
   
-  // WebRTC refs
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const dataChannelRef = useRef<RTCDataChannel | null>(null);
-  const allDataChannelsRef = useRef<RTCDataChannel[]>([]); // Track ALL data channels
-  const localStreamRef = useRef<MediaStream | null>(null);
+  // Local refs (for this hook instance)
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
-  const isSessionActiveRef = useRef(false);
-  const activeSessionIdRef = useRef<string | null>(null);
-  const currentSessionIdRef = useRef<string>(Date.now().toString()); // Unique session ID
-
-  // Update refs when state changes
+  
+  // Register this hook instance's callbacks with global system
   useEffect(() => {
-    isSessionActiveRef.current = isSessionActive;
-    activeSessionIdRef.current = sessionId;
-  }, [isSessionActive, sessionId]);
+    console.log('📝 Registering hook callbacks with global system. Instance:', hookInstanceId.current);
+    
+    globalSessionCallbacks.onSessionReady = onSessionReady;
+    globalSessionCallbacks.onFormCompleted = onFormCompleted;
+    globalSessionCallbacks.setError = setError;
+    globalSessionCallbacks.setTranscript = setTranscript;
+    globalSessionCallbacks.setAiResponse = setAiResponse;
+    
+    // Sync local state with global state
+    setSessionId(globalActiveSessionId);
+    setIsSessionActive(globalIsSessionActive);
+    setIsConnecting(globalIsStartingSession);
+    
+    return () => {
+      console.log('🗑️ Unregistering hook callbacks. Instance:', hookInstanceId.current);
+      // Only clear callbacks if this instance was the last one to set them
+      if (globalSessionCallbacks.onSessionReady === onSessionReady) {
+        globalSessionCallbacks.onSessionReady = undefined;
+      }
+      if (globalSessionCallbacks.onFormCompleted === onFormCompleted) {
+        globalSessionCallbacks.onFormCompleted = undefined;
+      }
+    };
+  }, [onSessionReady, onFormCompleted, hookInstanceId.current]);
+
+  // Keep local state in sync with global state
+  useEffect(() => {
+    const syncInterval = setInterval(() => {
+      setSessionId(globalActiveSessionId);
+      setIsSessionActive(globalIsSessionActive);
+      setIsConnecting(globalIsStartingSession);
+    }, 100); // Sync every 100ms
+    
+    return () => clearInterval(syncInterval);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
+    console.log('🎯 useVoiceChat useEffect mounted. Instance:', hookInstanceId.current);
+    
     return () => {
-      endSession();
+      console.log('🗑️ useVoiceChat useEffect cleanup (unmounting). Instance:', hookInstanceId.current);
+      console.log('🗑️ Global active channels at unmount:', globalAllDataChannels.length);
+      
+      // Only perform global cleanup if this is the last active hook instance
+      // For now, always cleanup - we can optimize this later if needed
+      if (globalAllDataChannels.length > 0) {
+        console.log('🗑️ Cleaning up global channels from hook unmount');
+        globalAllDataChannels.forEach((channel, index) => {
+          console.log(`🗑️ Force cleaning global channel ${index} at unmount: state=${channel.readyState}`);
+          channel.onmessage = null;
+          if (channel.readyState === 'open') {
+            try {
+              channel.close();
+            } catch (error) {
+              console.log(`⚠️ Error force-closing global channel ${index}:`, error);
+            }
+          }
+        });
+        globalAllDataChannels = [];
+      }
     };
   }, []);
 
@@ -142,23 +240,23 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     console.log('🔍 HANDLEREALTIMEMESSAGE CALLED:', {
       messageType: message.type,
       messageSessionId: sessionId,
-      currentSessionId: currentSessionIdRef.current,
-      isSessionActive: isSessionActiveRef.current,
-      dataChannelExists: !!dataChannelRef.current,
-      dataChannelState: dataChannelRef.current?.readyState || 'NO_CHANNEL',
-      hasOnMessage: !!dataChannelRef.current?.onmessage,
-      allDataChannelsCount: allDataChannelsRef.current.length
+      currentSessionId: globalCurrentSessionId,
+      isSessionActive: globalIsSessionActive,
+      dataChannelExists: !!globalDataChannel,
+      dataChannelState: globalDataChannel?.readyState || 'NO_CHANNEL',
+      hasOnMessage: !!globalDataChannel?.onmessage,
+      allDataChannelsCount: globalAllDataChannels.length
     });
     
     // Ignore messages from old sessions
-    if (sessionId && sessionId !== currentSessionIdRef.current) {
-      console.log('🧟‍♂️ IGNORING MESSAGE - from old session:', message.type, `(${sessionId} !== ${currentSessionIdRef.current})`);
+    if (sessionId && sessionId !== globalCurrentSessionId) {
+      console.log('🧟‍♂️ IGNORING MESSAGE - from old session:', message.type, `(${sessionId} !== ${globalCurrentSessionId})`);
       return;
     }
     
     // Ignore messages if session is not active (prevents processing during/after cleanup)
-    if (!isSessionActiveRef.current) {
-      console.log('🚫 IGNORING MESSAGE - session inactive:', message.type, 'ref:', isSessionActiveRef.current);
+    if (!globalIsSessionActive) {
+      console.log('🚫 IGNORING MESSAGE - session inactive:', message.type, 'global:', globalIsSessionActive);
       return;
     }
     
@@ -171,7 +269,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         
       case 'input_audio_buffer.speech_started':
         console.log('🎤 User started speaking');
-        setTranscript('Speaking...');
+        globalSessionCallbacks.setTranscript?.('Speaking...');
         break;
         
       case 'input_audio_buffer.speech_stopped':
@@ -189,24 +287,24 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       case 'output_audio_buffer.stopped':
         console.warn('⚠️ AI audio buffer stopped unexpectedly - this may indicate an interruption');
         // Log additional connection state for debugging
-        if (peerConnectionRef.current) {
-          console.log('🔗 WebRTC connection state:', peerConnectionRef.current.connectionState);
-          console.log('🔗 WebRTC ICE connection state:', peerConnectionRef.current.iceConnectionState);
+        if (globalPeerConnection) {
+          console.log('🔗 WebRTC connection state:', globalPeerConnection.connectionState);
+          console.log('🔗 WebRTC ICE connection state:', globalPeerConnection.iceConnectionState);
         }
-        if (dataChannelRef.current) {
-          console.log('📡 Data channel state:', dataChannelRef.current.readyState);
+        if (globalDataChannel) {
+          console.log('📡 Data channel state:', globalDataChannel.readyState);
         }
         break;
         
       case 'conversation.item.input_audio_transcription.completed':
         console.log('💬 User transcript:', message.transcript);
         const userTranscript = message.transcript || '';
-        setTranscript(userTranscript);
+        globalSessionCallbacks.setTranscript?.(userTranscript);
         break;
         
       case 'response.audio_transcript.delta':
         // AI response text as it's being generated
-        setAiResponse(prev => {
+        globalSessionCallbacks.setAiResponse?.(prev => {
           const newText = prev + (message.delta || '');
           return newText;
         });
@@ -215,7 +313,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       case 'response.audio_transcript.done':
         console.log('💬 AI response complete:', message.transcript);
         const fullAiResponse = message.transcript || '';
-        setAiResponse(fullAiResponse);
+        globalSessionCallbacks.setAiResponse?.(fullAiResponse);
         break;
 
       case 'response.function_call_arguments.delta':
@@ -248,7 +346,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         
       case 'error':
         console.error('💥 OpenAI error:', message.error);
-        setError(`OpenAI error: ${message.error.message || message.error}`);
+        globalSessionCallbacks.setError?.(`OpenAI error: ${message.error.message || message.error}`);
         break;
         
       default:
@@ -256,6 +354,9 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         console.log('📝 Unhandled message type:', message.type);
     }
   };
+
+  // Register the message handler globally
+  globalSessionCallbacks.handleRealtimeMessage = handleRealtimeMessage;
 
   // Handle function calls from OpenAI
   const handleFunctionCall = async (message: any) => {
@@ -289,7 +390,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         console.log('📋 Generated form summary from function call:', summary);
         
         // Send function response back to OpenAI
-        if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
+        if (globalDataChannel && globalDataChannel.readyState === 'open') {
           const functionResponse = {
             type: 'conversation.item.create',
             item: {
@@ -308,7 +409,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
             }
           };
           
-          dataChannelRef.current.send(JSON.stringify(functionResponse));
+          globalDataChannel.send(JSON.stringify(functionResponse));
           console.log('📤 Sent function response back to OpenAI');
         }
         
@@ -326,7 +427,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         console.error('💥 Error handling function call:', error);
         
         // Send error response back to OpenAI
-        if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
+        if (globalDataChannel && globalDataChannel.readyState === 'open') {
           const errorResponse = {
             type: 'conversation.item.create',
             item: {
@@ -339,7 +440,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
             }
           };
           
-          dataChannelRef.current.send(JSON.stringify(errorResponse));
+          globalDataChannel.send(JSON.stringify(errorResponse));
         }
       }
     }
@@ -367,7 +468,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
       });
 
-      peerConnectionRef.current = pc;
+      globalPeerConnection = pc;
 
       // Handle incoming audio
       pc.ontrack = (event) => {
@@ -379,11 +480,11 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
 
       // Create data channel for messaging
       const dataChannel = pc.createDataChannel('oai-events');
-      dataChannelRef.current = dataChannel;
+      globalDataChannel = dataChannel;
       
       // Track this data channel
-      allDataChannelsRef.current.push(dataChannel);
-      console.log('📡 Created data channel for session:', currentSessionIdRef.current, 'Total channels:', allDataChannelsRef.current.length);
+      globalAllDataChannels.push(dataChannel);
+      console.log('📡 Created data channel for session:', globalCurrentSessionId, 'Total channels:', globalAllDataChannels.length);
 
       dataChannel.onopen = () => {
         console.log('📡 Data channel opened');
@@ -456,12 +557,12 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       };
 
       dataChannel.onmessage = (event) => {
-        const capturedSessionId = currentSessionIdRef.current; // Capture session ID in closure
+        const capturedSessionId = globalCurrentSessionId; // Capture session ID in closure
         console.log('📡 DATA CHANNEL ONMESSAGE FIRED:', {
           dataChannelState: dataChannel.readyState,
-          isSessionActive: isSessionActiveRef.current,
+          isSessionActive: globalIsSessionActive,
           capturedSessionId,
-          currentSessionId: currentSessionIdRef.current,
+          currentSessionId: globalCurrentSessionId,
           eventType: 'onmessage'
         });
         try {
@@ -474,7 +575,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
 
       dataChannel.onerror = (error) => {
         console.error('💥 Data channel error:', error);
-        setError('Data channel connection failed');
+        globalSessionCallbacks.setError?.('Data channel connection failed');
       };
 
       // Get user media
@@ -487,7 +588,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         } 
       });
       
-      localStreamRef.current = stream;
+      globalLocalStream = stream;
       
       // Add audio track to peer connection
       stream.getAudioTracks().forEach(track => {
@@ -558,13 +659,40 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
 
   // Start conversation
   const startSession = async () => {
-    if (isConnecting || isSessionActive) return;
+    console.log('🚀 startSession called. Instance:', hookInstanceId.current, 'isConnecting:', isConnecting, 'isSessionActive:', isSessionActive, 'isStarting:', globalIsStartingSession);
+    
+    // SYNCHRONOUS guard - prevents multiple simultaneous startSession calls
+    // This handles both Next.js dev mode re-renders AND potential production race conditions
+    if (globalIsStartingSession) {
+      console.log('🚫 startSession blocked - already starting (sync guard)', isDevelopment ? '[DEV MODE]' : '[PRODUCTION]');
+      return;
+    }
+    
+    if (isConnecting || isSessionActive) {
+      console.log('⚠️ startSession blocked - already connecting or active');
+      return;
+    }
+    
+    // Set synchronous guard immediately
+    globalIsStartingSession = true;
+    console.log('🔒 Set starting session guard');
+    
+    // Set isConnecting immediately to block other attempts
+    setIsConnecting(true);
     
     // Create new session ID
-    currentSessionIdRef.current = Date.now().toString();
-    console.log('🆕 Starting new session:', currentSessionIdRef.current);
+    globalCurrentSessionId = Date.now().toString();
     
-    setIsConnecting(true);
+    // Check if this session has already been started globally
+    if (startedSessions.has(globalCurrentSessionId)) {
+      console.log('⚠️ startSession blocked - session already started globally:', globalCurrentSessionId);
+      return;
+    }
+    
+    // Mark this session as started
+    startedSessions.set(globalCurrentSessionId, true);
+    console.log('🆕 Starting new session:', globalCurrentSessionId, 'Instance:', hookInstanceId.current);
+    
     setError(null);
     setTranscript('');
     setAiResponse('');
@@ -582,16 +710,21 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         throw new Error('Failed to create session');
       }
 
-      setSessionId(newSessionData.sessionId);
-      
       // Setup WebRTC
       await setupWebRTC(newSessionData.sessionId, newSessionData.ephemeralToken);
       
+      // Update global state
+      globalIsSessionActive = true;
+      globalActiveSessionId = newSessionData.sessionId;
+      
+      // Update local state to match global state
       setIsSessionActive(true);
+      setSessionId(newSessionData.sessionId);
+      
       console.log('🎉 Live conversation started successfully!');
       
-      if (onSessionReady) {
-        onSessionReady(newSessionData.sessionId);
+      if (globalSessionCallbacks.onSessionReady) {
+        globalSessionCallbacks.onSessionReady(newSessionData.sessionId);
       }
       
     } catch (error) {
@@ -600,6 +733,8 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       endSession();
     } finally {
       setIsConnecting(false);
+      globalIsStartingSession = false; // Clear synchronous guard
+      console.log('🔓 Cleared starting session guard');
     }
   };
 
@@ -607,34 +742,38 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const endSession = async () => {
     console.log('🔒 Ending conversation...');
     
+    // Clear the starting guard
+    globalIsStartingSession = false;
+    console.log('🔓 Cleared starting session guard in endSession');
+    
     // IMMEDIATELY stop all message processing - before any async operations
+    globalIsSessionActive = false;
     setIsSessionActive(false);
-    isSessionActiveRef.current = false;
     
     // IMMEDIATELY remove the message handler to stop processing
-    if (dataChannelRef.current) {
+    if (globalDataChannel) {
       console.log('🔍 BEFORE REMOVING HANDLER:', {
-        dataChannelExists: !!dataChannelRef.current,
-        dataChannelState: dataChannelRef.current.readyState,
-        hasOnMessage: !!dataChannelRef.current.onmessage,
-        onMessageRef: dataChannelRef.current.onmessage
+        dataChannelExists: !!globalDataChannel,
+        dataChannelState: globalDataChannel.readyState,
+        hasOnMessage: !!globalDataChannel.onmessage,
+        onMessageRef: globalDataChannel.onmessage
       });
       
-      dataChannelRef.current.onmessage = null;
+      globalDataChannel.onmessage = null;
       
       console.log('🔍 AFTER REMOVING HANDLER:', {
-        dataChannelExists: !!dataChannelRef.current,
-        dataChannelState: dataChannelRef.current.readyState,
-        hasOnMessage: !!dataChannelRef.current.onmessage,
-        onMessageRef: dataChannelRef.current.onmessage
+        dataChannelExists: !!globalDataChannel,
+        dataChannelState: globalDataChannel.readyState,
+        hasOnMessage: !!globalDataChannel.onmessage,
+        onMessageRef: globalDataChannel.onmessage
       });
       
       console.log('🚫 Removed data channel message handler immediately');
     }
     
     // CLEAN UP ALL DATA CHANNELS (including zombie channels)
-    console.log('🧹 Cleaning up ALL data channels. Total:', allDataChannelsRef.current.length);
-    allDataChannelsRef.current.forEach((channel, index) => {
+    console.log('🧹 Cleaning up ALL data channels. Total:', globalAllDataChannels.length);
+    globalAllDataChannels.forEach((channel, index) => {
       console.log(`🧹 Cleaning channel ${index}: state=${channel.readyState}, hasHandler=${!!channel.onmessage}`);
       channel.onmessage = null;
       channel.onerror = null;
@@ -648,24 +787,24 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         }
       }
     });
-    allDataChannelsRef.current = []; // Clear the array
+    globalAllDataChannels = []; // Clear the array
     
     try {
       // Stop all media tracks first (as per WebRTC spec)
-      if (localStreamRef.current) {
+      if (globalLocalStream) {
         console.log('🎤 Stopping local media tracks...');
-        localStreamRef.current.getTracks().forEach(track => {
+        globalLocalStream.getTracks().forEach(track => {
           const kind = track.kind;
           const state = track.readyState;
           track.stop();
           console.log(`🎤 Stopped ${kind} track (was: ${state})`);
         });
-        localStreamRef.current = null;
+        globalLocalStream = null;
       }
       
       // Close peer connection and wait for proper closure
-      if (peerConnectionRef.current) {
-        const peerConnection = peerConnectionRef.current;
+      if (globalPeerConnection) {
+        const peerConnection = globalPeerConnection;
         console.log('🔗 Peer connection state:', peerConnection.connectionState);
         
         // Remove all event handlers
@@ -705,25 +844,33 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
           }, 1000);
         });
         
-        peerConnectionRef.current = null;
+        globalPeerConnection = null;
       }
       
       // Clear all session state
+      globalActiveSessionId = null;
+      globalCurrentSessionId = '';
       setSessionId(null);
       setTranscript('');
       setAiResponse('');
       setError(null);
+      
+      // Clean up global session tracking
+      if (globalCurrentSessionId) {
+        startedSessions.delete(globalCurrentSessionId);
+        console.log('🧹 Removed session from global tracking:', globalCurrentSessionId);
+      }
       
       console.log('✅ Session ended successfully');
       
     } catch (error) {
       console.error('💥 Error during session cleanup:', error);
       // Force cleanup even if there was an error
-      dataChannelRef.current = null;
-      peerConnectionRef.current = null;
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach(track => track.stop());
-        localStreamRef.current = null;
+      globalDataChannel = null;
+      globalPeerConnection = null;
+      if (globalLocalStream) {
+        globalLocalStream.getTracks().forEach(track => track.stop());
+        globalLocalStream = null;
       }
     }
   };
