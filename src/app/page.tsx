@@ -7,7 +7,7 @@ import TabNavigation, { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
-import { reportTemplates, submittedReports, ReportTemplate, SubmittedReport } from './data/mockData';
+import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
 const tabs: Tab[] = [
   { id: 'templates', label: 'Create' },
@@ -57,36 +57,16 @@ export default function Home() {
     console.log('📋 Form completed!', summary);
     setCompletedForms(prev => [...prev, summary]);
     
-    // Convert FormSummary to SubmittedReport format and add to reports
-    const newReport: SubmittedReport = {
-      id: Date.now(),
-      title: selectedTemplate?.title || 'Voice Report',
-      status: 'Completed' as const,
-      date: new Date().toISOString().split('T')[0],
-      templateType: selectedTemplate?.title || 'Voice Report',
-      summary: summary.plainText.length > 100 
-        ? summary.plainText.substring(0, 100) + '...' 
-        : summary.plainText,
-      plainText: summary.plainText,
-      json: summary.json,
-      isNew: true // Mark as new submission
-    };
-    
-    // Add to submitted reports (in a real app, this would be sent to your backend)
-    submittedReports.unshift(newReport);
-    
-    // Mark the report as not new after 24 hours (simulate real-world behavior)
-    setTimeout(() => {
-      const reportIndex = submittedReports.findIndex(r => r.id === newReport.id);
-      if (reportIndex !== -1) {
-        submittedReports[reportIndex].isNew = false;
-      }
-    }, 24 * 60 * 60 * 1000); // 24 hours
+    // Note: Report is now automatically saved to localStorage in useVoiceChat hook
+    console.log('💾 Report automatically saved to localStorage');
     
     // Navigate back to main interface and switch to reports tab
     setTimeout(() => {
       setSelectedTemplate(null);
       setActiveTab('reports');
+      
+      // Dispatch custom event to refresh reports list
+      window.dispatchEvent(new CustomEvent('reportsUpdated'));
     }, 3000); // Give time for user to see completion message
   };
 
@@ -142,7 +122,7 @@ export default function Home() {
     );
   }
 
-  console.log(">" + submittedReports);
+  console.log(">" + JSON.stringify(completedForms));
 
   // Main interface with tabs
   return (
@@ -185,7 +165,6 @@ export default function Home() {
 
         {activeTab === 'reports' && (
           <SubmittedReports
-            reports={submittedReports}
             onViewDetails={handleViewReportDetails}
           />
         )}

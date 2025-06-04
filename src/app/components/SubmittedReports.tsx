@@ -1,26 +1,69 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SubmittedReport } from '../data/mockData';
+import { getStoredReports, markReportAsRead, StoredReport } from '../utils/storage';
 import ReportDetailsModal from './ReportDetailsModal';
 
 interface SubmittedReportsProps {
-  reports: SubmittedReport[];
   onViewDetails?: (report: SubmittedReport) => void;
 }
 
 export default function SubmittedReports({ 
-  reports, 
   onViewDetails 
 }: SubmittedReportsProps) {
+  const [reports, setReports] = useState<StoredReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  console.log(reports);
+  // Load reports from localStorage on component mount and when coming back to tab
+  useEffect(() => {
+    const loadReports = () => {
+      setIsLoading(true);
+      const storedReports = getStoredReports();
+      setReports(storedReports);
+      setIsLoading(false);
+      console.log('📁 Loaded reports from localStorage:', storedReports);
+    };
+
+    loadReports();
+
+    // Listen for storage events (when localStorage is updated from other tabs/components)
+    const handleStorageChange = () => {
+      loadReports();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event for when reports are updated within the same tab
+    window.addEventListener('reportsUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('reportsUpdated', handleStorageChange);
+    };
+  }, []);
 
   const handleViewDetails = (report: SubmittedReport) => {
     setSelectedReport(report);
     setIsModalOpen(true);
+    
+    // Mark as read if it was new
+    if (report.isNew) {
+      markReportAsRead(report.id);
+      
+      // Update local state
+      setReports(prevReports => 
+        prevReports.map(r => 
+          r.id === report.id ? { ...r, isNew: false } : r
+        )
+      );
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('reportsUpdated'));
+    }
+    
     if (onViewDetails) {
       onViewDetails(report);
     }
@@ -55,6 +98,47 @@ export default function SubmittedReports({
         };
     }
   };
+
+  if (isLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '40px',
+        color: '#64748b'
+      }}>
+        Loading reports...
+      </div>
+    );
+  }
+
+  if (reports.length === 0) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '40px 20px',
+        color: '#64748b'
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+        <h3 style={{ 
+          fontSize: '18px', 
+          fontWeight: '600', 
+          color: '#334155',
+          margin: '0 0 8px 0'
+        }}>
+          No reports yet
+        </h3>
+        <p style={{ 
+          fontSize: '14px', 
+          margin: 0,
+          lineHeight: '1.5'
+        }}>
+          Your completed voice reports will appear here. Create your first report using the templates in the Create tab.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
