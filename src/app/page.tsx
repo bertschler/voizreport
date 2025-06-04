@@ -133,7 +133,7 @@ export default function Home() {
         {/* Voice chat interface */}
         <div style={{ padding: '20px' }}>
           <LiveVoiceChat 
-            templateInstructions={selectedTemplate.title + "\n\n" + selectedTemplate.definition + "\n\n" + selectedTemplate.form}
+            template={selectedTemplate}
             onSessionReady={handleSessionReady}
             onFormCompleted={handleFormCompletion}
           />
