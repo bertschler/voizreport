@@ -11,6 +11,7 @@ interface DefaultFooterProps {
   onTabChange: (tabId: string) => void;
   onNavigateToSession?: (template: ReportTemplate) => void;
   onStartNewSession?: () => void;
+  onStopSession?: () => void;
   showTabs?: boolean; // Controls whether to show tab navigation
 }
 
@@ -20,6 +21,7 @@ export default function DefaultFooter({
   onTabChange, 
   onNavigateToSession,
   onStartNewSession,
+  onStopSession,
   showTabs = true 
 }: DefaultFooterProps) {
   return (
@@ -33,8 +35,9 @@ export default function DefaultFooter({
         zIndex: 10
       }}>
         <SmartMicButton 
-          onNavigateToSession={onNavigateToSession}
+          onNavigateToSession={showTabs ? onNavigateToSession : undefined}
           onStartNewSession={onStartNewSession}
+          onStopSession={!showTabs ? onStopSession : undefined}
         />
       </div>
 

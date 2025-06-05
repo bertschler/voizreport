@@ -55,10 +55,16 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession,
   }, []);
 
   const handleMicClick = () => {
-    if (isSessionActive && activeTemplate && onNavigateToSession) {
-      // Navigate back to active session
-      console.log('🎯 Returning to active session:', activeTemplate.title);
-      onNavigateToSession(activeTemplate);
+    if (isSessionActive && activeTemplate) {
+      if (onStopSession) {
+        // Stop current session (when used in LiveVoiceChat)
+        console.log('🛑 Stopping current session:', activeTemplate.title);
+        onStopSession();
+      } else if (onNavigateToSession) {
+        // Navigate back to active session (when used in footer)
+        console.log('🎯 Returning to active session:', activeTemplate.title);
+        onNavigateToSession(activeTemplate);
+      }
     } else if (onStartNewSession) {
       // Start new session
       console.log('🎤 Starting new session...');
@@ -142,7 +148,7 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession,
           isConnecting 
             ? 'Connecting to voice session' 
             : isSessionActive 
-              ? `Return to recording: ${activeTemplate?.title}` 
+              ? (onStopSession ? `Stop recording: ${activeTemplate?.title}` : `Return to recording: ${activeTemplate?.title}`)
               : 'Start voice recording'
         }
       >

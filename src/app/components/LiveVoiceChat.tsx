@@ -3,9 +3,7 @@
 import React, { useEffect } from 'react';
 import { useVoiceChat, FormSummary } from '../hooks/useVoiceChat';
 import { ReportTemplate } from '../data/mockData';
-import StatusIndicator from './voice-chat/StatusIndicator';
-import StatusText from './voice-chat/StatusText';
-import VoiceActionButton from './voice-chat/VoiceActionButton';
+import SmartMicButton from './SmartMicButton';
 import ErrorDisplay from './voice-chat/ErrorDisplay';
 import FormFieldsDisplay from './FormFieldsDisplay';
 import VoiceModeToggle from './voice-chat/VoiceModeToggle';
@@ -76,20 +74,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
       <ErrorDisplay error={error} />
 
 
-      {/* Action Button - Centered with integrated recording animation */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '80px'
-      }}>
-        <VoiceActionButton
-          isSessionActive={isSessionActive}
-          isConnecting={isConnecting}
-          onStart={startSession}
-          onStop={endSession}
-        />
-      </div>
       {/* Voice Mode Toggle - Top Right Corner */}
       <div style={{
         display: 'flex',

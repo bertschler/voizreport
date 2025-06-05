@@ -171,6 +171,7 @@ export default function Home() {
             onTabChange={handleTabChange}
             onNavigateToSession={handleNavigateToSession}
             onStartNewSession={handleStartNewSession}
+            onStopSession={() => setSelectedTemplate(null)}
             showTabs={false}
           />
         }
