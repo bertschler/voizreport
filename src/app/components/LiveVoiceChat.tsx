@@ -29,6 +29,7 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
     isSessionActive,
     isConnecting,
     error,
+    formProgress,
     startSession,
     endSession
   } = useVoiceChat({
@@ -129,6 +130,100 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
           </div>
         )}
       </div>
+
+      {/* Form Progress Display */}
+      {isSessionActive && Object.keys(formProgress).length > 0 && (
+        <div style={{
+          marginBottom: '24px',
+          padding: '16px',
+          backgroundColor: '#f8fafc',
+          borderRadius: '12px',
+          border: '2px solid #e2e8f0',
+          textAlign: 'left'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '12px'
+          }}>
+            <h3 style={{
+              margin: '0',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#334155',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              📋 Information Captured
+            </h3>
+            
+            {formFields.length > 0 && (
+              <div style={{
+                fontSize: '12px',
+                color: '#64748b',
+                fontWeight: '500'
+              }}>
+                {Object.keys(formProgress).length} / {formFields.length} fields
+              </div>
+            )}
+          </div>
+          
+          {/* Progress Bar */}
+          {formFields.length > 0 && (
+            <div style={{
+              width: '100%',
+              height: '6px',
+              backgroundColor: '#e2e8f0',
+              borderRadius: '3px',
+              marginBottom: '12px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${(Object.keys(formProgress).length / formFields.length) * 100}%`,
+                height: '100%',
+                backgroundColor: '#22c55e',
+                borderRadius: '3px',
+                transition: 'width 0.3s ease-in-out'
+              }} />
+            </div>
+          )}
+          
+          <div style={{
+            display: 'grid',
+            gap: '8px'
+          }}>
+            {Object.entries(formProgress).map(([key, value]) => (
+              <div key={key} style={{
+                padding: '8px 12px',
+                backgroundColor: '#ffffff',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                fontSize: '13px'
+              }}>
+                <div style={{
+                  fontWeight: '600',
+                  color: '#475569',
+                  marginBottom: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span style={{ color: '#22c55e' }}>✓</span>
+                  {key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                </div>
+                <div style={{
+                  color: '#64748b',
+                  wordBreak: 'break-word'
+                }}>
+                  {String(value)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       <ErrorDisplay error={error} />

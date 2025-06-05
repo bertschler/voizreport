@@ -337,6 +337,22 @@ class WebRTCServiceClass {
         tools: [
           {
             type: 'function',
+            name: 'form_fields_updated',
+            description: 'Call this function when a field in the form is set or updated. Pass all fields with the current values (or empty if not set yet).',
+            parameters: {
+              type: 'object',
+              properties: {
+                extracted_data: {
+                  type: 'object',
+                  description: 'All the form data that has been collected so far during the conversation',
+                  properties: extractedDataProperties
+                }
+              },
+              required: ['extracted_data']
+            }
+          },
+          {
+            type: 'function',
             name: 'complete_form_submission',
             description: 'Call this function when all required form fields have been collected and the form is ready to be submitted. This will generate a comprehensive report summary and end the session.',
             parameters: {
@@ -415,7 +431,9 @@ class WebRTCServiceClass {
     const functionInstruction = `\n\n
       IMPORTANT FUNCTION CALLING RULES:
       1. When you have collected all the necessary information for the form and the conversation is complete, call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
-      2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function.`;
+      2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function.
+      3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
+    `;
     
     return baseInstructions + functionInstruction;
   }

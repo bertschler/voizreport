@@ -9,6 +9,7 @@ import {
   aiResponseAtom,
   hasPermissionAtom,
   formDataAtom,
+  formProgressAtom,
   activeTemplateAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
@@ -27,6 +28,7 @@ export interface VoiceChatState {
   transcript: string;
   aiResponse: string;
   error: string | null;
+  formProgress: Record<string, any>;
 }
 
 export interface VoiceChatActions {
@@ -53,6 +55,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const [aiResponse, setAiResponse] = useAtom(aiResponseAtom);
   const [hasPermission, setHasPermission] = useAtom(hasPermissionAtom);
   const [formData] = useAtom(formDataAtom);
+  const [formProgress, setFormProgress] = useAtom(formProgressAtom);
   const setActiveTemplate = useSetAtom(activeTemplateAtom);
   const addReport = useSetAtom(addReportAtom);
   
@@ -109,6 +112,15 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     if (name === 'exit_conversation') {
       console.log('🚫 Exit conversation function called');
       endSession();
+    } else if (name === 'form_fields_updated') { 
+      console.log('📋 Form fields updated function called with:', args);
+      const parsedArgs = JSON.parse(args);
+      
+      // Update form progress with the extracted data
+      if (parsedArgs.extracted_data) {
+        setFormProgress(parsedArgs.extracted_data);
+        console.log('📋 Updated form progress:', parsedArgs.extracted_data);
+      }
     } else if (name === 'complete_form_submission') {
       try {
         const parsedArgs = JSON.parse(args);
@@ -262,6 +274,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     setError(null);
     setTranscript('');
     setAiResponse('');
+    setFormProgress({});
 
     try {
       const newSessionId = await WebRTCService.getInstance().startSession(
@@ -286,6 +299,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       setError(error instanceof Error ? error.message : 'Failed to start conversation');
       setIsSessionActive(false);
       setSessionId(null);
+      setFormProgress({});
       setActiveTemplate(null);
     } finally {
       setIsConnecting(false);
@@ -307,6 +321,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       setTranscript('');
       setAiResponse('');
       setError(null);
+      setFormProgress({});
       setActiveTemplate(null);
       
       console.log('✅ Session ended successfully');
@@ -325,6 +340,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     transcript,
     aiResponse,
     error,
+    formProgress,
     
     // Actions
     startSession,

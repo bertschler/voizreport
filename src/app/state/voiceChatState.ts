@@ -25,6 +25,9 @@ export const isStartingSessionAtom = atom<boolean>(false);
 export const formDataAtom = atom<Record<string, any>>({});
 export const completedFieldsAtom = atom<Set<string>>(new Set<string>());
 
+// Form progress tracking - constantly updated during conversation
+export const formProgressAtom = atom<Record<string, any>>({});
+
 // Callbacks and configuration atoms
 export interface VoiceChatCallbacks {
   onSessionReady?: (sessionId: string) => void;
@@ -95,6 +98,7 @@ export const resetVoiceChatStateAtom = atom(
     set(isStartingSessionAtom, false);
     set(formDataAtom, {});
     set(completedFieldsAtom, new Set());
+    set(formProgressAtom, {});
     set(callbacksAtom, {});
     set(templateInstructionsAtom, '');
   }
