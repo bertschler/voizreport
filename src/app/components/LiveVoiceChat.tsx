@@ -69,6 +69,29 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
       maxWidth: '400px',
       margin: '0 auto'
     }}>
+      {/* Error Display */}
+      <ErrorDisplay error={error} />
+
+      {/* Visual Status Indicator */}
+      <div style={{
+        marginBottom: '32px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '16px'
+      }}>
+        <StatusIndicator 
+          isConnecting={isConnecting} 
+          isSessionActive={isSessionActive} 
+        />
+        
+        <StatusText 
+          isConnecting={isConnecting} 
+          isSessionActive={isSessionActive} 
+        />
+        
+      </div>
+      
       {/* Action Button - Centered with integrated recording animation */}
       <div style={{ 
         marginBottom: '32px',
@@ -114,29 +137,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
           formFields={formFields} 
           formProgress={formProgress} 
         />
-      </div>
-
-      {/* Error Display */}
-      <ErrorDisplay error={error} />
-
-      {/* Visual Status Indicator */}
-      <div style={{
-        marginBottom: '32px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '16px'
-      }}>
-        <StatusIndicator 
-          isConnecting={isConnecting} 
-          isSessionActive={isSessionActive} 
-        />
-        
-        <StatusText 
-          isConnecting={isConnecting} 
-          isSessionActive={isSessionActive} 
-        />
-        
       </div>
     </div>
   );

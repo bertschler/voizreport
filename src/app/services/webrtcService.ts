@@ -382,7 +382,7 @@ class WebRTCServiceClass {
           {
             type: 'function',
             name: 'exit_conversation',
-            description: 'Call this function immediately when the user wants to cancel, stop, exit, quit, abort, or end the conversation at any time.',
+            description: 'Call this function immediately when the user wants to cancel, stop, exit, quit, abort, or end the conversation at any time. This is only to be used when the user explicitly wants to end the conversation without saving the form.',
             parameters: {
               type: 'object',
               properties: {},
@@ -433,8 +433,8 @@ class WebRTCServiceClass {
     
     const functionInstruction = `\n\n
       IMPORTANT FUNCTION CALLING RULES:
-      1. When you have collected all the necessary information for the form and the conversation is complete, call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
-      2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function.
+      1. When you have collected all the necessary information for the form and the conversation is complete, say something simimar to "Thanks, I have all the information I need. I will now generate the report summary and end the session.", AFTERWARDS call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
+      2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function. If your already collected partial or full data, ask first if they want to submit the data and if yes call the 'complete_form_submission' function instead.
       3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
     `;
     
