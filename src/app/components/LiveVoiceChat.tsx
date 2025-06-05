@@ -8,6 +8,7 @@ import StatusText from './voice-chat/StatusText';
 import VoiceActionButton from './voice-chat/VoiceActionButton';
 import ErrorDisplay from './voice-chat/ErrorDisplay';
 import FormFieldsDisplay from './FormFieldsDisplay';
+import VoiceModeToggle from './voice-chat/VoiceModeToggle';
 
 interface LiveVoiceChatProps {
   onSessionReady?: (sessionId: string) => void;
@@ -67,8 +68,18 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
       padding: '32px 24px',
       textAlign: 'center',
       maxWidth: '400px',
-      margin: '0 auto'
+      margin: '0 auto',
+      position: 'relative'
     }}>
+      {/* Voice Mode Toggle - Top Right Corner */}
+      <div style={{
+        position: 'absolute',
+        top: '8px',
+        right: '8px'
+      }}>
+        <VoiceModeToggle />
+      </div>
+
       {/* Error Display */}
       <ErrorDisplay error={error} />
 
