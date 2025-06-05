@@ -22,9 +22,9 @@ export type { FormSummary };
 const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, template, onFormCompleted }: LiveVoiceChatProps) {
   const componentInstanceId = React.useRef(Math.random().toString(36).substr(2, 9));
   console.log('🏗️ LiveVoiceChat component created/re-rendered. Instance ID:', componentInstanceId.current);
-  
+
   const templateInstructions = template.title + "\n\n" + template.definition + "\n\nForm fields:\n" + JSON.stringify(template.openai_properties);
-  
+
   const {
     isSessionActive,
     isConnecting,
@@ -71,14 +71,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
       margin: '0 auto',
       position: 'relative'
     }}>
-      {/* Voice Mode Toggle - Top Right Corner */}
-      <div style={{
-        position: 'absolute',
-        top: '8px',
-        right: '8px'
-      }}>
-        <VoiceModeToggle />
-      </div>
 
       {/* Error Display */}
       <ErrorDisplay error={error} />
@@ -91,21 +83,20 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
         alignItems: 'center',
         gap: '16px'
       }}>
-        <StatusIndicator 
-          isConnecting={isConnecting} 
-          isSessionActive={isSessionActive} 
+        <StatusIndicator
+          isConnecting={isConnecting}
+          isSessionActive={isSessionActive}
         />
-        
-        <StatusText 
-          isConnecting={isConnecting} 
-          isSessionActive={isSessionActive} 
+
+        <StatusText
+          isConnecting={isConnecting}
+          isSessionActive={isSessionActive}
         />
-        
+
       </div>
-      
+
       {/* Action Button - Centered with integrated recording animation */}
-      <div style={{ 
-        marginBottom: '32px',
+      <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -118,7 +109,16 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
           onStop={endSession}
         />
       </div>
-      
+      {/* Voice Mode Toggle - Top Right Corner */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '32px',
+      }}>
+        <VoiceModeToggle />
+      </div>
+
       {/* Template Instructions */}
       <div style={{
         marginBottom: '24px',
@@ -143,10 +143,10 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
         }}>
           {template.definition}
         </p>
-        
-        <FormFieldsDisplay 
-          formFields={formFields} 
-          formProgress={formProgress} 
+
+        <FormFieldsDisplay
+          formFields={formFields}
+          formProgress={formProgress}
         />
       </div>
     </div>

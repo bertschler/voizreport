@@ -1,5 +1,5 @@
 import { useAtom, useSetAtom } from 'jotai';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import {
   sessionIdAtom,
   isSessionActiveAtom,
@@ -14,6 +14,7 @@ import {
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
+import { userNameAtom, voiceModeAtom } from '@/app/state/settingsState';
 import { WebRTCService, WebRTCServiceCallbacks } from '@/app/services/webrtcService';
 import { ReportTemplate, SubmittedReport } from '@/app/data/mockData';
 
@@ -58,11 +59,25 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const [formProgress, setFormProgress] = useAtom(formProgressAtom);
   const setActiveTemplate = useSetAtom(activeTemplateAtom);
   const addReport = useSetAtom(addReportAtom);
+  const [userName] = useAtom(userNameAtom);
+  const [voiceMode] = useAtom(voiceModeAtom);
   
   // Refs
   const hookInstanceId = useRef(Math.random().toString(36).substr(2, 9));
+  const previousVoiceMode = useRef(voiceMode);
   
   console.log('🏗️ useVoiceChat hook created. Instance:', hookInstanceId.current);
+
+  // Handle voice mode changes during active session
+  useEffect(() => {
+    if (isSessionActive && previousVoiceMode.current !== voiceMode) {
+      console.log('🎙️ Voice mode changed during session:', previousVoiceMode.current, '->', voiceMode);
+      WebRTCService.getInstance().sendVoiceModeUpdate(voiceMode);
+      previousVoiceMode.current = voiceMode;
+    } else {
+      previousVoiceMode.current = voiceMode;
+    }
+  }, [voiceMode, isSessionActive]);
 
   // Generate form summary
   const generateFormSummary = (formData: Record<string, any>): FormSummary => {
@@ -280,7 +295,9 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       const newSessionId = await WebRTCService.getInstance().startSession(
         webrtcCallbacks,
         template,
-        templateInstructions
+        templateInstructions,
+        userName,
+        voiceMode
       );
       
       setSessionId(newSessionId);

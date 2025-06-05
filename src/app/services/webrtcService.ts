@@ -114,7 +114,9 @@ class WebRTCServiceClass {
   async startSession(
     callbacks: WebRTCServiceCallbacks,
     template?: ReportTemplate,
-    templateInstructions?: string
+    templateInstructions?: string,
+    userName?: string,
+    voiceMode?: string
   ): Promise<string> {
     // Global lock to prevent multiple simultaneous session starts
     if (globalSessionLock) {
@@ -138,7 +140,7 @@ class WebRTCServiceClass {
     this.isConnecting = true;
 
     try {
-      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions);
+      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode);
       await globalSessionPromise;
       return this.sessionId || '';
     } finally {
@@ -151,7 +153,9 @@ class WebRTCServiceClass {
   private async _performSessionStart(
     callbacks: WebRTCServiceCallbacks,
     template?: ReportTemplate,
-    templateInstructions?: string
+    templateInstructions?: string,
+    userName?: string,
+    voiceMode?: string
   ): Promise<void> {
     // Clean up any existing session first
     if (this.sessionId) {
@@ -169,14 +173,16 @@ class WebRTCServiceClass {
     const sessionData = await this.createSession();
     
     // Setup connection
-    await this.setupConnection(sessionData, callbacks, template, templateInstructions);
+    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode);
   }
 
   async setupConnection(
     sessionData: WebRTCSessionData, 
     callbacks: WebRTCServiceCallbacks,
     template?: ReportTemplate,
-    templateInstructions?: string
+    templateInstructions?: string,
+    userName?: string,
+    voiceMode?: string
   ): Promise<void> {
     this.callbacks = callbacks;
     this.sessionId = sessionData.sessionId;
@@ -221,7 +227,7 @@ class WebRTCServiceClass {
 
     dataChannel.onopen = () => {
       console.log('📡 Data channel opened');
-      this.sendSessionConfiguration(template, templateInstructions);
+      this.sendSessionConfiguration(template, templateInstructions, userName, voiceMode);
       callbacks.onDataChannelOpen();
     };
 
@@ -317,13 +323,13 @@ class WebRTCServiceClass {
     console.log('✅ WebRTC connection established successfully!');
   }
 
-  private sendSessionConfiguration(template?: ReportTemplate, templateInstructions?: string): void {
+  private sendSessionConfiguration(template?: ReportTemplate, templateInstructions?: string, userName?: string, voiceMode?: string): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       console.error('💥 Data channel not available for session configuration');
       return;
     }
 
-    const instructions = this.getInstructions(templateInstructions);
+    const instructions = this.getInstructions(templateInstructions, voiceMode);
     const extractedDataProperties = template?.openai_properties || {};
     const requiredFields = template?.required_fields || [];
     
@@ -397,16 +403,15 @@ class WebRTCServiceClass {
     console.log('📤 Sent comprehensive session configuration');
     
     // Send initial greeting
-    this.sendInitialGreeting();
+    this.sendInitialGreeting(userName);
   }
 
-  private sendInitialGreeting(): void {
+  private sendInitialGreeting(userName?: string): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       return;
     }
 
-    const savedUserName = localStorage.getItem('voizreport_username');
-    const greeting = savedUserName ? `Hello! I am ${savedUserName}.` : 'Hello!';
+    const greeting = userName ? `Hello! I am ${userName}.` : 'Hello!';
     
     const initialPrompt = {
       type: 'conversation.item.create',
@@ -426,10 +431,15 @@ class WebRTCServiceClass {
     console.log('📤 Sent initial greeting');
   }
 
-  private getInstructions(templateInstructions?: string): string {
+  private getInstructions(templateInstructions?: string, voiceMode?: string): string {
     const baseInstructions = templateInstructions 
       ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
       : VOICE_AI_INSTRUCTIONS;
+    
+    // Add voice mode specific instructions
+    const voiceModeInstructions = voiceMode === 'freeform' 
+      ? `\n\nCURRENT VOICE MODE: FREEFORM - The user prefers to do most of the talking. Let them speak freely and naturally extract information from their responses. Don't be overly conversational - focus on listening and capturing data efficiently.`
+      : `\n\nCURRENT VOICE MODE: GUIDED - Help the user by guiding them through each field step by step. Ask clear questions to help them fill out the form systematically.`;
     
     const functionInstruction = `\n\n
       IMPORTANT FUNCTION CALLING RULES:
@@ -438,7 +448,35 @@ class WebRTCServiceClass {
       3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
     `;
     
-    return baseInstructions + functionInstruction;
+    return baseInstructions + voiceModeInstructions + functionInstruction;
+  }
+
+  sendVoiceModeUpdate(voiceMode: string): void {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      console.error('💥 Data channel not available for voice mode update');
+      return;
+    }
+
+    const modeText = voiceMode === 'freeform' 
+      ? 'I switched to freeform mode - I prefer to do most of the talking.'
+      : 'I switched to guided mode - please help me fill out the form step by step.';
+
+    const voiceModeUpdate = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [
+          {
+            type: 'input_text',
+            text: modeText
+          }
+        ]
+      }
+    };
+    
+    this.dataChannel.send(JSON.stringify(voiceModeUpdate));
+    console.log('📤 Sent voice mode update:', voiceMode);
   }
 
   sendFunctionResponse(callId: string, response: any): void {
