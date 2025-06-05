@@ -9,6 +9,7 @@ import {
   aiResponseAtom,
   hasPermissionAtom,
   formDataAtom,
+  activeTemplateAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
 import { WebRTCService, WebRTCServiceCallbacks } from '@/app/services/webrtcService';
@@ -51,6 +52,7 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
   const [aiResponse, setAiResponse] = useAtom(aiResponseAtom);
   const [hasPermission, setHasPermission] = useAtom(hasPermissionAtom);
   const [formData, setFormData] = useAtom(formDataAtom);
+  const setActiveTemplate = useSetAtom(activeTemplateAtom);
   
   // Refs
   const hookInstanceId = useRef(Math.random().toString(36).substr(2, 9));
@@ -216,6 +218,10 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
       setSessionId(WebRTCService.getInstance().getCurrentSessionId());
       setIsSessionActive(true);
       setIsConnecting(false);
+      // Set active template for existing session
+      if (template) {
+        setActiveTemplate(template);
+      }
       return;
     }
 
@@ -241,6 +247,11 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
       setIsSessionActive(true);
       setHasPermission(true);
       
+      // Set the active template
+      if (template) {
+        setActiveTemplate(template);
+      }
+      
       console.log('🎉 Session started successfully!');
       
     } catch (error) {
@@ -248,6 +259,7 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
       setError(error instanceof Error ? error.message : 'Failed to start conversation');
       setIsSessionActive(false);
       setSessionId(null);
+      setActiveTemplate(null);
     } finally {
       setIsConnecting(false);
     }
@@ -268,6 +280,7 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
       setTranscript('');
       setAiResponse('');
       setError(null);
+      setActiveTemplate(null);
       
       console.log('✅ Session ended successfully');
       

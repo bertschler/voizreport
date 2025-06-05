@@ -7,6 +7,7 @@ import TabNavigation, { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
+import FloatingSessionIndicator from "./components/FloatingSessionIndicator";
 import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
 const tabs: Tab[] = [
@@ -86,6 +87,11 @@ export default function Home() {
     console.log('🎤 Voice session ready:', sessionId);
   }, []);
 
+  const handleNavigateToSession = useCallback((template: ReportTemplate) => {
+    console.log('🎯 Navigating back to active session:', template.title);
+    setSelectedTemplate(template);
+  }, []);
+
   // If settings is open, show the settings page
   if (showSettings) {
     return (
@@ -102,6 +108,9 @@ export default function Home() {
           sticky={true}
         />
         <Settings onBack={handleSettingsBack} />
+        
+        {/* Floating Session Indicator - shows when there's an active session */}
+        <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
       </div>
     );
   }
@@ -131,6 +140,9 @@ export default function Home() {
             onFormCompleted={handleFormCompletion}
           />
         </div>
+        
+        {/* Floating Session Indicator - shows when there's an active session */}
+        <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
       </div>
     );
   }
@@ -182,6 +194,9 @@ export default function Home() {
           />
         )}
       </div>
+
+      {/* Floating Session Indicator - shows when there's an active session */}
+      <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
     </div>
   );
 }
