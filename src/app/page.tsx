@@ -9,6 +9,7 @@ import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
 import ReportDetailsPage from "./components/ReportDetailsPage";
 import ReportDetailsFooter from "./components/ReportDetailsFooter";
+import DefaultFooter from "./components/DefaultFooter";
 import PageLayout from "./components/PageLayout";
 import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
@@ -187,6 +188,7 @@ export default function Home() {
           />
         </>
       }
+      footer={<DefaultFooter />}
       onNavigateToSession={handleNavigateToSession}
     >
       {activeTab === 'templates' && (
