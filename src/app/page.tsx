@@ -8,6 +8,7 @@ import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
 import ReportDetailsPage from "./components/ReportDetailsPage";
+import ReportDetailsFooter from "./components/ReportDetailsFooter";
 import PageLayout from "./components/PageLayout";
 import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
@@ -110,6 +111,12 @@ export default function Home() {
             showBackButton={true}
             onBackClick={handleReportDetailsBack}
             sticky={true}
+          />
+        }
+        footer={
+          <ReportDetailsFooter 
+            report={selectedReport} 
+            onBack={handleReportDetailsBack} 
           />
         }
         contentPadding="0"
