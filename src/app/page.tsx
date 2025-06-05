@@ -7,7 +7,7 @@ import TabNavigation, { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
-import ReportDetailsPage from "./components/ReportDetailsModal";
+import ReportDetailsPage from "./components/ReportDetailsPage";
 import FloatingSessionIndicator from "./components/FloatingSessionIndicator";
 import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
