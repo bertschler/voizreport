@@ -62,7 +62,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   // Refs
   const hookInstanceId = useRef(Math.random().toString(36).substr(2, 9));
   
-  console.log('🏗️ useVoiceChatWithJotai hook created. Instance:', hookInstanceId.current);
+  console.log('🏗️ useVoiceChat hook created. Instance:', hookInstanceId.current);
 
   // Generate form summary
   const generateFormSummary = (formData: Record<string, any>): FormSummary => {

@@ -117,6 +117,7 @@ export default function Home() {
 
   // If a template is selected, show the voice chat interface
   if (selectedTemplate) {
+    console.log('🏠 selectedTemplate:', selectedTemplate);
     return (
       <div style={{ 
         minHeight: '100vh', 

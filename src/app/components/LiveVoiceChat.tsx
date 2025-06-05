@@ -23,7 +23,7 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
   console.log('🏗️ LiveVoiceChat component created/re-rendered. Instance ID:', componentInstanceId.current);
   console.log('🏗️ Template:', template.title);
   
-  const templateInstructions = template.title + "\n\n" + template.definition + "\n\n" + template.form;
+  const templateInstructions = template.title + "\n\n" + template.definition;
   
   const {
     isSessionActive,
@@ -46,11 +46,15 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
     };
   }, []);
 
-  // Parse form fields from template for instructions
+  // Parse form fields from openai_properties for instructions
   const getFormFields = () => {
     try {
-      const formData = JSON.parse(template.form || '{}');
-      return formData.fields || [];
+      const properties = template.openai_properties || {};
+      return Object.entries(properties).map(([key, property]: [string, any]) => ({
+        key,
+        required: true, // Assuming all fields are required by default
+        'voice:prompt': property.description || `Please provide ${key.replace(/_/g, ' ')}`
+      }));
     } catch {
       return [];
     }
