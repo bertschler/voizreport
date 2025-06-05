@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import FloatingSessionIndicator from './FloatingSessionIndicator';
 import { ReportTemplate } from '../data/mockData';
 
 interface PageLayoutProps {
@@ -44,11 +43,6 @@ export default function PageLayout({
 
       {/* Footer Section */}
       {footer}
-
-      {/* Floating Session Indicator - shows when there's an active session */}
-      {onNavigateToSession && (
-        <FloatingSessionIndicator onNavigateToSession={onNavigateToSession} />
-      )}
     </div>
   );
 } 

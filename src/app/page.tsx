@@ -186,6 +186,7 @@ export default function Home() {
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          onNavigateToSession={handleNavigateToSession}
         />
       }
       onNavigateToSession={handleNavigateToSession}
