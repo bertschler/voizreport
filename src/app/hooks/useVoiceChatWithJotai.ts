@@ -86,7 +86,10 @@ export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatStat
     
     console.log('🎯 Handling function call:', name, args);
     
-    if (name === 'complete_form_submission') {
+    if (name === 'exit_conversation') {
+      console.log('🚫 Exit conversation function called');
+      endSession();
+    } else if (name === 'complete_form_submission') {
       try {
         const parsedArgs = JSON.parse(args);
         console.log('📋 Form completion function called with:', parsedArgs);

@@ -359,6 +359,16 @@ class WebRTCServiceClass {
               },
               required: ['extracted_data', 'completion_reason', 'transcription_compact']
             }
+          },
+          {
+            type: 'function',
+            name: 'exit_conversation',
+            description: 'Call this function immediately when the user wants to cancel, stop, exit, quit, abort, or end the conversation at any time.',
+            parameters: {
+              type: 'object',
+              properties: {},
+              required: []
+            }
           }
         ]
       }
@@ -402,7 +412,10 @@ class WebRTCServiceClass {
       ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
       : VOICE_AI_INSTRUCTIONS;
     
-    const functionInstruction = `\n\nIMPORTANT: When you have collected all the necessary information for the form and the conversation is complete, call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.`;
+    const functionInstruction = `\n\n
+      IMPORTANT FUNCTION CALLING RULES:
+      1. When you have collected all the necessary information for the form and the conversation is complete, call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
+      2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function.`;
     
     return baseInstructions + functionInstruction;
   }
