@@ -7,6 +7,7 @@ import TabNavigation, { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
+import ReportDetailsPage from "./components/ReportDetailsModal";
 import FloatingSessionIndicator from "./components/FloatingSessionIndicator";
 import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
@@ -23,6 +24,7 @@ export default function Home() {
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<'plain' | 'json'>('plain');
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
   
   console.log('🏠 Home state:', { 
     activeTab, 
@@ -56,6 +58,7 @@ export default function Home() {
 
   const handleViewReportDetails = (report: SubmittedReport) => {
     console.log('View report details:', report);
+    setSelectedReport(report);
   };
 
   const handleSettingsClick = () => {
@@ -64,6 +67,10 @@ export default function Home() {
 
   const handleSettingsBack = () => {
     setShowSettings(false);
+  };
+
+  const handleReportDetailsBack = () => {
+    setSelectedReport(null);
   };
 
   const handleFormCompletion = useCallback((summary: FormSummary) => {
@@ -91,6 +98,29 @@ export default function Home() {
     console.log('🎯 Navigating back to active session:', template.title);
     setSelectedTemplate(template);
   }, []);
+
+  // If report details is open, show the report details page
+  if (selectedReport) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#f8fafc',
+        padding: '0'
+      }}>
+        <MobileHeader
+          title="Report Details"
+          subtitle={selectedReport.title}
+          showBackButton={true}
+          onBackClick={handleReportDetailsBack}
+          sticky={true}
+        />
+        <ReportDetailsPage report={selectedReport} onBack={handleReportDetailsBack} />
+        
+        {/* Floating Session Indicator - shows when there's an active session */}
+        <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
+      </div>
+    );
+  }
 
   // If settings is open, show the settings page
   if (showSettings) {

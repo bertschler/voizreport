@@ -3,32 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { SubmittedReport } from '../data/mockData';
 
-interface ReportDetailsModalProps {
+interface ReportDetailsPageProps {
   report: SubmittedReport | null;
-  isOpen: boolean;
-  onClose: () => void;
+  onBack: () => void;
 }
 
-export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDetailsModalProps) {
+export default function ReportDetailsPage({ report, onBack }: ReportDetailsPageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'json'>('overview');
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setIsAnimating(true);
-    }
-  }, [isOpen]);
-
-  const handleClose = () => {
-    setIsAnimating(false);
-    setTimeout(() => {
-      onClose();
-    }, 200); // Wait for animation to complete
-  };
-
-  if (!isOpen || !report) return null;
+  if (!report) return null;
 
   const handleCopy = async (content: string) => {
     try {
@@ -100,33 +85,12 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
   const compactTranscription = report.json?.compact_transcription || report.plainText;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: `rgba(0, 0, 0, ${isAnimating ? '0.5' : '0'})`,
-      backdropFilter: `blur(${isAnimating ? '4px' : '0px'})`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '20px',
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-    }}>
+    <div style={{ padding: '20px' }}>
       <div style={{
         backgroundColor: 'white',
-        borderRadius: '20px',
-        width: '100%',
-        maxWidth: '900px',
-        maxHeight: '90vh',
+        borderRadius: '12px',
         overflow: 'hidden',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: '1px solid #e2e8f0',
-        transform: `scale(${isAnimating ? '1' : '0.95'}) translateY(${isAnimating ? '0' : '20px'})`,
-        opacity: isAnimating ? 1 : 0,
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
       }}>
         {/* Header */}
         <div style={{
@@ -176,34 +140,6 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
                 </span>
               </div>
             </div>
-            <button
-              onClick={handleClose}
-              style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                borderRadius: '12px',
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: 'white',
-                fontSize: '20px',
-                marginLeft: '16px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              ×
-            </button>
           </div>
         </div>
 
@@ -245,9 +181,7 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
 
         {/* Content */}
         <div style={{
-          padding: '32px',
-          overflowY: 'auto',
-          maxHeight: '50vh'
+          padding: '32px'
         }}>
           {activeTab === 'overview' && (
             <div style={{ lineHeight: '1.6' }}>
@@ -553,7 +487,7 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
               Share
             </button>
             <button
-              onClick={handleClose}
+              onClick={onBack}
               style={{
                 backgroundColor: '#e2e8f0',
                 color: '#64748b',
@@ -565,7 +499,7 @@ export default function ReportDetailsModal({ report, isOpen, onClose }: ReportDe
                 cursor: 'pointer'
               }}
             >
-              Close
+              Back
             </button>
           </div>
         </div>

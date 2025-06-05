@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { SubmittedReport } from '../data/mockData';
 import { useReports } from '../hooks/useReports';
-import ReportDetailsModal from './ReportDetailsModal';
 
 interface SubmittedReportsProps {
   onViewDetails?: (report: SubmittedReport) => void;
@@ -13,13 +12,8 @@ export default function SubmittedReports({
   onViewDetails 
 }: SubmittedReportsProps) {
   const { reports, markAsRead } = useReports();
-  const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleViewDetails = (report: SubmittedReport) => {
-    setSelectedReport(report);
-    setIsModalOpen(true);
-    
     // Mark as read if it was new
     if (report.isNew) {
       markAsRead(report.id);
@@ -28,11 +22,6 @@ export default function SubmittedReports({
     if (onViewDetails) {
       onViewDetails(report);
     }
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedReport(null);
   };
   
   const getStatusColor = (status: SubmittedReport['status']) => {
@@ -216,12 +205,6 @@ export default function SubmittedReports({
           </div>
         ))}
       </div>
-
-      <ReportDetailsModal
-        report={selectedReport}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
 
       {/* Add CSS animation for the pulse effect */}
       <style jsx>{`
