@@ -10,6 +10,7 @@ import Settings from "./components/Settings";
 import ReportDetailsPage from "./components/ReportDetailsPage";
 import ReportDetailsFooter from "./components/ReportDetailsFooter";
 import DefaultFooter from "./components/DefaultFooter";
+import QuickTemplateSelector from "./components/QuickTemplateSelector";
 import PageLayout from "./components/PageLayout";
 import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
@@ -27,6 +28,7 @@ export default function Home() {
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
+  const [showQuickTemplateSelector, setShowQuickTemplateSelector] = useState<boolean>(false);
   
   console.log('🏠 Home state:', { 
     activeTab, 
@@ -102,8 +104,18 @@ export default function Home() {
   }, []);
 
   const handleStartNewSession = useCallback(() => {
-    console.log('🎤 Start new session - future functionality');
-    // Future: Could open a template selector or start with a default template
+    console.log('🎤 Opening quick template selector');
+    setShowQuickTemplateSelector(true);
+  }, []);
+
+  const handleQuickTemplateSelect = useCallback((template: ReportTemplate) => {
+    console.log('🎯 Quick template selected:', template.title);
+    setShowQuickTemplateSelector(false);
+    setSelectedTemplate(template);
+  }, []);
+
+  const handleCloseQuickTemplateSelector = useCallback(() => {
+    setShowQuickTemplateSelector(false);
   }, []);
 
   // If report details is open, show the report details page
@@ -222,6 +234,14 @@ export default function Home() {
           onViewDetails={handleViewReportDetails}
         />
       )}
+
+      {/* Quick Template Selector Overlay */}
+      <QuickTemplateSelector
+        templates={reportTemplates}
+        isVisible={showQuickTemplateSelector}
+        onSelectTemplate={handleQuickTemplateSelect}
+        onClose={handleCloseQuickTemplateSelector}
+      />
     </PageLayout>
   );
 }
