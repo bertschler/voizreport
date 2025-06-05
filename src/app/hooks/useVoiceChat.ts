@@ -364,7 +364,10 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     
     console.log('🎯 Handling function call:', name, args);
     
-    if (name === 'complete_form_submission') {
+    if (name === 'exit_conversation') {
+      console.log('🚫 Exit conversation function called');
+      endSession();
+    } else if (name === 'complete_form_submission') {
       try {
         console.log('📋 Form completion function called with args:', args);
         const parsedArgs = JSON.parse(args);
@@ -453,7 +456,11 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
       : VOICE_AI_INSTRUCTIONS;
     
     // Add function calling instruction
-    const functionInstruction = `\n\nIMPORTANT: When you have collected all the necessary information for the form and the conversation is complete, call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.`;
+    const functionInstruction = `\n\n
+    IMPORTANT: When you have collected all the necessary information for the form and the conversation is complete,
+    call the 'complete_form_submission' function with all the extracted data. This will automatically generate the
+    report summary and end the session. Do not ask the user if they want to submit - simply call the function when
+    you determine the form is complete. If the user want to cancel or stop the conversation, call the 'exit_conversation' function.`;
     
     return baseInstructions + functionInstruction;
   };
@@ -520,11 +527,20 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
                     },
                     completion_reason: {
                       type: 'string',
-                      enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion', 'user_stopped_conversation'],
+                      enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion'],
                       description: 'Reason why the form is being completed'
                     }
                   },
                   required: ['extracted_data', 'completion_reason', 'transcription_compact']
+                }
+              },
+              {
+                type: 'function',
+                name: 'exit_conversation',
+                description: 'Call this function when the users wants to abort, cancel or stop the conversation without completing the form. This will end the session and the report will not be generated.',
+                parameters: {
+                  type: 'object',
+                  required: []
                 }
               }
             ]
