@@ -27,7 +27,7 @@ export default function DefaultFooter({
       {/* Floating Smart Mic Button - positioned above footer */}
       <div style={{
         position: 'absolute',
-        top: showTabs ? '-50px' : '-30px', // Closer to footer when no tabs
+        top: '-20px', // Closer to footer when no tabs
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 10
@@ -100,7 +100,7 @@ export default function DefaultFooter({
       {/* Recording Focus Footer - minimal background when recording */}
       {!showTabs && (
         <div style={{
-          height: '40px',
+          height: '80px',
           background: 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',

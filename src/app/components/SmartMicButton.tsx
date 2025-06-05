@@ -115,8 +115,8 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession 
       {/* Smart Mic Button */}
       <button
         style={{
-          width: '80px',
-          height: '80px',
+          width: '120px',
+          height: '120px',
           borderRadius: '50%',
           border: 'none',
           cursor: 'pointer',
@@ -182,8 +182,8 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession 
         
         {/* Mic Icon */}
         <Microphone2
-          width={40}
-          height={40}
+          width={60}
+          height={60}
           color="white"
         />
       </button>
