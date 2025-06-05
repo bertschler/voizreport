@@ -70,6 +70,25 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
       maxWidth: '400px',
       margin: '0 auto'
     }}>
+      {/* Action Button */}
+      <div style={{ marginBottom: '24px' }}>
+        <VoiceActionButton
+          isSessionActive={isSessionActive}
+          isConnecting={isConnecting}
+          onStart={startSession}
+          onStop={endSession}
+        />
+      </div>
+
+      <div style={{ 
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <RecordingAnimation isVisible={isSessionActive} />
+      </div>
+      
       {/* Template Instructions */}
       <div style={{
         marginBottom: '24px',
@@ -101,8 +120,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
         />
       </div>
 
-      {/* Unified Form Progress Display - now integrated above */}
-
       {/* Error Display */}
       <ErrorDisplay error={error} />
 
@@ -124,25 +141,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
           isSessionActive={isSessionActive} 
         />
         
-      </div>
-
-      {/* Action Button */}
-      <div style={{ marginBottom: '24px' }}>
-        <VoiceActionButton
-          isSessionActive={isSessionActive}
-          isConnecting={isConnecting}
-          onStart={startSession}
-          onStop={endSession}
-        />
-      </div>
-
-      <div style={{ 
-        marginBottom: '24px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <RecordingAnimation isVisible={isSessionActive} />
       </div>
     </div>
   );

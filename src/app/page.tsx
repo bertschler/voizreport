@@ -114,10 +114,7 @@ export default function Home() {
           />
         }
         footer={
-          <ReportDetailsFooter 
-            report={selectedReport} 
-            onBack={handleReportDetailsBack} 
-          />
+          <ReportDetailsFooter report={selectedReport} />
         }
         contentPadding="0"
         onNavigateToSession={handleNavigateToSession}

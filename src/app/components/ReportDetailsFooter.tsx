@@ -5,10 +5,9 @@ import { SubmittedReport } from '../data/mockData';
 
 interface ReportDetailsFooterProps {
   report: SubmittedReport;
-  onBack: () => void;
 }
 
-export default function ReportDetailsFooter({ report, onBack }: ReportDetailsFooterProps) {
+export default function ReportDetailsFooter({ report }: ReportDetailsFooterProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleDownload = (content: string, filename: string, type: string) => {
@@ -171,21 +170,6 @@ export default function ReportDetailsFooter({ report, onBack }: ReportDetailsFoo
               <line x1="12" y1="2" x2="12" y2="15"/>
             </svg>
             Share
-          </button>
-          <button
-            onClick={onBack}
-            style={{
-              backgroundColor: '#e2e8f0',
-              color: '#64748b',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '12px 20px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
-          >
-            Back
           </button>
         </div>
       </div>
