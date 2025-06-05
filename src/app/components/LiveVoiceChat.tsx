@@ -9,33 +9,21 @@ import FormFieldsDisplay from './FormFieldsDisplay';
 import VoiceModeToggle from './voice-chat/VoiceModeToggle';
 
 interface LiveVoiceChatProps {
-  onSessionReady?: (sessionId: string) => void;
   template: ReportTemplate;
-  onFormCompleted?: (summary: FormSummary) => void;
 }
 
 // Export the FormSummary type for external use
 export type { FormSummary };
 
-const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, template, onFormCompleted }: LiveVoiceChatProps) {
+const LiveVoiceChat = React.memo(function LiveVoiceChat({ template }: LiveVoiceChatProps) {
   const componentInstanceId = React.useRef(Math.random().toString(36).substr(2, 9));
   console.log('🏗️ LiveVoiceChat component created/re-rendered. Instance ID:', componentInstanceId.current);
 
-  const templateInstructions = template.title + "\n\n" + template.definition + "\n\nForm fields:\n" + JSON.stringify(template.openai_properties);
-
   const {
-    isSessionActive,
-    isConnecting,
     error,
     formProgress,
-    startSession,
     endSession
-  } = useVoiceChat({
-    template,
-    templateInstructions,
-    onSessionReady,
-    onFormCompleted
-  });
+  } = useVoiceChat();
 
   // Cleanup effect only
   useEffect(() => {

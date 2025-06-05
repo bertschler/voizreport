@@ -60,6 +60,9 @@ const startedSessionsAtom = atom<Map<string, boolean>>(new Map());
 // Current active template atom for session indicator
 export const activeTemplateAtom = atom<any | null>(null);
 
+// Selected template atom - triggers automatic session start
+export const selectedTemplateAtom = atom<any | null>(null);
+
 export const addStartedSessionAtom = atom(
   null,
   (get, set, sessionId: string) => {
@@ -101,6 +104,8 @@ export const resetVoiceChatStateAtom = atom(
     set(formProgressAtom, {});
     set(callbacksAtom, {});
     set(templateInstructionsAtom, '');
+    set(activeTemplateAtom, null);
+    set(selectedTemplateAtom, null);
   }
 );
 
