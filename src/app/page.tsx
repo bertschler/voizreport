@@ -19,7 +19,7 @@ import { selectedTemplateAtom } from './state/voiceChatState';
 
 const tabs: Tab[] = [
   { id: 'templates', label: 'Create' },
-  { id: 'reports', label: 'Recent Reports' }
+  { id: 'reports', label: 'Recent' }
 ];
 
 export default function Home() {

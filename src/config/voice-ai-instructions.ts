@@ -262,7 +262,7 @@ export const VOICE_AI_TEMPLATE = `
 
 
 export const VOICE_AI_CONFIG = {
-  model: 'gpt-4o-realtime-preview-2024-12-17',
+  model: 'gpt-4o-realtime-preview-2025-06-03',
   voice: 'coral',
   instructions: VOICE_AI_INSTRUCTIONS + "\n\n" + VOICE_AI_TEMPLATE,
   input_audio_transcription: { model: 'whisper-1' },
