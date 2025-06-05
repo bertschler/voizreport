@@ -40,7 +40,7 @@ export interface VoiceChatOptions {
   onFormCompleted?: (summary: FormSummary) => void;
 }
 
-export function useVoiceChatWithJotai(options?: VoiceChatOptions): VoiceChatState & VoiceChatActions {
+export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & VoiceChatActions {
   const { template, templateInstructions, onSessionReady, onFormCompleted } = options || {};
   
   // Jotai atoms

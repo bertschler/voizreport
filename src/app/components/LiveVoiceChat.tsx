@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useVoiceChatWithJotai, FormSummary } from '../hooks/useVoiceChatWithJotai';
+import { useVoiceChat, FormSummary } from '../hooks/useVoiceChat';
 import { ReportTemplate } from '../data/mockData';
 import StatusIndicator from './voice-chat/StatusIndicator';
 import StatusText from './voice-chat/StatusText';
@@ -31,7 +31,7 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
     error,
     startSession,
     endSession
-  } = useVoiceChatWithJotai({
+  } = useVoiceChat({
     template,
     templateInstructions,
     onSessionReady,
