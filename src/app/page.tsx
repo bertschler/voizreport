@@ -8,7 +8,7 @@ import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
 import ReportDetailsPage from "./components/ReportDetailsPage";
-import FloatingSessionIndicator from "./components/FloatingSessionIndicator";
+import PageLayout from "./components/PageLayout";
 import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
 
 const tabs: Tab[] = [
@@ -22,7 +22,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'templates' | 'reports'>('templates');
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
-  const [selectedFormat, setSelectedFormat] = useState<'plain' | 'json'>('plain');
+
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
   
@@ -102,46 +102,41 @@ export default function Home() {
   // If report details is open, show the report details page
   if (selectedReport) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f8fafc',
-        padding: '0'
-      }}>
-        <MobileHeader
-          title="Report Details"
-          subtitle={selectedReport.title}
-          showBackButton={true}
-          onBackClick={handleReportDetailsBack}
-          sticky={true}
-        />
+      <PageLayout
+        header={
+          <MobileHeader
+            title="Report Details"
+            subtitle={selectedReport.title}
+            showBackButton={true}
+            onBackClick={handleReportDetailsBack}
+            sticky={true}
+          />
+        }
+        contentPadding="0"
+        onNavigateToSession={handleNavigateToSession}
+      >
         <ReportDetailsPage report={selectedReport} onBack={handleReportDetailsBack} />
-        
-        {/* Floating Session Indicator - shows when there's an active session */}
-        <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
-      </div>
+      </PageLayout>
     );
   }
 
   // If settings is open, show the settings page
   if (showSettings) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f8fafc',
-        padding: '0'
-      }}>
-        <MobileHeader
-          title="Settings"
-          subtitle="Manage your preferences"
-          showBackButton={true}
-          onBackClick={handleSettingsBack}
-          sticky={true}
-        />
+      <PageLayout
+        header={
+          <MobileHeader
+            title="Settings"
+            subtitle="Manage your preferences"
+            showBackButton={true}
+            onBackClick={handleSettingsBack}
+            sticky={true}
+          />
+        }
+        onNavigateToSession={handleNavigateToSession}
+      >
         <Settings onBack={handleSettingsBack} />
-        
-        {/* Floating Session Indicator - shows when there's an active session */}
-        <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
-      </div>
+      </PageLayout>
     );
   }
 
@@ -149,85 +144,61 @@ export default function Home() {
   if (selectedTemplate) {
     console.log('🏠 selectedTemplate:', selectedTemplate);
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f8fafc',
-        padding: '0'
-      }}>
-        <MobileHeader
-          title={selectedTemplate.title}
-          subtitle="New Report"
-          showBackButton={true}
-          onBackClick={goBack}
-          sticky={true}
-        />
-
-        {/* Voice chat interface */}
-        <div style={{ padding: '20px' }}>
-          <LiveVoiceChat 
-            key={`voice-chat-${selectedTemplate.id}`}
-            template={selectedTemplate}
-            onSessionReady={handleSessionReady}
-            onFormCompleted={handleFormCompletion}
+      <PageLayout
+        header={
+          <MobileHeader
+            title={selectedTemplate.title}
+            subtitle="New Report"
+            showBackButton={true}
+            onBackClick={goBack}
+            sticky={true}
           />
-        </div>
-        
-        {/* Floating Session Indicator - shows when there's an active session */}
-        <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
-      </div>
+        }
+        onNavigateToSession={handleNavigateToSession}
+      >
+        <LiveVoiceChat 
+          key={`voice-chat-${selectedTemplate.id}`}
+          template={selectedTemplate}
+          onSessionReady={handleSessionReady}
+          onFormCompleted={handleFormCompletion}
+        />
+      </PageLayout>
     );
   }
 
-  console.log(">" + JSON.stringify(completedForms));
-
   // Main interface with tabs
   return (
-    <div style={{ 
-      height: '100vh', 
-      backgroundColor: '#f8fafc',
-      maxWidth: '430px',
-      margin: '0 auto',
-      boxShadow: '0 0 20px rgba(0,0,0,0.1)',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      <MobileHeader
-        title="VoizReport"
-        subtitle="Voice-powered reporting"
-        onSettingsClick={handleSettingsClick}
-      />
-
-      <TabNavigation
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
-
-      {/* Content */}
-      <div style={{ 
-        padding: '20px',
-        flex: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden'
-      }}>
-        {activeTab === 'templates' && (
-          <TemplatesList
-            templates={reportTemplates}
-            onStartReport={startReport}
-            onCreateTemplate={handleCreateTemplate}
-            onEditTemplate={handleEditTemplate}
+    <PageLayout
+      header={
+        <>
+          <MobileHeader
+            title="VoizReport"
+            subtitle="Voice-powered reporting"
+            onSettingsClick={handleSettingsClick}
           />
-        )}
-
-        {activeTab === 'reports' && (
-          <SubmittedReports
-            onViewDetails={handleViewReportDetails}
+          <TabNavigation
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
           />
-        )}
-      </div>
+        </>
+      }
+      onNavigateToSession={handleNavigateToSession}
+    >
+      {activeTab === 'templates' && (
+        <TemplatesList
+          templates={reportTemplates}
+          onStartReport={startReport}
+          onCreateTemplate={handleCreateTemplate}
+          onEditTemplate={handleEditTemplate}
+        />
+      )}
 
-      {/* Floating Session Indicator - shows when there's an active session */}
-      <FloatingSessionIndicator onNavigateToSession={handleNavigateToSession} />
-    </div>
+      {activeTab === 'reports' && (
+        <SubmittedReports
+          onViewDetails={handleViewReportDetails}
+        />
+      )}
+    </PageLayout>
   );
 }

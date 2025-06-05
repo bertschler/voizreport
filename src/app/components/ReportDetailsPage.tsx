@@ -123,14 +123,7 @@ export default function ReportDetailsPage({ report, onBack }: ReportDetailsPageP
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
-              <h2 style={{ 
-                fontSize: '24px', 
-                fontWeight: '700', 
-                margin: '0 0 8px 0',
-                lineHeight: '1.2'
-              }}>
-                {report.title}
-              </h2>
+              
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <span style={{ 
                   fontSize: '14px', 
