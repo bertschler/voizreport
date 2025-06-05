@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import LiveVoiceChat, { FormSummary } from './components/LiveVoiceChat';
 import MobileHeader from "./components/MobileHeader";
-import TabNavigation, { Tab } from "./components/TabNavigation";
+import { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
 import SubmittedReports from "./components/SubmittedReports";
 import Settings from "./components/Settings";
@@ -175,20 +175,19 @@ export default function Home() {
   return (
     <PageLayout
       header={
-        <>
-          <MobileHeader
-            title="VoizReport"
-            subtitle="Voice-powered reporting"
-            onSettingsClick={handleSettingsClick}
-          />
-          <TabNavigation
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </>
+        <MobileHeader
+          title="VoizReport"
+          subtitle="Voice-powered reporting"
+          onSettingsClick={handleSettingsClick}
+        />
       }
-      footer={<DefaultFooter />}
+      footer={
+        <DefaultFooter 
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+      }
       onNavigateToSession={handleNavigateToSession}
     >
       {activeTab === 'templates' && (
