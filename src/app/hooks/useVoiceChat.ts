@@ -1,5 +1,5 @@
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useRef, useEffect } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
+import { useRef } from 'react';
 import {
   sessionIdAtom,
   isSessionActiveAtom,
@@ -12,8 +12,9 @@ import {
   activeTemplateAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
+import { addReportAtom } from '@/app/state/reportsState';
 import { WebRTCService, WebRTCServiceCallbacks } from '@/app/services/webrtcService';
-import { ReportTemplate } from '@/app/data/mockData';
+import { ReportTemplate, SubmittedReport } from '@/app/data/mockData';
 
 // Re-export FormSummary for external use
 export type { FormSummary };
@@ -51,8 +52,9 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const [transcript, setTranscript] = useAtom(transcriptAtom);
   const [aiResponse, setAiResponse] = useAtom(aiResponseAtom);
   const [hasPermission, setHasPermission] = useAtom(hasPermissionAtom);
-  const [formData, setFormData] = useAtom(formDataAtom);
+  const [formData] = useAtom(formDataAtom);
   const setActiveTemplate = useSetAtom(activeTemplateAtom);
+  const addReport = useSetAtom(addReportAtom);
   
   // Refs
   const hookInstanceId = useRef(Math.random().toString(36).substr(2, 9));
@@ -78,6 +80,24 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
     };
 
     return { plainText, json, timestamp };
+  };
+
+  // Create SubmittedReport from form summary
+  const createSubmittedReport = (summary: FormSummary): SubmittedReport => {
+    const now = new Date();
+    const reportId = Date.now(); // Simple ID generation
+    
+    return {
+      id: reportId,
+      title: template?.title || 'Voice Report',
+      templateType: template?.title || 'Custom Report',
+      date: now.toLocaleDateString(),
+      status: 'Completed',
+      summary: summary.plainText.substring(0, 150) + (summary.plainText.length > 150 ? '...' : ''),
+      plainText: summary.plainText,
+      json: summary.json,
+      isNew: true
+    };
   };
 
   // Handle function calls from OpenAI
@@ -108,6 +128,10 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
         }
         
         console.log('📋 Generated form summary:', summary);
+        
+        // Create and save the report using Jotai
+        const submittedReport = createSubmittedReport(summary);
+        addReport(submittedReport);
         
         // Send success response
         WebRTCService.getInstance().sendFunctionResponse(call_id, {

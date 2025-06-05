@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SubmittedReport } from '../data/mockData';
-import { getStoredReports, markReportAsRead, StoredReport } from '../utils/storage';
+import { useReports } from '../hooks/useReports';
 import ReportDetailsModal from './ReportDetailsModal';
 
 interface SubmittedReportsProps {
@@ -12,38 +12,9 @@ interface SubmittedReportsProps {
 export default function SubmittedReports({ 
   onViewDetails 
 }: SubmittedReportsProps) {
-  const [reports, setReports] = useState<StoredReport[]>([]);
+  const { reports, markAsRead } = useReports();
   const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load reports from localStorage on component mount and when coming back to tab
-  useEffect(() => {
-    const loadReports = () => {
-      setIsLoading(true);
-      const storedReports = getStoredReports();
-      setReports(storedReports);
-      setIsLoading(false);
-      console.log('📁 Loaded reports from localStorage:', storedReports);
-    };
-
-    loadReports();
-
-    // Listen for storage events (when localStorage is updated from other tabs/components)
-    const handleStorageChange = () => {
-      loadReports();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Custom event for when reports are updated within the same tab
-    window.addEventListener('reportsUpdated', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('reportsUpdated', handleStorageChange);
-    };
-  }, []);
 
   const handleViewDetails = (report: SubmittedReport) => {
     setSelectedReport(report);
@@ -51,17 +22,7 @@ export default function SubmittedReports({
     
     // Mark as read if it was new
     if (report.isNew) {
-      markReportAsRead(report.id);
-      
-      // Update local state
-      setReports(prevReports => 
-        prevReports.map(r => 
-          r.id === report.id ? { ...r, isNew: false } : r
-        )
-      );
-      
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('reportsUpdated'));
+      markAsRead(report.id);
     }
     
     if (onViewDetails) {
@@ -98,20 +59,6 @@ export default function SubmittedReports({
         };
     }
   };
-
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '40px',
-        color: '#64748b'
-      }}>
-        Loading reports...
-      </div>
-    );
-  }
 
   if (reports.length === 0) {
     return (
