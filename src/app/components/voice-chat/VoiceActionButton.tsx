@@ -2,6 +2,7 @@
 
 import React from 'react';
 import AiButton from '../AiButton';
+import RecordingAnimation from './RecordingAnimation';
 
 interface VoiceActionButtonProps {
   isSessionActive: boolean;
@@ -20,7 +21,9 @@ export default function VoiceActionButton({
     padding: '16px 32px',
     fontSize: '18px',
     borderRadius: '24px',
-    minWidth: '200px'
+    minWidth: '200px',
+    position: 'relative' as const,
+    overflow: 'visible' as const
   };
 
   if (!isSessionActive) {
@@ -63,7 +66,10 @@ export default function VoiceActionButton({
           fontWeight: '600',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
-          boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+          boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-2px)';
@@ -74,15 +80,63 @@ export default function VoiceActionButton({
           e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
         }}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Recording Animation - positioned to the left inside button */}
+        <div style={{
+          position: 'absolute',
+          left: '20px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '24px',
+          height: '24px',
+          opacity: isSessionActive ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}>
+          <RecordingAnimation isVisible={isSessionActive} />
+        </div>
+
+        {/* Button text with left padding to make room for animation */}
+        <span style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px',
+          paddingLeft: '32px' // Make room for the recording animation
+        }}>
           Stop reporting
         </span>
+
+        {/* Subtle pulse effect background */}
+        <div style={{
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          borderRadius: '24px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+          opacity: isSessionActive ? 1 : 0,
+          animation: isSessionActive ? 'pulseGlow 2s ease-in-out infinite' : 'none',
+          pointerEvents: 'none'
+        }} />
       </button>
 
       <style jsx>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulseGlow {
+          0%, 100% { 
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% { 
+            opacity: 0.6;
+            transform: scale(1.02);
+          }
         }
       `}</style>
     </>

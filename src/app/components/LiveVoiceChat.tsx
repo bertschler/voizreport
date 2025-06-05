@@ -5,7 +5,6 @@ import { useVoiceChat, FormSummary } from '../hooks/useVoiceChat';
 import { ReportTemplate } from '../data/mockData';
 import StatusIndicator from './voice-chat/StatusIndicator';
 import StatusText from './voice-chat/StatusText';
-import RecordingAnimation from './voice-chat/RecordingAnimation';
 import VoiceActionButton from './voice-chat/VoiceActionButton';
 import ErrorDisplay from './voice-chat/ErrorDisplay';
 import FormFieldsDisplay from './FormFieldsDisplay';
@@ -70,23 +69,20 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
       maxWidth: '400px',
       margin: '0 auto'
     }}>
-      {/* Action Button */}
-      <div style={{ marginBottom: '24px' }}>
+      {/* Action Button - Centered with integrated recording animation */}
+      <div style={{ 
+        marginBottom: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '80px'
+      }}>
         <VoiceActionButton
           isSessionActive={isSessionActive}
           isConnecting={isConnecting}
           onStart={startSession}
           onStop={endSession}
         />
-      </div>
-
-      <div style={{ 
-        marginBottom: '24px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <RecordingAnimation isVisible={isSessionActive} />
       </div>
       
       {/* Template Instructions */}
