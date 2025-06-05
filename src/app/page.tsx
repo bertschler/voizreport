@@ -101,6 +101,11 @@ export default function Home() {
     setSelectedTemplate(template);
   }, []);
 
+  const handleStartNewSession = useCallback(() => {
+    console.log('🎤 Start new session - future functionality');
+    // Future: Could open a template selector or start with a default template
+  }, []);
+
   // If report details is open, show the report details page
   if (selectedReport) {
     return (
@@ -159,6 +164,15 @@ export default function Home() {
             sticky={true}
           />
         }
+        footer={
+          <DefaultFooter 
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            onNavigateToSession={handleNavigateToSession}
+            onStartNewSession={handleStartNewSession}
+          />
+        }
         onNavigateToSession={handleNavigateToSession}
       >
         <LiveVoiceChat 
@@ -187,6 +201,7 @@ export default function Home() {
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onNavigateToSession={handleNavigateToSession}
+          onStartNewSession={handleStartNewSession}
         />
       }
       onNavigateToSession={handleNavigateToSession}
