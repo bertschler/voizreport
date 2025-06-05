@@ -83,13 +83,7 @@ export function useVoiceChat(options?: VoiceChatOptions): VoiceChatState & Voice
   const generateFormSummary = (formData: Record<string, any>): FormSummary => {
     const timestamp = Date.now();
 
-    const plainText = Object.entries(formData)
-      .filter(([_, value]) => value && String(value).trim() !== '')
-      .map(([key, value]) => {
-        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        return `${label}: ${value}`;
-      })
-      .join('\n');
+    const plainText = "";
 
     const json = {
       timestamp: timestamp,

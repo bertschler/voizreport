@@ -77,7 +77,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
 
       {/* Visual Status Indicator */}
       <div style={{
-        marginBottom: '32px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
