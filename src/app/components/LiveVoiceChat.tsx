@@ -50,10 +50,11 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ onSessionReady, templa
   const getFormFields = () => {
     try {
       const properties = template.openai_properties || {};
+      const requiredFields = template.required_fields || [];
       return Object.entries(properties).map(([key, property]: [string, any]) => ({
         key,
-        required: true, // Assuming all fields are required by default
-        'voice:prompt': property.description || `Please provide ${key.replace(/_/g, ' ')}`
+        required: requiredFields.includes(key),
+        'voice:prompt': property.description || key
       }));
     } catch {
       return [];

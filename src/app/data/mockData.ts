@@ -5,6 +5,7 @@ export interface ReportTemplate {
   definition: string;
   icon: string;
   openai_properties: Record<string, any>;
+  required_fields?: string[];
 }
 
 export interface SubmittedReport {
@@ -28,7 +29,10 @@ export const reportTemplates: ReportTemplate[] = [
     icon: "🎧",
     openai_properties: {
       customer_name: { type: 'string', description: 'Customer full name' },
+      customer_age: { type: 'number', description: 'Customer age in years' },
+      customer_gender: { type: 'string', enum: ['Male', 'Female', 'Other'], description: 'Customer gender' },
     },
+    required_fields: ['customer_name'],
   },
   {
     id: 1,

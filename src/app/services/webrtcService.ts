@@ -325,6 +325,7 @@ class WebRTCServiceClass {
 
     const instructions = this.getInstructions(templateInstructions);
     const extractedDataProperties = template?.openai_properties || {};
+    const requiredFields = template?.required_fields || [];
     
     const sessionUpdate = {
       type: 'session.update',
@@ -345,7 +346,8 @@ class WebRTCServiceClass {
                 extracted_data: {
                   type: 'object',
                   description: 'All the form data that has been collected so far during the conversation',
-                  properties: extractedDataProperties
+                  properties: extractedDataProperties,
+                  required: requiredFields
                 }
               },
               required: ['extracted_data']
@@ -361,7 +363,8 @@ class WebRTCServiceClass {
                 extracted_data: {
                   type: 'object',
                   description: 'All the form data that has been collected during the conversation',
-                  properties: extractedDataProperties
+                  properties: extractedDataProperties,
+                  required: requiredFields
                 },
                 transcription_compact: {
                   type: 'string',
