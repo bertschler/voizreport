@@ -138,91 +138,135 @@ export const reportTemplates: ReportTemplate[] = [
       next_visit_time: { type: 'string', description: 'Next scheduled visit time' },
       additional_notes: { type: 'string', description: 'Any additional notes' }
     },
+  },
+  {
+    id: 6,
+    title: "Real Estate Property Inspection Report",
+    description: "Comprehensive property condition assessment for buyers, sellers, or insurance",
+    definition: "Document property details, structural conditions, electrical and plumbing systems, HVAC status, exterior conditions, safety concerns, estimated repair costs, and overall property rating. Include photos and detailed observations for each major system.",
+    icon: "🏠",
+    openai_properties: {
+      property_address: { type: 'string', description: 'Full property address' },
+      property_type: { type: 'string', enum: ['Single Family', 'Condo', 'Townhouse', 'Multi-Family', 'Commercial'], description: 'Type of property' },
+      square_footage: { type: 'number', description: 'Total square footage' },
+      year_built: { type: 'number', description: 'Year the property was built' },
+      structural_condition: { type: 'string', enum: ['Excellent', 'Good', 'Fair', 'Poor', 'Critical'], description: 'Overall structural condition' },
+      electrical_system: { type: 'string', enum: ['Up to Code', 'Needs Minor Updates', 'Needs Major Updates', 'Safety Hazard'], description: 'Electrical system condition' },
+      plumbing_system: { type: 'string', enum: ['Excellent', 'Good', 'Needs Repair', 'Needs Replacement'], description: 'Plumbing system condition' },
+      hvac_condition: { type: 'string', enum: ['Excellent', 'Good', 'Needs Service', 'Needs Replacement'], description: 'HVAC system condition' },
+      roof_condition: { type: 'string', enum: ['New', 'Good', 'Needs Minor Repair', 'Needs Major Repair', 'Needs Replacement'], description: 'Roof condition' },
+      safety_concerns: { 
+        type: 'array', 
+        description: 'List of safety issues found',
+        items: { type: 'string' }
+      },
+      estimated_repair_cost: { type: 'number', description: 'Estimated cost for necessary repairs' },
+      overall_rating: { type: 'string', enum: ['Excellent', 'Good', 'Fair', 'Poor'], description: 'Overall property rating' }
+    },
+  },
+  {
+    id: 7,
+    title: "Restaurant Food Safety Audit Report",
+    description: "Document food safety compliance and health code violations",
+    definition: "Assess food storage temperatures, staff hygiene practices, kitchen cleanliness, equipment sanitization, food handling procedures, pest control, and regulatory compliance. Include violation severity levels and corrective action timelines.",
+    icon: "🍽️",
+    openai_properties: {
+      restaurant_name: { type: 'string', description: 'Name of the restaurant' },
+      audit_date: { type: 'string', description: 'Date of the audit' },
+      food_storage_temp: { type: 'string', enum: ['Compliant', 'Minor Issues', 'Major Violations'], description: 'Food storage temperature compliance' },
+      staff_hygiene: { type: 'string', enum: ['Excellent', 'Good', 'Needs Improvement', 'Poor'], description: 'Staff hygiene practices' },
+      kitchen_cleanliness: { type: 'string', enum: ['Excellent', 'Good', 'Acceptable', 'Unacceptable'], description: 'Kitchen cleanliness level' },
+      equipment_sanitization: { type: 'string', enum: ['Proper', 'Mostly Proper', 'Inadequate', 'Non-Compliant'], description: 'Equipment sanitization status' },
+      violations_found: { 
+        type: 'array', 
+        description: 'List of health code violations',
+        items: {
+          type: 'object',
+          properties: {
+            violation_type: { type: 'string', description: 'Type of violation' },
+            severity: { type: 'string', enum: ['Low', 'Medium', 'High', 'Critical'], description: 'Violation severity' },
+            location: { type: 'string', description: 'Location where violation was found' }
+          }
+        }
+      },
+      pest_control_status: { type: 'string', enum: ['No Issues', 'Minor Signs', 'Active Infestation'], description: 'Pest control status' },
+      overall_compliance_score: { type: 'number', description: 'Overall compliance score out of 100' },
+      corrective_actions_required: { type: 'string', description: 'Required corrective actions' },
+      reinspection_date: { type: 'string', description: 'Date for required reinspection' }
+    },
+  },
+  {
+    id: 8,
+    title: "Project Status Report",
+    description: "Track project progress, milestones, and resource allocation",
+    definition: "Document project timeline, budget status, milestone completion, resource utilization, risk assessment, stakeholder communication, and next phase planning. Include percentage completion and variance analysis.",
+    icon: "📋",
+    openai_properties: {
+      project_name: { type: 'string', description: 'Name of the project' },
+      project_manager: { type: 'string', description: 'Project manager name' },
+      start_date: { type: 'string', description: 'Project start date' },
+      target_completion_date: { type: 'string', description: 'Target completion date' },
+      current_phase: { type: 'string', description: 'Current project phase' },
+      completion_percentage: { type: 'number', description: 'Overall completion percentage (0-100)' },
+      budget_allocated: { type: 'number', description: 'Total budget allocated' },
+      budget_spent: { type: 'number', description: 'Amount of budget spent to date' },
+      milestones_completed: { 
+        type: 'array', 
+        description: 'List of completed milestones',
+        items: {
+          type: 'object',
+          properties: {
+            milestone_name: { type: 'string', description: 'Milestone name' },
+            completion_date: { type: 'string', description: 'Date milestone was completed' }
+          }
+        }
+      },
+      upcoming_milestones: { 
+        type: 'array', 
+        description: 'List of upcoming milestones',
+        items: {
+          type: 'object',
+          properties: {
+            milestone_name: { type: 'string', description: 'Milestone name' },
+            target_date: { type: 'string', description: 'Target completion date' }
+          }
+        }
+      },
+      risks_identified: { type: 'string', description: 'Identified project risks and mitigation strategies' },
+      resource_utilization: { type: 'string', enum: ['Under-utilized', 'Optimal', 'Over-utilized', 'Critical'], description: 'Current resource utilization status' },
+      next_steps: { type: 'string', description: 'Planned next steps and actions' }
+    },
+  },
+  {
+    id: 9,
+    title: "Employee Performance Review Report",
+    description: "Evaluate employee performance, goals, and development needs",
+    definition: "Assess job performance against objectives, core competencies, achievements, areas for improvement, goal setting for next period, training needs, and career development discussions. Include quantitative ratings and qualitative feedback.",
+    icon: "👤",
+    openai_properties: {
+      employee_name: { type: 'string', description: 'Employee full name' },
+      employee_id: { type: 'string', description: 'Employee identification number' },
+      position_title: { type: 'string', description: 'Employee job title' },
+      department: { type: 'string', description: 'Department name' },
+      review_period_start: { type: 'string', description: 'Start date of review period' },
+      review_period_end: { type: 'string', description: 'End date of review period' },
+      overall_performance_rating: { type: 'string', enum: ['Exceeds Expectations', 'Meets Expectations', 'Below Expectations', 'Unsatisfactory'], description: 'Overall performance rating' },
+      goals_achievement: { type: 'string', enum: ['All Goals Met', 'Most Goals Met', 'Some Goals Met', 'Few Goals Met'], description: 'Achievement of set goals' },
+      key_accomplishments: { type: 'string', description: 'Major accomplishments during review period' },
+      areas_for_improvement: { type: 'string', description: 'Areas identified for improvement' },
+      core_competencies_rating: {
+        type: 'object',
+        description: 'Ratings for core competencies',
+        properties: {
+          communication: { type: 'number', description: 'Communication skills rating (1-5)' },
+          teamwork: { type: 'number', description: 'Teamwork rating (1-5)' },
+          problem_solving: { type: 'number', description: 'Problem-solving rating (1-5)' },
+          leadership: { type: 'number', description: 'Leadership skills rating (1-5)' }
+        }
+      },
+      training_needs: { type: 'string', description: 'Identified training and development needs' },
+      career_development_goals: { type: 'string', description: 'Career development goals and aspirations' },
+      next_review_date: { type: 'string', description: 'Date of next scheduled review' }
+    },
   }
 ];
-
-export const submittedReports: SubmittedReport[] = [
-  {
-    id: 1,
-    title: "Customer Service Incident - Login Issues",
-    templateType: "Customer Service Incident Report",
-    date: "2024-01-15",
-    status: "Completed",
-    summary: "Multiple customers reported login difficulties...",
-    plainText: `Customer Name: John Smith
-Contact Information: john.smith@email.com, (555) 123-4567
-Issue Description: Unable to log into account for 3 days, receiving 'invalid credentials' error
-Actions Taken: Reset password, cleared cache, verified account status
-Resolution Status: Resolved
-Follow Up Required: false`,
-    json: {
-      timestamp: 1642276200000,
-      completed_at: "2024-01-15T19:30:00.000Z",
-      data: {
-        customer_name: "John Smith",
-        contact_information: "john.smith@email.com, (555) 123-4567",
-        issue_description: "Unable to log into account for 3 days, receiving 'invalid credentials' error",
-        actions_taken: "Reset password, cleared cache, verified account status",
-        resolution_status: "Resolved",
-        follow_up_required: false
-      },
-    }
-  },
-  {
-    id: 2,
-    title: "Safety Check - Main Floor",
-    templateType: "Safety Inspection Report",
-    date: "2024-01-14",
-    status: "Under Review",
-    summary: "Routine safety inspection identified minor issues...",
-    plainText: `Inspection Location: Main Floor - Assembly Area
-Hazard Type: Trip Hazard
-Severity Level: Medium
-Immediate Actions: Placed warning cones, cordoned off area
-Recommended Solutions: Replace damaged flooring tiles, improve lighting
-Compliance Requirements: OSHA workplace safety standards
-Correction Timeline: Within 2 weeks`,
-    json: {
-      timestamp: 1642161300000,
-      completed_at: "2024-01-14T15:15:00.000Z",
-      data: {
-        inspection_location: "Main Floor - Assembly Area",
-        hazard_type: "Trip Hazard",
-        severity_level: "Medium",
-        immediate_actions: "Placed warning cones, cordoned off area",
-        recommended_solutions: "Replace damaged flooring tiles, improve lighting",
-        compliance_requirements: "OSHA workplace safety standards",
-        correction_timeline: "Within 2 weeks"
-      },
-    }
-  },
-  {
-    id: 3,
-    title: "Server Maintenance - Database Update",
-    templateType: "Equipment Maintenance Report",
-    date: "2024-01-13",
-    status: "Completed",
-    summary: "Successfully updated database servers...",
-    plainText: `Equipment Id: EQ-3001
-Condition Assessment: Good condition, minor performance degradation noted
-Maintenance Performed: Updated database software, optimized queries, cleaned server room
-Parts Replaced: Cooling fan (Part #CF-2024), RAM module (Part #RAM-16GB-DDR4)
-Operational Status: Operational
-Next Maintenance Date: 2024-07-13`,
-    json: {
-      timestamp: 1642089900000,
-      completed_at: "2024-01-13T21:45:00.000Z",
-      data: {
-        equipment_id: "EQ-3001",
-        condition_assessment: "Good condition, minor performance degradation noted",
-        maintenance_performed: "Updated database software, optimized queries, cleaned server room",
-        parts_replaced: [
-          { part_name: "Cooling fan", part_number: "CF-2024" },
-          { part_name: "RAM module", part_number: "RAM-16GB-DDR4" }
-        ],
-        operational_status: "Operational",
-        next_maintenance_date: "2024-07-13"
-      },
-    }
-  }
-]; 

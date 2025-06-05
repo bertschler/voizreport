@@ -90,6 +90,7 @@ export default function QuickTemplateSelector({
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: '430px',
+        maxHeight: '85vh',
         background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
@@ -101,7 +102,7 @@ export default function QuickTemplateSelector({
         boxShadow: '0 -15px 40px rgba(0, 0, 0, 0.15)',
         zIndex: 1001,
         animation: 'slideUpGlass 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-        overflow: 'hidden',
+        overflow: 'auto',
         willChange: 'transform'
       }}>
         {/* Lightweight gradient overlay */}
@@ -274,6 +275,40 @@ export default function QuickTemplateSelector({
         .template-button:hover {
           transform: translateY(-2px) scale(1.02);
           box-shadow: 0 12px 24px rgba(139, 92, 246, 0.1);
+        }
+
+        /* Auto-hide scrollbar - only show when scrolling/hovering */
+        div::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        div::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        div::-webkit-scrollbar-thumb {
+          background: rgba(139, 92, 246, 0);
+          border-radius: 3px;
+          transition: background 0.3s ease;
+        }
+        
+        div:hover::-webkit-scrollbar-thumb {
+          background: rgba(139, 92, 246, 0.3);
+        }
+        
+        div::-webkit-scrollbar-thumb:hover {
+          background: rgba(139, 92, 246, 0.5);
+        }
+
+        /* For Firefox */
+        div {
+          scrollbar-width: thin;
+          scrollbar-color: transparent transparent;
+          transition: scrollbar-color 0.3s ease;
+        }
+        
+        div:hover {
+          scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
         }
 
         @keyframes fadeInBackdrop {
