@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ReportTemplate } from '../data/mockData';
 
 interface QuickTemplateSelectorProps {
@@ -16,6 +16,8 @@ export default function QuickTemplateSelector({
   onSelectTemplate, 
   onClose 
 }: QuickTemplateSelectorProps) {
+  const [hoveredTemplate, setHoveredTemplate] = useState<number | null>(null);
+
   // Close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -26,7 +28,6 @@ export default function QuickTemplateSelector({
 
     if (isVisible) {
       document.addEventListener('keydown', handleEscape);
-      // Prevent body scroll when overlay is open
       document.body.style.overflow = 'hidden';
     }
 
@@ -40,7 +41,7 @@ export default function QuickTemplateSelector({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Optimized Backdrop */}
       <div
         onClick={onClose}
         style={{
@@ -49,15 +50,39 @@ export default function QuickTemplateSelector({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 0, 0, 0.7) 100%)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           zIndex: 1000,
-          animation: 'fadeIn 0.2s ease-out'
+          animation: 'fadeInBackdrop 0.3s ease-out'
         }}
-      />
+      >
+        {/* Simplified Floating Particles */}
+        <div style={{
+          position: 'absolute',
+          top: '25%',
+          left: '20%',
+          width: '6px',
+          height: '6px',
+          background: 'rgba(139, 92, 246, 0.6)',
+          borderRadius: '50%',
+          animation: 'floatSimple 8s ease-in-out infinite',
+          willChange: 'transform'
+        }} />
+        <div style={{
+          position: 'absolute',
+          top: '70%',
+          right: '25%',
+          width: '4px',
+          height: '4px',
+          background: 'rgba(6, 182, 212, 0.5)',
+          borderRadius: '50%',
+          animation: 'floatSimple 6s ease-in-out infinite 2s',
+          willChange: 'transform'
+        }} />
+      </div>
 
-      {/* Quick Template Selector */}
+      {/* Optimized AI Interface */}
       <div style={{
         position: 'fixed',
         bottom: '0',
@@ -65,112 +90,146 @@ export default function QuickTemplateSelector({
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: '430px',
-        backgroundColor: 'white',
-        borderTopLeftRadius: '24px',
-        borderTopRightRadius: '24px',
-        padding: '24px 20px 40px 20px',
-        boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.15)',
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTopLeftRadius: '32px',
+        borderTopRightRadius: '32px',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        borderBottom: 'none',
+        padding: '32px 24px 48px 24px',
+        boxShadow: '0 -15px 40px rgba(0, 0, 0, 0.15)',
         zIndex: 1001,
-        animation: 'slideUp 0.3s ease-out'
+        animation: 'slideUpGlass 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        overflow: 'hidden',
+        willChange: 'transform'
       }}>
-        {/* Handle Bar */}
+        {/* Lightweight gradient overlay */}
         <div style={{
-          width: '40px',
-          height: '4px',
-          backgroundColor: '#e2e8f0',
-          borderRadius: '2px',
-          margin: '0 auto 20px auto'
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '80px',
+          background: 'linear-gradient(180deg, rgba(139, 92, 246, 0.03) 0%, transparent 100%)',
+          pointerEvents: 'none'
         }} />
 
-        {/* Header */}
+        {/* Handle Bar */}
+        <div style={{
+          width: '50px',
+          height: '4px',
+          background: 'linear-gradient(90deg, #8B5CF6, #06B6D4)',
+          borderRadius: '2px',
+          margin: '0 auto 32px auto',
+          opacity: 0.7
+        }} />
+
+        {/* AI Header */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '24px'
+          marginBottom: '32px'
         }}>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#1e293b',
-            margin: '0 0 4px 0'
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '8px'
           }}>
-            🎤 Quick Start
-          </h2>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              background: '#10B981',
+              borderRadius: '50%',
+              animation: 'pulseSimple 3s ease-in-out infinite',
+              willChange: 'opacity'
+            }} />
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: '800',
+              color: '#1e293b',
+              margin: '0',
+              letterSpacing: '-0.025em'
+            }}>
+              AI Voice Studio
+            </h2>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              background: '#F59E0B',
+              borderRadius: '50%',
+              animation: 'pulseSimple 3s ease-in-out infinite 1.5s',
+              willChange: 'opacity'
+            }} />
+          </div>
           <p style={{
             fontSize: '14px',
-            color: '#64748b',
-            margin: '0'
+            color: 'rgba(30, 41, 59, 0.7)',
+            margin: '0',
+            fontWeight: '500'
           }}>
-            Select a report type to start recording
+            Choose your intelligence pathway
           </p>
         </div>
 
-        {/* Templates Grid */}
+        {/* Optimized Templates Grid */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '12px',
-          marginBottom: '20px'
+          gap: '16px',
+          marginBottom: '28px'
         }}>
-          {templates.map((template) => (
+          {templates.map((template, index) => (
             <button
               key={template.id}
               onClick={() => onSelectTemplate(template)}
+              onMouseEnter={() => setHoveredTemplate(template.id)}
+              onMouseLeave={() => setHoveredTemplate(null)}
+              className={`template-button ${hoveredTemplate === template.id ? 'hovered' : ''}`}
               style={{
-                backgroundColor: '#f8fafc',
-                border: '2px solid #e2e8f0',
-                borderRadius: '16px',
-                padding: '20px 16px',
+                background: hoveredTemplate === template.id 
+                  ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%)'
+                  : 'rgba(255, 255, 255, 0.4)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: hoveredTemplate === template.id 
+                  ? '2px solid rgba(139, 92, 246, 0.2)'
+                  : '2px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '20px',
+                padding: '24px 20px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 textAlign: 'center',
-                minHeight: '100px',
+                minHeight: '120px',
                 position: 'relative',
-                overflow: 'hidden'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f1f5f9';
-                e.currentTarget.style.borderColor = '#8B5CF6';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#f8fafc';
-                e.currentTarget.style.borderColor = '#e2e8f0';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-              onTouchStart={(e) => {
-                e.currentTarget.style.backgroundColor = '#f1f5f9';
-                e.currentTarget.style.borderColor = '#8B5CF6';
-                e.currentTarget.style.transform = 'scale(0.98)';
-              }}
-              onTouchEnd={(e) => {
-                setTimeout(() => {
-                  e.currentTarget.style.backgroundColor = '#f8fafc';
-                  e.currentTarget.style.borderColor = '#e2e8f0';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }, 100);
+                overflow: 'hidden',
+                willChange: 'transform',
+                animation: `templateSlideIn 0.4s ease-out ${index * 0.08}s both`
               }}
             >
               {/* Icon */}
               <div style={{
-                fontSize: '32px',
-                marginBottom: '8px',
-                lineHeight: '1'
+                fontSize: '36px',
+                marginBottom: '12px',
+                lineHeight: '1',
+                transition: 'transform 0.2s ease',
+                transform: hoveredTemplate === template.id ? 'scale(1.1)' : 'scale(1)'
               }}>
                 {template.icon}
               </div>
               
               {/* Title */}
               <h3 style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#1e293b',
+                fontSize: '15px',
+                fontWeight: '700',
+                color: hoveredTemplate === template.id ? '#1e293b' : '#475569',
                 margin: '0',
-                lineHeight: '1.3'
+                lineHeight: '1.3',
+                transition: 'color 0.2s ease',
+                letterSpacing: '-0.01em'
               }}>
                 {template.title}
               </h3>
@@ -178,47 +237,91 @@ export default function QuickTemplateSelector({
           ))}
         </div>
 
-        {/* Cancel Button */}
+        {/* Optimized Cancel Button */}
         <button
           onClick={onClose}
           style={{
             width: '100%',
-            padding: '12px',
-            backgroundColor: 'transparent',
-            border: '2px solid #e2e8f0',
-            borderRadius: '12px',
+            padding: '16px',
+            background: 'rgba(255, 255, 255, 0.6)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '16px',
             color: '#64748b',
             fontSize: '16px',
-            fontWeight: '500',
+            fontWeight: '600',
             cursor: 'pointer',
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#f8fafc';
-            e.currentTarget.style.borderColor = '#cbd5e1';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.8)';
+            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.borderColor = '#e2e8f0';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.6)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
           Cancel
         </button>
       </div>
 
-      {/* CSS Animations */}
+      {/* Optimized CSS Animations */}
       <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        .template-button:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 12px 24px rgba(139, 92, 246, 0.1);
+        }
+
+        @keyframes fadeInBackdrop {
+          from { 
+            opacity: 0;
+          }
+          to { 
+            opacity: 1;
+          }
         }
         
-        @keyframes slideUp {
+        @keyframes slideUpGlass {
           from { 
             transform: translateX(-50%) translateY(100%);
+            opacity: 0;
           }
           to { 
             transform: translateX(-50%) translateY(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes templateSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes floatSimple {
+          0%, 100% { 
+            transform: translateY(0px); 
+          }
+          50% { 
+            transform: translateY(-15px); 
+          }
+        }
+
+        @keyframes pulseSimple {
+          0%, 100% { 
+            opacity: 1; 
+          }
+          50% { 
+            opacity: 0.5; 
           }
         }
       `}</style>
