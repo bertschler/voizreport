@@ -9,9 +9,10 @@ import { ReportTemplate } from '../data/mockData';
 interface SmartMicButtonProps {
   onNavigateToSession?: (template: ReportTemplate) => void;
   onStartNewSession?: () => void;
+  onStopSession?: () => void;
 }
 
-export default function SmartMicButton({ onNavigateToSession, onStartNewSession }: SmartMicButtonProps) {
+export default function SmartMicButton({ onNavigateToSession, onStartNewSession, onStopSession }: SmartMicButtonProps) {
   const isSessionActive = useAtomValue(isSessionActiveAtom);
   const isConnecting = useAtomValue(isConnectingAtom);
   const activeTemplate = useAtomValue(activeTemplateAtom);
@@ -68,23 +69,14 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession 
     }
   };
 
-  // Determine mic button styling based on session state
-  const getMicButtonStyle = () => {
+  // Determine animation based on session state
+  const getAnimation = () => {
     if (isConnecting) {
-      return {
-        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-        animation: 'connectingBlink 1s infinite'
-      };
+      return 'none'; // No blinking, just smooth color transition
     } else if (isSessionActive) {
-      return {
-        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-        animation: 'sessionPulse 2s infinite'
-      };
+      return 'sessionPulse 2s infinite';
     } else {
-      return {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        animation: 'micFloat 3s ease-in-out infinite'
-      };
+      return 'micFloat 3s ease-in-out infinite';
     }
   };
 
@@ -126,7 +118,8 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession 
           transition: 'all 0.3s ease',
           position: 'relative',
           overflow: 'hidden',
-          ...getMicButtonStyle()
+          background: 'transparent',
+          animation: getAnimation()
         }}
         onMouseEnter={(e) => {
           if (!isSessionActive) {
@@ -153,6 +146,45 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession 
               : 'Start voice recording'
         }
       >
+        {/* Default Background Gradient */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          opacity: (!isSessionActive && !isConnecting) ? 1 : 0,
+          transition: 'opacity 0.5s ease'
+        }} />
+
+        {/* Connecting Background Gradient */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          opacity: isConnecting ? 1 : 0,
+          transition: 'opacity 0.5s ease'
+        }} />
+
+        {/* Active Session Background Gradient */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+          opacity: (isSessionActive && !isConnecting) ? 1 : 0,
+          transition: 'opacity 0.5s ease'
+        }} />
+
         {/* Recording dot indicator */}
         {isSessionActive && (
           <div style={{
@@ -163,7 +195,7 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession 
             height: '12px',
             background: '#ff4444',
             borderRadius: '50%',
-            animation: isConnecting ? 'connectingBlink 1s infinite' : 'recordingGlow 1.5s infinite',
+            animation: isConnecting ? 'none' : 'recordingGlow 1.5s infinite',
             zIndex: 2
           }} />
         )}
@@ -177,15 +209,18 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession 
           bottom: '0',
           borderRadius: '50%',
           background: 'rgba(255, 255, 255, 0.1)',
-          animation: isSessionActive ? 'none' : 'micPulse 2s infinite'
+          animation: isSessionActive ? 'none' : 'micPulse 2s infinite',
+          zIndex: 5
         }} />
         
         {/* Mic Icon */}
-        <Microphone2
-          width={60}
-          height={60}
-          color="white"
-        />
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          <Microphone2
+            width={60}
+            height={60}
+            color="white"
+          />
+        </div>
       </button>
     </div>
   );
