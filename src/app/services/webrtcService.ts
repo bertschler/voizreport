@@ -361,17 +361,23 @@ class WebRTCServiceClass {
                     items: {
                       type: 'object',
                       properties: {
-                        name: { type: 'string' },
-                        type: { type: 'string' },
-                        description: { type: 'string' },
-                        required: { type: 'boolean' },
-                        enum: { type: 'array', items: { type: 'string' } }
-                      }
+                        name: { type: 'string', description: 'Field name/key' },
+                        type: { type: 'string', description: 'Field data type (string, number, boolean, etc.)' },
+                        description: { type: 'string', description: 'Field description for voice prompts' },
+                        required: { type: 'boolean', description: 'Whether this field is required' },
+                        enum: { 
+                          type: 'array', 
+                          items: { type: 'string' },
+                          description: 'Optional: List of allowed values for multiple choice fields'
+                        }
+                      },
+                      required: ['name', 'type', 'description', 'required'],
+                      additionalProperties: false
                     }
                   },
                   current_phase: { 
                     type: 'string', 
-                    enum: ['field-definition', 'review'],
+                    enum: ['core-attributes', 'field-definition', 'review'],
                     description: 'Current phase of template creation' 
                   }
                 }
