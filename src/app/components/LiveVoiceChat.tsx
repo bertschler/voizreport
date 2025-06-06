@@ -14,6 +14,7 @@ import { ReportTemplate } from '../data/mockData';
 import SmartMicButton from './SmartMicButton';
 import ErrorDisplay from './voice-chat/ErrorDisplay';
 import FormFieldsDisplay from './FormFieldsDisplay';
+import TemplateFieldsDisplay from './TemplateFieldsDisplay';
 import VoiceModeToggle from './voice-chat/VoiceModeToggle';
 
 interface LiveVoiceChatProps {
@@ -287,7 +288,7 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
             🎨 Create New Template
           </h3>
           <p style={{
-            margin: '0',
+            margin: '0 0 12px 0',
             fontSize: '14px',
             color: '#a16207',
             lineHeight: '1.5'
@@ -295,6 +296,10 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
             I'll help you create a new report template by asking you questions about what kind of data you want to collect. 
             Let's design this step by step!
           </p>
+
+          <TemplateFieldsDisplay
+            templateProgress={templateCreationProgress}
+          />
         </div>
       )}
     </div>

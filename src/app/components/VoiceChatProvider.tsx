@@ -15,6 +15,8 @@ import {
   formProgressAtom,
   activeTemplateAtom,
   voiceChatModeAtom,
+  templateCreationProgressAtom,
+  createdTemplateAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
@@ -45,6 +47,8 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const [userName] = useAtom(userNameAtom);
   const [voiceMode] = useAtom(voiceModeAtom);
   const [voiceChatMode] = useAtom(voiceChatModeAtom);
+  const setTemplateCreationProgress = useSetAtom(templateCreationProgressAtom);
+  const setCreatedTemplate = useSetAtom(createdTemplateAtom);
   
   // Refs
   const providerInstanceId = useRef(Math.random().toString(36).substr(2, 9));
@@ -105,6 +109,65 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     if (name === 'exit_conversation') {
       console.log('🚫 Exit conversation function called');
       endSession();
+    } else if (name === 'exit_template_creation') {
+      console.log('🚫 Exit template creation function called');
+      endSession();
+    } else if (name === 'template_progress_updated') {
+      console.log('🎨 Template progress updated function called with:', args);
+      const parsedArgs = JSON.parse(args);
+      
+      // Update template creation progress
+      if (parsedArgs.template_data) {
+        setTemplateCreationProgress(parsedArgs.template_data);
+        console.log('🎨 Updated template creation progress:', parsedArgs.template_data);
+      }
+      
+      // Send success response
+      WebRTCService.getInstance().sendFunctionResponse(call_id, {
+        status: 'success',
+        message: 'Template progress updated successfully'
+      });
+    } else if (name === 'complete_template_creation') {
+      try {
+        const parsedArgs = JSON.parse(args);
+        console.log('🎨 Template creation completion function called with:', parsedArgs);
+        
+        // Save the completed template
+        if (parsedArgs.final_template) {
+          setCreatedTemplate(parsedArgs.final_template);
+          console.log('🎨 Template creation completed:', parsedArgs.final_template);
+        }
+        
+        // Send success response
+        WebRTCService.getInstance().sendFunctionResponse(call_id, {
+          status: 'success',
+          message: 'Template created successfully!'
+        });
+        
+        // Notify parent component if needed
+        if (onFormCompleted) {
+          // Create a summary for template creation
+          const templateSummary = {
+            plainText: `Template "${parsedArgs.final_template?.title || 'New Template'}" created successfully`,
+            json: parsedArgs.final_template || {},
+            timestamp: Date.now()
+          };
+          onFormCompleted(templateSummary);
+        }
+        
+        // End session after delay
+        setTimeout(() => {
+          endSession();
+        }, 3000);
+        
+      } catch (error) {
+        console.error('💥 Error handling template creation completion:', error);
+        
+        WebRTCService.getInstance().sendFunctionResponse(call_id, {
+          status: 'error',
+          message: 'Failed to complete template creation'
+        });
+      }
     } else if (name === 'form_fields_updated') { 
       console.log('📋 Form fields updated function called with:', args);
       const parsedArgs = JSON.parse(args);
