@@ -72,9 +72,7 @@ export default function DefaultFooter({
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
-          zIndex: 1,
-          paddingTop: '8px',
-          paddingBottom: '8px'
+          zIndex: 1
         }}>
           {tabs.map((tab, index) => (
             <button
@@ -83,13 +81,12 @@ export default function DefaultFooter({
               style={{
                 flex: 1,
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                padding: '8px 4px',
+                padding: '12px 4px',
                 transition: 'all 0.2s ease',
                 // Add spacing around the center mic button
                 marginLeft: index === 0 ? '0' : index === Math.floor(tabs.length / 2) ? '40px' : '0',
@@ -104,7 +101,7 @@ export default function DefaultFooter({
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: '16px',
-                transform: activeTab === tab.id ? 'scale(1.15) translateY(-2px)' : 'scale(0.9)',
+                transform: activeTab === tab.id ? 'scale(1.25)' : 'scale(1)',
                 transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 position: 'relative',
                 border: activeTab === tab.id ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
@@ -127,8 +124,8 @@ export default function DefaultFooter({
                   src={tab.id === 'templates' ? '/create.png' : '/list.png'}
                   alt={tab.label}
                   style={{
-                    width: '40px',
-                    height: '40px',
+                    width: '46px',
+                    height: '46px',
                     filter: activeTab === tab.id 
                       ? '' 
                       : 'brightness(0) invert(0.4)',
