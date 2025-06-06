@@ -20,6 +20,7 @@ import {
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
+import { addTemplateAtom, convertCreatedTemplateToReportTemplate } from '@/app/state/templatesState';
 import { userNameAtom, voiceModeAtom } from '@/app/state/settingsState';
 import { WebRTCService, WebRTCServiceCallbacks } from '@/app/services/webrtcService';
 import { ReportTemplate, SubmittedReport } from '@/app/data/mockData';
@@ -44,6 +45,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const setFormProgress = useSetAtom(formProgressAtom);
   const setActiveTemplate = useSetAtom(activeTemplateAtom);
   const addReport = useSetAtom(addReportAtom);
+  const addTemplate = useSetAtom(addTemplateAtom);
   const [userName] = useAtom(userNameAtom);
   const [voiceMode] = useAtom(voiceModeAtom);
   const [voiceChatMode] = useAtom(voiceChatModeAtom);
@@ -135,7 +137,16 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         // Save the completed template
         if (parsedArgs.template_data) {
           setCreatedTemplate(parsedArgs.template_data);
-          console.log('🎨 Template creation completed:', parsedArgs.template_data);
+          
+          // Convert and save to persistent templates state
+          const convertedTemplate = convertCreatedTemplateToReportTemplate(parsedArgs.template_data);
+          const savedTemplate = addTemplate(convertedTemplate);
+          
+          console.log('🎨 Template creation completed and saved:', {
+            original: parsedArgs.template_data,
+            converted: convertedTemplate,
+            saved: savedTemplate
+          });
         }
         
         // Send success response

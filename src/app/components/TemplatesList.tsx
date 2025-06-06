@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import AiButton from './AiButton';
 import { ReportTemplate } from '../data/mockData';
+import { StoredTemplate } from '../state/templatesState';
 
 interface TemplatesListProps {
-  templates: ReportTemplate[];
+  templates: StoredTemplate[];
   onStartReport: (template: ReportTemplate) => void;
   onCreateTemplate?: () => void;
   onEditTemplate?: (template: ReportTemplate) => void;
@@ -86,14 +87,30 @@ export default function TemplatesList({
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
               <span style={{ fontSize: '24px' }}>{template.icon}</span>
               <div style={{ flex: 1 }}>
-                <h3 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: '600', 
-                  margin: '0 0 8px 0',
-                  color: '#1e293b'
-                }}>
-                  {template.title}
-                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <h3 style={{ 
+                    fontSize: '18px', 
+                    fontWeight: '600', 
+                    margin: '0',
+                    color: '#1e293b'
+                  }}>
+                    {template.title}
+                  </h3>
+                  {template.isCustom && (
+                    <span style={{
+                      fontSize: '10px',
+                      backgroundColor: '#8b5cf6',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontWeight: '500',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      Custom
+                    </span>
+                  )}
+                </div>
                 <p style={{ 
                   fontSize: '14px', 
                   color: '#64748b',

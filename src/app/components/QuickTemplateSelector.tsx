@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { ReportTemplate } from '../data/mockData';
+import { StoredTemplate } from '../state/templatesState';
 
 interface QuickTemplateSelectorProps {
-  templates: ReportTemplate[];
+  templates: StoredTemplate[];
   isVisible: boolean;
   onSelectTemplate: (template: ReportTemplate) => void;
   onClose: () => void;

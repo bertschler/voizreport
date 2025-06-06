@@ -14,8 +14,9 @@ import ReportDetailsFooter from "./components/ReportDetailsFooter";
 import DefaultFooter from "./components/DefaultFooter";
 import QuickTemplateSelector from "./components/QuickTemplateSelector";
 import PageLayout from "./components/PageLayout";
-import { reportTemplates, ReportTemplate, SubmittedReport } from './data/mockData';
+import { ReportTemplate, SubmittedReport } from './data/mockData';
 import { selectedTemplateAtom } from './state/voiceChatState';
+import { templatesAtom } from './state/templatesState';
 
 const tabs: Tab[] = [
   { id: 'templates', label: 'Create' },
@@ -27,6 +28,7 @@ export default function Home() {
   
   const [activeTab, setActiveTab] = useState<'templates' | 'reports'>('templates');
   const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
+  const [templates] = useAtom(templatesAtom);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState<boolean>(false);
 
@@ -292,7 +294,7 @@ export default function Home() {
       >
         {activeTab === 'templates' && (
           <TemplatesList
-            templates={reportTemplates}
+            templates={templates}
             onStartReport={startReport}
             onCreateTemplate={handleCreateTemplate}
             onEditTemplate={handleEditTemplate}
@@ -307,7 +309,7 @@ export default function Home() {
 
         {/* Quick Template Selector Overlay */}
         <QuickTemplateSelector
-          templates={reportTemplates}
+          templates={templates}
           isVisible={showQuickTemplateSelector}
           onSelectTemplate={handleQuickTemplateSelect}
           onClose={handleCloseQuickTemplateSelector}

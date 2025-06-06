@@ -158,11 +158,11 @@ export interface ReportTemplate {
   description: string;
   definition: string;
   icon: string;
-  openai_properties: Record<string, any>;
+  fields: Record<string, any>;
   required_fields?: string[];
 }
 
-Below is a concrete example of a fully defined template with enums and required fields, illustrating how openai_properties should be structured:
+Below is a concrete example of a fully defined template with enums and required fields, illustrating how fields should be structured:
 
 {
   title: "Customer Service Incident Report",
@@ -209,7 +209,7 @@ Notes on this example:
 	•	required_fields lists keys that must be provided.
 	•	All field definitions follow JSON Schema conventions (compatible with OpenAI’s function-calling style).
 
-You can use this structure as a template for any new report type. Ensure that each property under openai_properties includes:
+You can use this structure as a template for any new report type. Ensure that each property under fields includes:
 
 {
   "type": "<string|number|boolean|array|object>",
