@@ -133,9 +133,9 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         console.log('🎨 Template creation completion function called with:', parsedArgs);
         
         // Save the completed template
-        if (parsedArgs.final_template) {
-          setCreatedTemplate(parsedArgs.final_template);
-          console.log('🎨 Template creation completed:', parsedArgs.final_template);
+        if (parsedArgs.template_data) {
+          setCreatedTemplate(parsedArgs.template_data);
+          console.log('🎨 Template creation completed:', parsedArgs.template_data);
         }
         
         // Send success response
@@ -148,8 +148,8 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         if (onFormCompleted) {
           // Create a summary for template creation
           const templateSummary = {
-            plainText: `Template "${parsedArgs.final_template?.title || 'New Template'}" created successfully`,
-            json: parsedArgs.final_template || {},
+            plainText: `Template "${parsedArgs.template_data?.title || 'New Template'}" created successfully`,
+            json: parsedArgs.template_data || {},
             timestamp: Date.now()
           };
           onFormCompleted(templateSummary);
