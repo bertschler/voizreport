@@ -25,7 +25,7 @@ export default function DefaultFooter({
   showTabs = true 
 }: DefaultFooterProps) {
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative'}}>
       {/* Floating Smart Mic Button - positioned above footer */}
       <div style={{
         position: 'absolute',
@@ -76,15 +76,27 @@ export default function DefaultFooter({
                 marginRight: index === tabs.length - 1 ? '0' : index === Math.floor(tabs.length / 2) - 1 ? '40px' : '0'
               }}
             >
-              {/* Tab Icon - using simple shapes for now */}
+              {/* Tab Icon */}
               <div style={{
-                width: '24px',
-                height: '24px',
-                marginBottom: '4px',
-                background: activeTab === tab.id ? '#8B5CF6' : '#9CA3AF',
-                borderRadius: tab.id === 'templates' ? '6px' : '50%',
-                transition: 'all 0.2s ease'
-              }} />
+                width: '52px',
+                height: '52px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: activeTab === tab.id ? 'scale(1.15)' : 'scale(0.9)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                position: 'relative'
+              }}>
+                <img 
+                  src={tab.id === 'templates' ? '/create.png' : '/list.png'}
+                  alt={tab.label}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+              </div>
               
               {/* Tab Label */}
               <span style={{

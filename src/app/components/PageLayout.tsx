@@ -26,7 +26,8 @@ export default function PageLayout({
       margin: '0 auto',
       boxShadow: '0 0 20px rgba(0,0,0,0.1)',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflow: 'hidden'
     }}>
       {/* Header Section */}
       {header}
