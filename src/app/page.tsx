@@ -28,6 +28,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'templates' | 'reports'>('templates');
   const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState<boolean>(false);
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
@@ -37,7 +38,8 @@ export default function Home() {
     activeTab, 
     selectedTemplate: selectedTemplate?.title || 'none', 
     completedFormsCount: completedForms.length,
-    showSettings 
+    showSettings,
+    isCreatingTemplate
   });
 
   const startReport = (template: ReportTemplate) => {
@@ -49,6 +51,7 @@ export default function Home() {
   const goBack = () => {
     console.log('🔙 goBack called, clearing selectedTemplate:', selectedTemplate?.title || 'none');
     setSelectedTemplate(null);
+    setIsCreatingTemplate(false);
   };
 
   const handleTabChange = (tabId: string) => {
@@ -56,7 +59,8 @@ export default function Home() {
   };
 
   const handleCreateTemplate = () => {
-    console.log('Create new template');
+    console.log('🎨 Starting template creation mode');
+    setIsCreatingTemplate(true);
   };
 
   const handleEditTemplate = (template: ReportTemplate) => {
@@ -90,6 +94,7 @@ export default function Home() {
     // Navigate back to main interface and switch to reports tab
     setTimeout(() => {
       setSelectedTemplate(null);
+      setIsCreatingTemplate(false);
       setActiveTab('reports');
       
       // Dispatch custom event to refresh reports list
@@ -104,6 +109,7 @@ export default function Home() {
   const handleNavigateToSession = useCallback((template: ReportTemplate) => {
     console.log('🎯 Navigating back to active session:', template.title);
     setSelectedTemplate(template);
+    setIsCreatingTemplate(false);
   }, [setSelectedTemplate]);
 
   const handleStartNewSession = useCallback(() => {
@@ -115,6 +121,7 @@ export default function Home() {
     console.log('🎯 Quick template selected:', template.title);
     setShowQuickTemplateSelector(false);
     setSelectedTemplate(template);
+    setIsCreatingTemplate(false);
   }, [setSelectedTemplate]);
 
   const handleCloseQuickTemplateSelector = useCallback(() => {
@@ -175,6 +182,48 @@ export default function Home() {
     );
   }
 
+  // If template creation mode is active, show the template creation interface
+  if (isCreatingTemplate) {
+    return (
+      <VoiceChatProvider
+        onSessionReady={handleSessionReady}
+        onFormCompleted={handleFormCompletion}
+      >
+        <PageLayout
+          header={
+            <MobileHeader
+              title="Create Template"
+              subtitle="Design a new report type"
+              showBackButton={true}
+              onBackClick={goBack}
+              sticky={true}
+            />
+          }
+          footer={
+            <DefaultFooter 
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onNavigateToSession={handleNavigateToSession}
+              onStartNewSession={handleStartNewSession}
+              onStopSession={() => {
+                setSelectedTemplate(null);
+                setIsCreatingTemplate(false);
+              }}
+              showTabs={false}
+            />
+          }
+          onNavigateToSession={handleNavigateToSession}
+        >
+          <LiveVoiceChat 
+            key="template-creation"
+            mode="template-creation"
+          />
+        </PageLayout>
+      </VoiceChatProvider>
+    );
+  }
+
   // If a template is selected, show the voice chat interface
   if (selectedTemplate) {
     console.log('🏠 selectedTemplate:', selectedTemplate);
@@ -209,6 +258,7 @@ export default function Home() {
           <LiveVoiceChat 
             key={`voice-chat-${selectedTemplate.id}`}
             template={selectedTemplate}
+            mode="report"
           />
         </PageLayout>
       </VoiceChatProvider>

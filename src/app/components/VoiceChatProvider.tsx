@@ -14,6 +14,7 @@ import {
   formDataAtom,
   formProgressAtom,
   activeTemplateAtom,
+  voiceChatModeAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
@@ -43,6 +44,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const addReport = useSetAtom(addReportAtom);
   const [userName] = useAtom(userNameAtom);
   const [voiceMode] = useAtom(voiceModeAtom);
+  const [voiceChatMode] = useAtom(voiceChatModeAtom);
   
   // Refs
   const providerInstanceId = useRef(Math.random().toString(36).substr(2, 9));
@@ -277,7 +279,8 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         selectedTemplate,
         templateInstructions,
         userName,
-        voiceMode
+        voiceMode,
+        voiceChatMode
       );
       
       setSessionId(newSessionId);
@@ -297,7 +300,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     } finally {
       setIsConnecting(false);
     }
-  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setAiResponse, setFormProgress, setHasPermission, userName, voiceMode]);
+  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setAiResponse, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode]);
 
   // End session
   const endSession = useCallback(async () => {
@@ -327,14 +330,22 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
 
   // Auto-start session when template is selected
   useEffect(() => {
+    console.log('🔍 VoiceChatProvider effect triggered:');
+    console.log('🔍   selectedTemplate:', selectedTemplate?.title || 'none');
+    console.log('🔍   isSessionActive:', isSessionActive);
+    console.log('🔍   isConnecting:', isConnecting);
+    console.log('🔍   voiceChatMode:', voiceChatMode);
+    
     if (selectedTemplate && !isSessionActive && !isConnecting) {
       console.log('🎯 Auto-starting session for selected template:', selectedTemplate.title);
       startSession();
     } else if (!selectedTemplate && isSessionActive) {
       console.log('🛑 Template cleared, ending session');
       endSession();
+    } else {
+      console.log('🔍 Conditions not met for auto-start/end');
     }
-  }, [selectedTemplate, isSessionActive, isConnecting, startSession, endSession]);
+  }, [selectedTemplate, isSessionActive, isConnecting, startSession, endSession, voiceChatMode]);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -114,7 +114,7 @@ export default function DefaultFooter({
                     borderRadius: '20px',
                     background: 'conic-gradient(from 0deg, #8B5CF6, #7C3AED, #6366F1, #8B5CF6)',
                     //animation: 'spin 3s linear infinite',
-                    opacity: 0.7,
+                    opacity: 0.2,
                     zIndex: -1,
                     filter: 'blur(2px)'
                   }} />

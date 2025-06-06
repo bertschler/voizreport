@@ -21,12 +21,47 @@ export const localStreamAtom = atom<MediaStream | null>(null);
 export const currentSessionIdAtom = atom<string>('');
 export const isStartingSessionAtom = atom<boolean>(false);
 
-// Form data atoms
+// Voice chat mode atoms
+export type VoiceChatMode = 'report' | 'template-creation';
+export const voiceChatModeAtom = atom<VoiceChatMode>('report');
+
+// Form data atoms (for report mode)
 export const formDataAtom = atom<Record<string, any>>({});
 export const completedFieldsAtom = atom<Set<string>>(new Set<string>());
 
 // Form progress tracking - constantly updated during conversation
 export const formProgressAtom = atom<Record<string, any>>({});
+
+// Template creation atoms (for template-creation mode)
+export interface TemplateCreationProgress {
+  title?: string;
+  description?: string;
+  definition?: string;
+  icon?: string;
+  fields?: Array<{
+    name: string;
+    type: string;
+    description: string;
+    required: boolean;
+    enum?: string[];
+  }>;
+  currentPhase?: 'core-attributes' | 'field-definition' | 'review';
+}
+
+export const templateCreationProgressAtom = atom<TemplateCreationProgress>({});
+export const isCreatingTemplateAtom = atom<boolean>(false);
+
+// Template creation result atom
+export interface CreatedTemplate {
+  title: string;
+  description: string;
+  definition: string;
+  icon: string;
+  openai_properties: Record<string, any>;
+  required_fields?: string[];
+}
+
+export const createdTemplateAtom = atom<CreatedTemplate | null>(null);
 
 // Callbacks and configuration atoms
 export interface VoiceChatCallbacks {
@@ -99,9 +134,13 @@ export const resetVoiceChatStateAtom = atom(
     set(aiResponseAtom, '');
     set(currentSessionIdAtom, '');
     set(isStartingSessionAtom, false);
+    set(voiceChatModeAtom, 'report');
     set(formDataAtom, {});
     set(completedFieldsAtom, new Set());
     set(formProgressAtom, {});
+    set(templateCreationProgressAtom, {});
+    set(isCreatingTemplateAtom, false);
+    set(createdTemplateAtom, null);
     set(callbacksAtom, {});
     set(templateInstructionsAtom, '');
     set(activeTemplateAtom, null);

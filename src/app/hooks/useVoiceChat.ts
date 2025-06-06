@@ -9,11 +9,18 @@ import {
   hasPermissionAtom,
   formProgressAtom,
   selectedTemplateAtom,
-  FormSummary
+  voiceChatModeAtom,
+  templateCreationProgressAtom,
+  isCreatingTemplateAtom,
+  createdTemplateAtom,
+  FormSummary,
+  VoiceChatMode,
+  TemplateCreationProgress,
+  CreatedTemplate
 } from '@/app/state/voiceChatState';
 
-// Re-export FormSummary for external use
-export type { FormSummary };
+// Re-export types for external use
+export type { FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate };
 
 export interface VoiceChatState {
   sessionId: string | null;
@@ -24,10 +31,17 @@ export interface VoiceChatState {
   aiResponse: string;
   error: string | null;
   formProgress: Record<string, any>;
+  voiceChatMode: VoiceChatMode;
+  templateCreationProgress: TemplateCreationProgress;
+  isCreatingTemplate: boolean;
+  createdTemplate: CreatedTemplate | null;
 }
 
 export interface VoiceChatActions {
   endSession: () => void;
+  setVoiceChatMode: (mode: VoiceChatMode) => void;
+  startTemplateCreation: () => void;
+  clearCreatedTemplate: () => void;
 }
 
 export function useVoiceChat(): VoiceChatState & VoiceChatActions {
@@ -40,12 +54,47 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
   const [aiResponse] = useAtom(aiResponseAtom);
   const [hasPermission] = useAtom(hasPermissionAtom);
   const [formProgress] = useAtom(formProgressAtom);
-  const [, setSelectedTemplate] = useAtom(selectedTemplateAtom);
+  const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
+  const [voiceChatMode, setVoiceChatMode] = useAtom(voiceChatModeAtom);
+  const [templateCreationProgress] = useAtom(templateCreationProgressAtom);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useAtom(isCreatingTemplateAtom);
+  const [createdTemplate, setCreatedTemplate] = useAtom(createdTemplateAtom);
 
   // End session by clearing selected template (provider will handle cleanup)
   const endSession = () => {
     console.log('🔒 Ending session via useVoiceChat hook');
     setSelectedTemplate(null);
+    setIsCreatingTemplate(false);
+  };
+
+  // Start template creation mode
+  const startTemplateCreation = () => {
+    console.log('🎯 Starting template creation mode');
+    console.log('🎯 Current voiceChatMode:', voiceChatMode);
+    console.log('🎯 Current selectedTemplate:', selectedTemplate?.title || 'none');
+    
+    setVoiceChatMode('template-creation');
+    setIsCreatingTemplate(true);
+    const templateCreationTemplate = { 
+      // Special template indicator for template creation mode
+      id: 'template-creation',
+      title: 'Template Creation',
+      description: 'Create a new report template',
+      definition: 'Template creation session',
+      icon: '🎨',
+      openai_properties: {},
+      required_fields: []
+    };
+    
+    console.log('🎯 Setting selectedTemplate to:', templateCreationTemplate);
+    setSelectedTemplate(templateCreationTemplate);
+    
+    console.log('🎯 Template creation mode setup complete');
+  };
+
+  // Clear created template
+  const clearCreatedTemplate = () => {
+    setCreatedTemplate(null);
   };
 
   return {
@@ -58,8 +107,15 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
     aiResponse,
     error,
     formProgress,
+    voiceChatMode,
+    templateCreationProgress,
+    isCreatingTemplate,
+    createdTemplate,
     
     // Actions
-    endSession
+    endSession,
+    setVoiceChatMode,
+    startTemplateCreation,
+    clearCreatedTemplate
   };
 } 

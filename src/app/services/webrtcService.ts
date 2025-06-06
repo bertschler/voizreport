@@ -1,6 +1,6 @@
-import { VOICE_AI_INSTRUCTIONS } from '@/config/voice-ai-instructions';
+import { VOICE_AI_INSTRUCTIONS, VOICE_AI_TEMPLATE_INSTRUCTIONS } from '@/config/voice-ai-instructions';
 import { ReportTemplate } from '@/app/data/mockData';
-import { FormSummary } from '@/app/state/voiceChatState';
+import { FormSummary, VoiceChatMode } from '@/app/state/voiceChatState';
 
 export interface WebRTCSessionData {
   sessionId: string;
@@ -116,7 +116,8 @@ class WebRTCServiceClass {
     template?: ReportTemplate,
     templateInstructions?: string,
     userName?: string,
-    voiceMode?: string
+    voiceMode?: string,
+    voiceChatMode?: VoiceChatMode
   ): Promise<string> {
     // Global lock to prevent multiple simultaneous session starts
     if (globalSessionLock) {
@@ -140,7 +141,7 @@ class WebRTCServiceClass {
     this.isConnecting = true;
 
     try {
-      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode);
+      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode);
       await globalSessionPromise;
       return this.sessionId || '';
     } finally {
@@ -155,7 +156,8 @@ class WebRTCServiceClass {
     template?: ReportTemplate,
     templateInstructions?: string,
     userName?: string,
-    voiceMode?: string
+    voiceMode?: string,
+    voiceChatMode?: VoiceChatMode
   ): Promise<void> {
     // Clean up any existing session first
     if (this.sessionId) {
@@ -173,7 +175,7 @@ class WebRTCServiceClass {
     const sessionData = await this.createSession();
     
     // Setup connection
-    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode);
+    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode);
   }
 
   async setupConnection(
@@ -182,7 +184,8 @@ class WebRTCServiceClass {
     template?: ReportTemplate,
     templateInstructions?: string,
     userName?: string,
-    voiceMode?: string
+    voiceMode?: string,
+    voiceChatMode?: VoiceChatMode
   ): Promise<void> {
     this.callbacks = callbacks;
     this.sessionId = sessionData.sessionId;
@@ -227,7 +230,7 @@ class WebRTCServiceClass {
 
     dataChannel.onopen = () => {
       console.log('📡 Data channel opened');
-      this.sendSessionConfiguration(template, templateInstructions, userName, voiceMode);
+      this.sendSessionConfiguration(template, templateInstructions, userName, voiceMode, voiceChatMode);
       callbacks.onDataChannelOpen();
     };
 
@@ -323,15 +326,156 @@ class WebRTCServiceClass {
     console.log('✅ WebRTC connection established successfully!');
   }
 
-  private sendSessionConfiguration(template?: ReportTemplate, templateInstructions?: string, userName?: string, voiceMode?: string): void {
+  private sendSessionConfiguration(template?: ReportTemplate, templateInstructions?: string, userName?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       console.error('💥 Data channel not available for session configuration');
       return;
     }
 
-    const instructions = this.getInstructions(templateInstructions, voiceMode);
-    const extractedDataProperties = template?.openai_properties || {};
-    const requiredFields = template?.required_fields || [];
+    const instructions = this.getInstructions(templateInstructions, voiceMode, voiceChatMode);
+    const isTemplateCreation = voiceChatMode === 'template-creation';
+    
+    let tools = [];
+    
+    if (isTemplateCreation) {
+      // Template creation tools (placeholder for future implementation)
+      tools = [
+        {
+          type: 'function',
+          name: 'template_progress_updated',
+          description: 'Call this function when template creation progress is updated (title, description, fields, etc.)',
+          parameters: {
+            type: 'object',
+            properties: {
+              template_data: {
+                type: 'object',
+                description: 'Current template creation progress',
+                properties: {
+                  title: { type: 'string', description: 'Template title' },
+                  description: { type: 'string', description: 'Template description' },
+                  definition: { type: 'string', description: 'Template definition/instructions' },
+                  icon: { type: 'string', description: 'Template icon (emoji)' },
+                  fields: { 
+                    type: 'array',
+                    description: 'Template fields being defined',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        name: { type: 'string' },
+                        type: { type: 'string' },
+                        description: { type: 'string' },
+                        required: { type: 'boolean' },
+                        enum: { type: 'array', items: { type: 'string' } }
+                      }
+                    }
+                  },
+                  current_phase: { 
+                    type: 'string', 
+                    enum: ['core-attributes', 'field-definition', 'review'],
+                    description: 'Current phase of template creation' 
+                  }
+                }
+              }
+            },
+            required: ['template_data']
+          }
+        },
+        {
+          type: 'function',
+          name: 'complete_template_creation',
+          description: 'Call this function when the template creation is complete and ready to be finalized.',
+          parameters: {
+            type: 'object',
+            properties: {
+              final_template: {
+                type: 'object',
+                description: 'The complete template definition',
+                properties: {
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  definition: { type: 'string' },
+                  icon: { type: 'string' },
+                  openai_properties: { type: 'object' },
+                  required_fields: { type: 'array', items: { type: 'string' } }
+                },
+                required: ['title', 'description', 'definition', 'icon', 'openai_properties']
+              }
+            },
+            required: ['final_template']
+          }
+        },
+        {
+          type: 'function',
+          name: 'exit_template_creation',
+          description: 'Call this function when the user wants to cancel template creation.',
+          parameters: {
+            type: 'object',
+            properties: {},
+            required: []
+          }
+        }
+      ];
+    } else {
+      // Report filling tools (existing functionality)
+      const extractedDataProperties = template?.openai_properties || {};
+      const requiredFields = template?.required_fields || [];
+      
+      tools = [
+        {
+          type: 'function',
+          name: 'form_fields_updated',
+          description: 'Call this function when a field in the form is set or updated. Pass all fields with the current values (or empty if not set yet).',
+          parameters: {
+            type: 'object',
+            properties: {
+              extracted_data: {
+                type: 'object',
+                description: 'All the form data that has been collected so far during the conversation',
+                properties: extractedDataProperties,
+                required: requiredFields
+              }
+            },
+            required: ['extracted_data']
+          }
+        },
+        {
+          type: 'function',
+          name: 'complete_form_submission',
+          description: 'Call this function when all required form fields have been collected and the form is ready to be submitted. This will generate a comprehensive report summary and end the session.',
+          parameters: {
+            type: 'object',
+            properties: {
+              extracted_data: {
+                type: 'object',
+                description: 'All the form data that has been collected during the conversation',
+                properties: extractedDataProperties,
+                required: requiredFields
+              },
+              transcription_compact: {
+                type: 'string',
+                description: 'A compact transcription of the full conversation that has been collected.',
+              },
+              completion_reason: {
+                type: 'string',
+                enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion', 'user_stopped_conversation'],
+                description: 'Reason why the form is being completed'
+              }
+            },
+            required: ['extracted_data', 'completion_reason', 'transcription_compact']
+          }
+        },
+        {
+          type: 'function',
+          name: 'exit_conversation',
+          description: 'Call this function immediately when the user wants to cancel, stop, exit, quit, abort, or end the conversation at any time. This is only to be used when the user explicitly wants to end the conversation without saving the form.',
+          parameters: {
+            type: 'object',
+            properties: {},
+            required: []
+          }
+        }
+      ];
+    }
     
     const sessionUpdate = {
       type: 'session.update',
@@ -341,72 +485,18 @@ class WebRTCServiceClass {
         input_audio_transcription: { model: 'whisper-1' },
         turn_detection: { type: 'server_vad' },
         modalities: ['text', 'audio'],
-        tools: [
-          {
-            type: 'function',
-            name: 'form_fields_updated',
-            description: 'Call this function when a field in the form is set or updated. Pass all fields with the current values (or empty if not set yet).',
-            parameters: {
-              type: 'object',
-              properties: {
-                extracted_data: {
-                  type: 'object',
-                  description: 'All the form data that has been collected so far during the conversation',
-                  properties: extractedDataProperties,
-                  required: requiredFields
-                }
-              },
-              required: ['extracted_data']
-            }
-          },
-          {
-            type: 'function',
-            name: 'complete_form_submission',
-            description: 'Call this function when all required form fields have been collected and the form is ready to be submitted. This will generate a comprehensive report summary and end the session.',
-            parameters: {
-              type: 'object',
-              properties: {
-                extracted_data: {
-                  type: 'object',
-                  description: 'All the form data that has been collected during the conversation',
-                  properties: extractedDataProperties,
-                  required: requiredFields
-                },
-                transcription_compact: {
-                  type: 'string',
-                  description: 'A compact transcription of the full conversation that has been collected.',
-                },
-                completion_reason: {
-                  type: 'string',
-                  enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion', 'user_stopped_conversation'],
-                  description: 'Reason why the form is being completed'
-                }
-              },
-              required: ['extracted_data', 'completion_reason', 'transcription_compact']
-            }
-          },
-          {
-            type: 'function',
-            name: 'exit_conversation',
-            description: 'Call this function immediately when the user wants to cancel, stop, exit, quit, abort, or end the conversation at any time. This is only to be used when the user explicitly wants to end the conversation without saving the form.',
-            parameters: {
-              type: 'object',
-              properties: {},
-              required: []
-            }
-          }
-        ]
+        tools
       }
     };
     
     this.dataChannel.send(JSON.stringify(sessionUpdate));
-    console.log('📤 Sent comprehensive session configuration');
+    console.log(`📤 Sent ${isTemplateCreation ? 'template creation' : 'report filling'} session configuration`);
     
     // Send initial greeting
-    this.sendInitialGreeting(userName);
+    this.sendInitialGreeting(userName, isTemplateCreation);
   }
 
-  private sendInitialGreeting(userName?: string): void {
+  private sendInitialGreeting(userName?: string, isTemplateCreation?: boolean): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       return;
     }
@@ -431,24 +521,41 @@ class WebRTCServiceClass {
     console.log('📤 Sent initial greeting');
   }
 
-  private getInstructions(templateInstructions?: string, voiceMode?: string): string {
-    const baseInstructions = templateInstructions 
-      ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
-      : VOICE_AI_INSTRUCTIONS;
+  private getInstructions(templateInstructions?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode): string {
+    const isTemplateCreation = voiceChatMode === 'template-creation';
     
-    // Add voice mode specific instructions
-    const voiceModeInstructions = voiceMode === 'freeform' 
-      ? `\n\nCURRENT VOICE MODE: FREEFORM - The user prefers to do most of the talking. Let them speak freely and naturally extract information from their responses. Don't be overly conversational - focus on listening and capturing data efficiently.`
-      : `\n\nCURRENT VOICE MODE: GUIDED - Help the user by guiding them through each field step by step. Ask clear questions to help them fill out the form systematically.`;
-    
-    const functionInstruction = `\n\n
-      IMPORTANT FUNCTION CALLING RULES:
-      1. When you have collected all the necessary information for the form and the conversation is complete, say something simimar to "Thanks, I have all the information I need. I will now generate the report summary and end the session.", AFTERWARDS call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
-      2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function. If your already collected partial or full data (other than the name of the user), ask first if they want to submit the data and if yes call the 'complete_form_submission' function instead.
-      3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
-    `;
-    
-    return baseInstructions + voiceModeInstructions + functionInstruction;
+    if (isTemplateCreation) {
+      // Use template creation instructions
+      const baseInstructions = `${VOICE_AI_TEMPLATE_INSTRUCTIONS}\n\nToday is ${new Date().toLocaleDateString()}.`;
+      
+      const functionInstruction = `\n\n
+        IMPORTANT FUNCTION CALLING RULES FOR TEMPLATE CREATION:
+        1. When template creation progress is made (title, description, fields defined, etc.), call the 'template_progress_updated' function with the current progress.
+        2. When the template is complete and ready to be finalized, call the 'complete_template_creation' function with the final template definition.
+        3. If the user wants to cancel template creation, call the 'exit_template_creation' function.
+      `;
+      
+      return baseInstructions + functionInstruction;
+    } else {
+      // Use regular report filling instructions
+      const baseInstructions = templateInstructions 
+        ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
+        : VOICE_AI_INSTRUCTIONS;
+      
+      // Add voice mode specific instructions
+      const voiceModeInstructions = voiceMode === 'freeform' 
+        ? `\n\nCURRENT VOICE MODE: FREEFORM - The user prefers to do most of the talking. Let them speak freely and naturally extract information from their responses. Don't be overly conversational - focus on listening and capturing data efficiently.`
+        : `\n\nCURRENT VOICE MODE: GUIDED - Help the user by guiding them through each field step by step. Ask clear questions to help them fill out the form systematically.`;
+      
+      const functionInstruction = `\n\n
+        IMPORTANT FUNCTION CALLING RULES:
+        1. When you have collected all the necessary information for the form and the conversation is complete, say something simimar to "Thanks, I have all the information I need. I will now generate the report summary and end the session.", AFTERWARDS call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
+        2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function. If your already collected partial or full data (other than the name of the user), ask first if they want to submit the data and if yes call the 'complete_form_submission' function instead.
+        3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
+      `;
+      
+      return baseInstructions + voiceModeInstructions + functionInstruction;
+    }
   }
 
   sendVoiceModeUpdate(voiceMode: string): void {
