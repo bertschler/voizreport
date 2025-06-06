@@ -16,6 +16,9 @@ import ErrorDisplay from './voice-chat/ErrorDisplay';
 import FormFieldsDisplay from './FormFieldsDisplay';
 import TemplateFieldsDisplay from './TemplateFieldsDisplay';
 import VoiceModeToggle from './voice-chat/VoiceModeToggle';
+import TemplateCreationProgressComponent from './voice-chat/TemplateCreationProgress';
+import CreatedTemplateResult from './voice-chat/CreatedTemplateResult';
+import TemplateCreationInstructions from './voice-chat/TemplateCreationInstructions';
 
 interface LiveVoiceChatProps {
   template?: ReportTemplate;
@@ -82,131 +85,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
   const formFields = getFormFields();
   const isTemplateMode = voiceChatMode === 'template-creation';
 
-  // Render template creation progress display
-  const renderTemplateCreationProgress = () => {
-    if (!isTemplateMode) return null;
-
-    return (
-      <div style={{
-        marginBottom: '24px',
-        padding: '16px',
-        backgroundColor: '#f1f5f9',
-        borderRadius: '12px',
-        textAlign: 'left'
-      }}>
-        <h3 style={{
-          margin: '0 0 8px 0',
-          fontSize: '16px',
-          fontWeight: '600',
-          color: '#334155'
-        }}>
-          🎨 Template Creation Progress
-        </h3>
-        
-        {templateCreationProgress.title && (
-          <div style={{ marginBottom: '8px' }}>
-            <strong>Title:</strong> {templateCreationProgress.title}
-          </div>
-        )}
-        
-        {templateCreationProgress.description && (
-          <div style={{ marginBottom: '8px' }}>
-            <strong>Description:</strong> {templateCreationProgress.description}
-          </div>
-        )}
-        
-        {templateCreationProgress.icon && (
-          <div style={{ marginBottom: '8px' }}>
-            <strong>Icon:</strong> {templateCreationProgress.icon}
-          </div>
-        )}
-        
-        {templateCreationProgress.fields && templateCreationProgress.fields.length > 0 && (
-          <div style={{ marginBottom: '8px' }}>
-            <strong>Fields ({templateCreationProgress.fields.length}):</strong>
-            <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-              {templateCreationProgress.fields.map((field, index) => (
-                <li key={index} style={{ marginBottom: '2px', fontSize: '14px' }}>
-                  <strong>{field.name}</strong> ({field.type})
-                  {field.required && <span style={{ color: '#e11d48' }}>*</span>}
-                  {field.enum && ` - Options: ${field.enum.join(', ')}`}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {templateCreationProgress.currentPhase && (
-          <div style={{ 
-            padding: '8px 12px',
-            backgroundColor: '#e0f2fe',
-            borderRadius: '6px',
-            fontSize: '14px',
-            color: '#0369a1'
-          }}>
-            Current Phase: {templateCreationProgress.currentPhase.replace('-', ' ').toUpperCase()}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Render created template result
-  const renderCreatedTemplate = () => {
-    if (!createdTemplate) return null;
-
-    return (
-      <div style={{
-        marginBottom: '24px',
-        padding: '16px',
-        backgroundColor: '#f0fdf4',
-        borderRadius: '12px',
-        textAlign: 'left',
-        border: '2px solid #22c55e'
-      }}>
-        <h3 style={{
-          margin: '0 0 12px 0',
-          fontSize: '16px',
-          fontWeight: '600',
-          color: '#166534'
-        }}>
-          ✅ Template Created Successfully!
-        </h3>
-        
-        <div style={{ marginBottom: '8px' }}>
-          <strong>{createdTemplate.icon} {createdTemplate.title}</strong>
-        </div>
-        
-        <div style={{ marginBottom: '8px', fontSize: '14px', color: '#64748b' }}>
-          {createdTemplate.description}
-        </div>
-        
-        <div style={{ marginBottom: '12px', fontSize: '14px' }}>
-          <strong>Fields:</strong> {Object.keys(createdTemplate.openai_properties || {}).length}
-        </div>
-        
-        <button
-          onClick={() => {
-            // TODO: Save template to database/state
-            console.log('Template to save:', createdTemplate);
-            alert('Template saved! (This would save to your templates in a real implementation)');
-          }}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#22c55e',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
-          Save Template
-        </button>
-      </div>
-    );
-  };
-
   return (
     <div style={{
       padding: '32px 24px',
@@ -232,10 +110,18 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
       )}
 
       {/* Template Creation Progress */}
-      {renderTemplateCreationProgress()}
+      {isTemplateMode && (
+        <TemplateCreationProgressComponent
+          templateCreationProgress={templateCreationProgress}
+        />
+      )}
 
       {/* Created Template Result */}
-      {renderCreatedTemplate()}
+      {createdTemplate && (
+        <CreatedTemplateResult
+          createdTemplate={createdTemplate}
+        />
+      )}
 
       {/* Template Instructions (for report mode only) */}
       {!isTemplateMode && template && (
@@ -272,35 +158,9 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
 
       {/* Template Creation Instructions */}
       {isTemplateMode && !createdTemplate && (
-        <div style={{
-          marginBottom: '24px',
-          padding: '16px',
-          backgroundColor: '#fef3c7',
-          borderRadius: '12px',
-          textAlign: 'left'
-        }}>
-          <h3 style={{
-            margin: '0 0 8px 0',
-            fontSize: '16px',
-            fontWeight: '600',
-            color: '#92400e'
-          }}>
-            🎨 Create New Template
-          </h3>
-          <p style={{
-            margin: '0 0 12px 0',
-            fontSize: '14px',
-            color: '#a16207',
-            lineHeight: '1.5'
-          }}>
-            I'll help you create a new report template by asking you questions about what kind of data you want to collect. 
-            Let's design this step by step!
-          </p>
-
-          <TemplateFieldsDisplay
-            templateProgress={templateCreationProgress}
-          />
-        </div>
+        <TemplateCreationInstructions
+          templateProgress={templateCreationProgress}
+        />
       )}
     </div>
   );
