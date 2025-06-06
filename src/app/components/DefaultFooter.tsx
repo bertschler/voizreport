@@ -25,7 +25,27 @@ export default function DefaultFooter({
   showTabs = true 
 }: DefaultFooterProps) {
   return (
-    <div style={{ position: 'relative'}}>
+    <>
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { 
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+          }
+          50% { 
+            opacity: 0.7;
+            transform: translateX(-50%) scale(1.2);
+          }
+        }
+      `}</style>
+      
+      <div style={{ position: 'relative'}}>
       {/* Floating Smart Mic Button - positioned above footer */}
       <div style={{
         position: 'absolute',
@@ -83,30 +103,40 @@ export default function DefaultFooter({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transform: activeTab === tab.id ? 'scale(1.15)' : 'scale(0.9)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                position: 'relative'
+                borderRadius: '16px',
+                transform: activeTab === tab.id ? 'scale(1.15) translateY(-2px)' : 'scale(0.9)',
+                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                position: 'relative',
+                border: activeTab === tab.id ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
               }}>
+                {/* Animated glow ring for active tab */}
+                {activeTab === tab.id && (
+                  <div style={{
+                    position: 'absolute',
+                    inset: '-4px',
+                    borderRadius: '20px',
+                    background: 'conic-gradient(from 0deg, #8B5CF6, #7C3AED, #6366F1, #8B5CF6)',
+                    //animation: 'spin 3s linear infinite',
+                    opacity: 0.7,
+                    zIndex: -1,
+                    filter: 'blur(2px)'
+                  }} />
+                )}
+                
                 <img 
                   src={tab.id === 'templates' ? '/create.png' : '/list.png'}
                   alt={tab.label}
                   style={{
                     width: '40px',
                     height: '40px',
-                    transition: 'all 0.3s ease'
+                    filter: activeTab === tab.id 
+                      ? '' 
+                      : 'brightness(0) invert(0.4)',
+                    transition: 'all 0.4s ease',
+                    transform: activeTab === tab.id ? 'rotate(5deg)' : 'rotate(0deg)'
                   }}
                 />
               </div>
-              
-              {/* Tab Label */}
-              <span style={{
-                fontSize: '12px',
-                fontWeight: '500',
-                color: activeTab === tab.id ? '#8B5CF6' : '#6B7280',
-                transition: 'all 0.2s ease'
-              }}>
-                {tab.label}
-              </span>
             </button>
           ))}
         </div>
@@ -125,5 +155,6 @@ export default function DefaultFooter({
         }} />
       )}
     </div>
+    </>
   );
 } 
