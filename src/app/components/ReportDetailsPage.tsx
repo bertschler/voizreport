@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SubmittedReport, reportTemplates } from '../data/mockData';
+import { useAtomValue } from 'jotai';
+import { SubmittedReport } from '../data/mockData';
+import { templatesAtom } from '../state/templatesState';
 import FormFieldsDisplay from './FormFieldsDisplay';
 import AdditionalDetailsSection from './AdditionalDetailsSection';
 
@@ -12,6 +14,7 @@ interface ReportDetailsPageProps {
 
 export default function ReportDetailsPage({ report }: ReportDetailsPageProps) {
   const [copied, setCopied] = useState(false);
+  const templates = useAtomValue(templatesAtom);
 
   if (!report) return null;
 
@@ -47,7 +50,10 @@ export default function ReportDetailsPage({ report }: ReportDetailsPageProps) {
 
   // Helper function to extract form fields from template
   const getFormFields = () => {
-    const template = reportTemplates.find(t => t.title === report.templateType);
+    const template = templates.find(t => t.title === report.templateType);
+
+    console.log('template', template);
+
     if (!template) return [];
     
     try {
