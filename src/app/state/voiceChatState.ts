@@ -45,7 +45,7 @@ export interface TemplateCreationProgress {
     required: boolean;
     enum?: string[];
   }>;
-  currentPhase?: 'core-attributes' | 'field-definition' | 'review';
+  currentPhase?: 'field-definition' | 'review';
 }
 
 export const templateCreationProgressAtom = atom<TemplateCreationProgress>({});

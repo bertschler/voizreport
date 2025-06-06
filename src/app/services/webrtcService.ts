@@ -343,7 +343,7 @@ class WebRTCServiceClass {
         {
           type: 'function',
           name: 'template_progress_updated',
-          description: 'Call this function when template creation progress is updated (title, description, fields, etc.)',
+          description: 'Call this function when template creation progress is set or updated (title, description, fields, etc.). Pass all fields with the current values (or empty if not set yet).',
           parameters: {
             type: 'object',
             properties: {
@@ -371,7 +371,7 @@ class WebRTCServiceClass {
                   },
                   current_phase: { 
                     type: 'string', 
-                    enum: ['core-attributes', 'field-definition', 'review'],
+                    enum: ['field-definition', 'review'],
                     description: 'Current phase of template creation' 
                   }
                 }
