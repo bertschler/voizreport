@@ -20,10 +20,10 @@ import {
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
-import { addTemplateAtom, convertCreatedTemplateToReportTemplate } from '@/app/state/templatesState';
+import { addTemplateAtom } from '@/app/state/templatesState';
 import { userNameAtom, voiceModeAtom } from '@/app/state/settingsState';
 import { WebRTCService, WebRTCServiceCallbacks } from '@/app/services/webrtcService';
-import { ReportTemplate, SubmittedReport } from '@/app/data/mockData';
+import { handleFunctionCall, FunctionHandlerContext, FunctionCallMessage } from '@/app/services/functionHandlers';
 
 interface VoiceChatProviderProps {
   children: React.ReactNode;
@@ -69,181 +69,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     }
   }, [voiceMode, isSessionActive]);
 
-  // Generate form summary
-  const generateFormSummary = (formData: Record<string, any>): FormSummary => {
-    const timestamp = Date.now();
 
-    const plainText = "";
-
-    const json = {
-      timestamp: timestamp,
-      completed_at: new Date(timestamp).toISOString(),
-      data: formData,
-    };
-
-    return { plainText, json, timestamp };
-  };
-
-  // Create SubmittedReport from form summary
-  const createSubmittedReport = (summary: FormSummary): SubmittedReport => {
-    const now = new Date();
-    const reportId = Date.now(); // Simple ID generation
-    
-    return {
-      id: reportId,
-      title: selectedTemplate?.title || 'Voice Report',
-      templateType: selectedTemplate?.title || 'Custom Report',
-      date: now.toLocaleDateString(),
-      status: 'Completed',
-      summary: summary.plainText.substring(0, 150) + (summary.plainText.length > 150 ? '...' : ''),
-      plainText: summary.plainText,
-      json: summary.json,
-      isNew: true
-    };
-  };
-
-  // Handle function calls from OpenAI
-  const handleFunctionCall = async (message: any) => {
-    const { name, arguments: args, call_id } = message;
-    
-    console.log('🎯 Handling function call:', name, args);
-    
-    if (name === 'exit_conversation') {
-      console.log('🚫 Exit conversation function called');
-      endSession();
-    } else if (name === 'exit_template_creation') {
-      console.log('🚫 Exit template creation function called');
-      endSession();
-    } else if (name === 'template_progress_updated') {
-      console.log('🎨 Template progress updated function called with:', args);
-      const parsedArgs = JSON.parse(args);
-      
-      // Update template creation progress
-      if (parsedArgs.template_data) {
-        setTemplateCreationProgress(parsedArgs.template_data);
-        console.log('🎨 Updated template creation progress:', parsedArgs.template_data);
-      }
-      
-      // Send success response
-      WebRTCService.getInstance().sendFunctionResponse(call_id, {
-        status: 'success',
-        message: 'Template progress updated successfully'
-      });
-    } else if (name === 'complete_template_creation') {
-      try {
-        const parsedArgs = JSON.parse(args);
-        console.log('🎨 Template creation completion function called with:', parsedArgs);
-        
-        // Save the completed template
-        if (parsedArgs.template_data) {
-          setCreatedTemplate(parsedArgs.template_data);
-          
-          // Convert and save to persistent templates state
-          const convertedTemplate = convertCreatedTemplateToReportTemplate(parsedArgs.template_data);
-          const savedTemplate = addTemplate(convertedTemplate);
-          
-          console.log('🎨 Template creation completed and saved:', {
-            original: parsedArgs.template_data,
-            converted: convertedTemplate,
-            saved: savedTemplate
-          });
-        }
-        
-        // Send success response
-        WebRTCService.getInstance().sendFunctionResponse(call_id, {
-          status: 'success',
-          message: 'Template created successfully!'
-        });
-        
-        // Notify parent component if needed
-        if (onFormCompleted) {
-          // Create a summary for template creation
-          const templateSummary = {
-            plainText: `Template "${parsedArgs.template_data?.title || 'New Template'}" created successfully`,
-            json: parsedArgs.template_data || {},
-            timestamp: Date.now()
-          };
-          onFormCompleted(templateSummary);
-        }
-        
-        // End session after delay
-        setTimeout(() => {
-          endSession();
-        }, 3000);
-        
-      } catch (error) {
-        console.error('💥 Error handling template creation completion:', error);
-        
-        WebRTCService.getInstance().sendFunctionResponse(call_id, {
-          status: 'error',
-          message: 'Failed to complete template creation'
-        });
-      }
-    } else if (name === 'form_fields_updated') { 
-      console.log('📋 Form fields updated function called with:', args);
-      const parsedArgs = JSON.parse(args);
-      
-      // Update form progress with the extracted data
-      if (parsedArgs.extracted_data) {
-        setFormProgress(parsedArgs.extracted_data);
-        console.log('📋 Updated form progress:', parsedArgs.extracted_data);
-      }
-    } else if (name === 'complete_form_submission') {
-      try {
-        const parsedArgs = JSON.parse(args);
-        console.log('📋 Form completion function called with:', parsedArgs);
-        
-        const currentFormData = {
-          ...formData,
-          ...parsedArgs.extracted_data
-        };
-        
-        const transcription = parsedArgs.transcription_compact || '';
-        const summary = generateFormSummary(currentFormData);
-        
-        if (transcription) {
-          summary.json.transcription = transcription;
-          summary.plainText += `${transcription}`;
-        }
-        
-        console.log('📋 Generated form summary:', summary);
-        
-        // Create and save the report using Jotai
-        const submittedReport = createSubmittedReport(summary);
-        addReport(submittedReport);
-        
-        // Send success response
-        WebRTCService.getInstance().sendFunctionResponse(call_id, {
-          status: 'success',
-          message: 'Form completed successfully. Report has been generated and saved.',
-          summary: {
-            total_fields: Object.keys(currentFormData).length,
-            completed_fields: Object.keys(currentFormData).filter(key => 
-              currentFormData[key] && String(currentFormData[key]).trim() !== ''
-            ).length
-          }
-        });
-        
-        // Notify parent component
-        if (onFormCompleted) {
-          onFormCompleted(summary);
-        }
-        
-        // End session after delay
-        setTimeout(() => {
-          endSession();
-        }, 3000);
-        
-      } catch (error) {
-        console.error('💥 Error handling function call:', error);
-        
-        WebRTCService.getInstance().sendFunctionResponse(call_id, {
-          status: 'error',
-          message: 'Failed to complete form submission'
-        });
-      }
-    }
-  };
 
   // Handle realtime messages from OpenAI
   const handleRealtimeMessage = (message: any, messageSessionId?: string) => {
@@ -283,7 +109,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
 
       case 'response.function_call_arguments.done':
         console.log('🔧 Function call completed:', message);
-        handleFunctionCall(message);
+        handleFunctionCallWrapper(message);
         break;
         
       case 'error':
@@ -402,6 +228,29 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       console.error('💥 Error during session cleanup:', error);
     }
   }, [setIsSessionActive, setIsConnecting, setSessionId, setTranscript, setAiResponse, setError, setFormProgress, setActiveTemplate, setSelectedTemplate, setVoiceChatMode]);
+
+  // Handle function calls from OpenAI using the extracted handler service
+  const handleFunctionCallWrapper = useCallback(async (message: any) => {
+    const functionMessage: FunctionCallMessage = {
+      name: message.name,
+      arguments: message.arguments,
+      call_id: message.call_id
+    };
+    
+    const context: FunctionHandlerContext = {
+      setTemplateCreationProgress,
+      setCreatedTemplate,
+      setFormProgress,
+      formData,
+      selectedTemplate,
+      onFormCompleted,
+      endSession,
+      addReport,
+      addTemplate
+    };
+    
+    await handleFunctionCall(functionMessage, context);
+  }, [formData, selectedTemplate, onFormCompleted, addReport, addTemplate, setTemplateCreationProgress, setCreatedTemplate, setFormProgress, endSession]);
 
   // Auto-start session when template is selected
   useEffect(() => {
