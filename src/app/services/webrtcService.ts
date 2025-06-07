@@ -4,6 +4,8 @@ import { VoiceChatMode } from '@/app/state/voiceChatState';
 import { VOICE_AI_BASE_INSTRUCTIONS } from '@/config/instructions/base-instructions';
 import { TEMPLATE_CREATION_FUNCTION_INSTRUCTIONS, VOICE_MODE_INSTRUCTIONS, REPORT_FILLING_FUNCTION_INSTRUCTIONS } from '@/config/instructions/function-instructions';
 import { VOICE_AI_TEMPLATE_INSTRUCTIONS } from '@/config/instructions/template-instructions';
+import { getReportFillingTools } from '@/config/instructions/report-filling-tools';
+import { TEMPLATE_CREATION_TOOLS } from '@/config/instructions/template-creation-tools';
 
 export interface WebRTCSessionData {
   sessionId: string;
@@ -338,170 +340,9 @@ class WebRTCServiceClass {
     const instructions = this.getInstructions(templateInstructions, voiceMode, voiceChatMode, userName);
     const isTemplateCreation = voiceChatMode === 'template-creation';
     
-    let tools = [];
-    
-    if (isTemplateCreation) {
-      // Template creation tools (placeholder for future implementation)
-      tools = [
-        {
-          type: 'function',
-          name: 'template_progress_updated',
-          description: 'Call this function when template creation progress is set or updated (title, description, fields, etc.). Pass all fields with the current values (or empty if not set yet).',
-          parameters: {
-            type: 'object',
-            properties: {
-              template_data: {
-                type: 'object',
-                description: 'Current template creation progress',
-                properties: {
-                  title: { type: 'string', description: 'Template title' },
-                  description: { type: 'string', description: 'Template description' },
-                  definition: { type: 'string', description: 'Template definition/instructions' },
-                  icon: { type: 'string', description: 'Template icon (emoji)' },
-                  fields: { 
-                    type: 'array',
-                    description: 'Template fields being defined',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        name: { type: 'string', description: 'Field name/key' },
-                        type: { type: 'string', description: 'Field data type (string, number, boolean, etc.)' },
-                        description: { type: 'string', description: 'Field description for voice prompts' },
-                        required: { type: 'boolean', description: 'Whether this field is required' },
-                        enum: { 
-                          type: 'array', 
-                          items: { type: 'string' },
-                          description: 'Optional: List of allowed values for multiple choice fields'
-                        }
-                      },
-                      required: ['name', 'type', 'description', 'required'],
-                      additionalProperties: false
-                    }
-                  },
-                  current_phase: { 
-                    type: 'string', 
-                    enum: ['core-attributes', 'field-definition', 'review'],
-                    description: 'Current phase of template creation' 
-                  }
-                }
-              }
-            },
-            required: ['template_data']
-          }
-        },
-        {
-          type: 'function',
-          name: 'complete_template_creation',
-          description: 'Call this function when the template creation is complete and ready to be finalized. Pass all fields with the current values (or empty if not set yet).',
-          parameters: {
-            type: 'object',
-            properties: {
-              template_data: {
-                type: 'object',
-                description: 'Current template creation progress with all fields',
-                properties: {
-                  title: { type: 'string', description: 'Template title' },
-                  description: { type: 'string', description: 'Template description' },
-                  definition: { type: 'string', description: 'Template definition/instructions' },
-                  icon: { type: 'string', description: 'Template icon (emoji)' },
-                  fields: { 
-                    type: 'array',
-                    description: 'Template fields being defined',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        name: { type: 'string', description: 'Field name/key' },
-                        type: { type: 'string', description: 'Field data type (string, number, boolean, etc.)' },
-                        description: { type: 'string', description: 'Field description for voice prompts' },
-                        required: { type: 'boolean', description: 'Whether this field is required' },
-                        enum: { 
-                          type: 'array', 
-                          items: { type: 'string' },
-                          description: 'Optional: List of allowed values for multiple choice fields'
-                        }
-                      },
-                      required: ['name', 'type', 'description', 'required'],
-                      additionalProperties: false
-                    }
-                  }
-                }
-              }
-            },
-            required: ['template_data']
-          }
-        },
-        {
-          type: 'function',
-          name: 'exit_template_creation',
-          description: 'Call this function when the user wants to cancel template creation.',
-          parameters: {
-            type: 'object',
-            properties: {},
-            required: []
-          }
-        }
-      ];
-    } else {
-      // Report filling tools (existing functionality)
-      const extractedDataProperties = template?.openai_properties || {};
-      const requiredFields = template?.required_fields || [];
-      
-      tools = [
-        {
-          type: 'function',
-          name: 'form_fields_updated',
-          description: 'Call this function when a field in the form is set or updated. Pass all fields with the current values (or empty if not set yet).',
-          parameters: {
-            type: 'object',
-            properties: {
-              extracted_data: {
-                type: 'object',
-                description: 'All the form data that has been collected so far during the conversation',
-                properties: extractedDataProperties,
-                required: requiredFields
-              }
-            },
-            required: ['extracted_data']
-          }
-        },
-        {
-          type: 'function',
-          name: 'complete_form_submission',
-          description: 'Call this function when all required form fields have been collected and the form is ready to be submitted. This will generate a comprehensive report summary and end the session.',
-          parameters: {
-            type: 'object',
-            properties: {
-              extracted_data: {
-                type: 'object',
-                description: 'All the form data that has been collected during the conversation',
-                properties: extractedDataProperties,
-                required: requiredFields
-              },
-              transcription_compact: {
-                type: 'string',
-                description: 'A compact transcription of the full conversation that has been collected.',
-              },
-              completion_reason: {
-                type: 'string',
-                enum: ['all_required_fields_collected', 'sufficient_information_gathered', 'user_indicated_completion', 'user_stopped_conversation'],
-                description: 'Reason why the form is being completed'
-              }
-            },
-            required: ['extracted_data', 'completion_reason', 'transcription_compact']
-          }
-        },
-        {
-          type: 'function',
-          name: 'exit_conversation',
-          description: 'Call this function immediately when the user wants to cancel, stop, exit, quit, abort, or end the conversation at any time. This is only to be used when the user explicitly wants to end the conversation without saving the form.',
-          parameters: {
-            type: 'object',
-            properties: {},
-            required: []
-          }
-        }
-      ];
-    }
+    const tools = isTemplateCreation 
+      ? TEMPLATE_CREATION_TOOLS
+      : getReportFillingTools(template);
     
     const sessionUpdate = {
       type: 'session.update',
