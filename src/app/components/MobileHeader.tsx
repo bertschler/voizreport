@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface MobileHeaderProps {
   title: string;
@@ -9,6 +10,7 @@ interface MobileHeaderProps {
   onBackClick?: () => void;
   sticky?: boolean;
   onSettingsClick?: () => void;
+  showLogo?: boolean;
 }
 
 export default function MobileHeader({ 
@@ -17,7 +19,8 @@ export default function MobileHeader({
   showBackButton = false, 
   onBackClick,
   sticky = false,
-  onSettingsClick
+  onSettingsClick,
+  showLogo = true
 }: MobileHeaderProps) {
   const headerStyle: React.CSSProperties = {
     backgroundColor: 'white',
@@ -69,24 +72,45 @@ export default function MobileHeader({
         </div>
       ) : (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1 style={{ 
-              fontSize: '24px', 
-              fontWeight: '700',
-              margin: 0,
-              color: '#1e293b'
-            }}>
-              {title}
-            </h1>
-            {subtitle && (
-              <p style={{ 
-                fontSize: '16px', 
-                color: '#64748b',
-                margin: '4px 0 0 0'
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {showLogo && (
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                padding: '2px'
               }}>
-                {subtitle}
-              </p>
+                <Image
+                  src="/appicon.png"
+                  alt="App Icon"
+                  width={48}
+                  height={48}
+                  style={{
+                    //borderRadius: '6px',
+                    objectFit: 'contain',
+                    //boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+                  }}
+                />
+              </div>
             )}
+            <div>
+              <h1 style={{ 
+                fontSize: '24px', 
+                fontWeight: '700',
+                margin: 0,
+                color: '#1e293b'
+              }}>
+                {title}
+              </h1>
+              {subtitle && (
+                <p style={{ 
+                  fontSize: '16px', 
+                  color: '#64748b',
+                  margin: '4px 0 0 0'
+                }}>
+                  {subtitle}
+                </p>
+              )}
+            </div>
           </div>
           
           {/* Settings button - subtle and tertiary */}

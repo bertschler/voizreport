@@ -358,6 +358,29 @@ class WebRTCServiceClass {
     
     this.dataChannel.send(JSON.stringify(sessionUpdate));
     console.log(`📤 Sent ${isTemplateCreation ? 'template creation' : 'report filling'} session configuration`);
+    
+    // Send initial greeting trigger after a short delay to ensure session update is processed
+    setTimeout(() => {
+      this.triggerInitialGreeting();
+    }, 100);
+  }
+
+  private triggerInitialGreeting(): void {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      console.error('💥 Data channel not available for initial greeting');
+      return;
+    }
+
+    // Trigger AI to start speaking by creating a response
+    const responseCreate = {
+      type: 'response.create',
+      response: {
+        modalities: ['text', 'audio']
+      }
+    };
+    
+    this.dataChannel.send(JSON.stringify(responseCreate));
+    console.log('📤 Sent initial greeting trigger');
   }
 
   private getInstructions(templateInstructions?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode, userName?: string): string {
