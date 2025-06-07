@@ -1,6 +1,9 @@
-import { VOICE_AI_INSTRUCTIONS, VOICE_AI_TEMPLATE_INSTRUCTIONS } from '@/config/voice-ai-instructions';
+
 import { ReportTemplate } from '@/app/data/mockData';
-import { FormSummary, VoiceChatMode } from '@/app/state/voiceChatState';
+import { VoiceChatMode } from '@/app/state/voiceChatState';
+import { VOICE_AI_BASE_INSTRUCTIONS } from '@/config/instructions/base-instructions';
+import { TEMPLATE_CREATION_FUNCTION_INSTRUCTIONS, VOICE_MODE_INSTRUCTIONS, REPORT_FILLING_FUNCTION_INSTRUCTIONS } from '@/config/instructions/function-instructions';
+import { VOICE_AI_TEMPLATE_INSTRUCTIONS } from '@/config/instructions/template-instructions';
 
 export interface WebRTCSessionData {
   sessionId: string;
@@ -332,7 +335,7 @@ class WebRTCServiceClass {
       return;
     }
 
-    const instructions = this.getInstructions(templateInstructions, voiceMode, voiceChatMode);
+    const instructions = this.getInstructions(templateInstructions, voiceMode, voiceChatMode, userName);
     const isTemplateCreation = voiceChatMode === 'template-creation';
     
     let tools = [];
@@ -514,70 +517,31 @@ class WebRTCServiceClass {
     
     this.dataChannel.send(JSON.stringify(sessionUpdate));
     console.log(`📤 Sent ${isTemplateCreation ? 'template creation' : 'report filling'} session configuration`);
-    
-    // Send initial greeting
-    this.sendInitialGreeting(userName, isTemplateCreation);
   }
 
-  private sendInitialGreeting(userName?: string, isTemplateCreation?: boolean): void {
-    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-      return;
-    }
-
-    const greeting = userName ? `Hello! I am ${userName}.` : 'Hello!';
-    
-    const initialPrompt = {
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'user',
-        content: [
-          {
-            type: 'input_text',
-            text: greeting
-          }
-        ]
-      }
-    };
-    
-    this.dataChannel.send(JSON.stringify(initialPrompt));
-    console.log('📤 Sent initial greeting');
-  }
-
-  private getInstructions(templateInstructions?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode): string {
+  private getInstructions(templateInstructions?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode, userName?: string): string {
     const isTemplateCreation = voiceChatMode === 'template-creation';
+    
+    // Add user name context if available
+    const userNameContext = userName ? `\n\nThe user's name is ${userName}.` : '';
     
     if (isTemplateCreation) {
       // Use template creation instructions
-      const baseInstructions = `${VOICE_AI_TEMPLATE_INSTRUCTIONS}\n\nToday is ${new Date().toLocaleDateString()}.`;
+      const baseInstructions = `${VOICE_AI_TEMPLATE_INSTRUCTIONS}${userNameContext}\n\nToday is ${new Date().toLocaleDateString()}.`;
       
-      const functionInstruction = `\n\n
-        IMPORTANT FUNCTION CALLING RULES FOR TEMPLATE CREATION:
-        1. When template creation progress is made (title, description, fields defined, etc.), call the 'template_progress_updated' function with the current progress.
-        2. When the template is complete and ready to be finalized, call the 'complete_template_creation' function with the final template definition.
-        3. If the user wants to cancel template creation, call the 'exit_template_creation' function.
-      `;
-      
-      return baseInstructions + functionInstruction;
+      return baseInstructions + TEMPLATE_CREATION_FUNCTION_INSTRUCTIONS;
     } else {
       // Use regular report filling instructions
       const baseInstructions = templateInstructions 
-        ? `${VOICE_AI_INSTRUCTIONS}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
-        : VOICE_AI_INSTRUCTIONS;
+        ? `${VOICE_AI_BASE_INSTRUCTIONS}${userNameContext}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
+        : `${VOICE_AI_BASE_INSTRUCTIONS}${userNameContext}`;
       
       // Add voice mode specific instructions
       const voiceModeInstructions = voiceMode === 'freeform' 
-        ? `\n\nCURRENT VOICE MODE: FREEFORM - The user prefers to do most of the talking. Let them speak freely and naturally extract information from their responses. Don't be overly conversational - focus on listening and capturing data efficiently.`
-        : `\n\nCURRENT VOICE MODE: GUIDED - Help the user by guiding them through each field step by step. Ask clear questions to help them fill out the form systematically.`;
+        ? VOICE_MODE_INSTRUCTIONS.FREEFORM
+        : VOICE_MODE_INSTRUCTIONS.GUIDED;
       
-      const functionInstruction = `\n\n
-        IMPORTANT FUNCTION CALLING RULES:
-        1. When you have collected all the necessary information for the form and the conversation is complete, say something simimar to "Thanks, I have all the information I need. I will now generate the report summary and end the session.", AFTERWARDS call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
-        2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function. If your already collected partial or full data (other than the name of the user), ask first if they want to submit the data and if yes call the 'complete_form_submission' function instead.
-        3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
-      `;
-      
-      return baseInstructions + voiceModeInstructions + functionInstruction;
+      return baseInstructions + voiceModeInstructions + REPORT_FILLING_FUNCTION_INSTRUCTIONS;
     }
   }
 
