@@ -48,7 +48,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const addTemplate = useSetAtom(addTemplateAtom);
   const [userName] = useAtom(userNameAtom);
   const [voiceMode] = useAtom(voiceModeAtom);
-  const [voiceChatMode] = useAtom(voiceChatModeAtom);
+  const [voiceChatMode, setVoiceChatMode] = useAtom(voiceChatModeAtom);
   const setTemplateCreationProgress = useSetAtom(templateCreationProgressAtom);
   const setCreatedTemplate = useSetAtom(createdTemplateAtom);
   
@@ -394,13 +394,14 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setFormProgress({});
       setActiveTemplate(null);
       setSelectedTemplate(null); // Clear selected template
+      setVoiceChatMode('report'); // Reset voice chat mode to default (reports)
       
       console.log('✅ Session ended successfully');
       
     } catch (error) {
       console.error('💥 Error during session cleanup:', error);
     }
-  }, [setIsSessionActive, setIsConnecting, setSessionId, setTranscript, setAiResponse, setError, setFormProgress, setActiveTemplate, setSelectedTemplate]);
+  }, [setIsSessionActive, setIsConnecting, setSessionId, setTranscript, setAiResponse, setError, setFormProgress, setActiveTemplate, setSelectedTemplate, setVoiceChatMode]);
 
   // Auto-start session when template is selected
   useEffect(() => {
