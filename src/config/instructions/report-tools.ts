@@ -65,7 +65,7 @@ export const getReportTools = (template?: ReportTemplate) => {
     {
       type: 'function',
       name: 'open_camera',
-      description: 'Call this function when the user wants to take a photo or attach a picture. This will open the device camera interface.',
+      description: 'Call this function ONLY when the camera is NOT currently open and the user wants to take a photo or attach a picture (e.g., "I want to take a picture", "add a photo", "attach an image"). This will open the device camera interface and display the camera preview.',
       parameters: {
         type: 'object',
         properties: {
@@ -81,7 +81,7 @@ export const getReportTools = (template?: ReportTemplate) => {
     {
       type: 'function',
       name: 'capture_photo',
-      description: 'Call this function immediately when the camera is open and the user wants to capture/take the photo (e.g., "capture it", "take the photo", "capture now", "take it", "snap it"). This will trigger the photo capture process.',
+      description: 'Call this function ONLY when the camera is already open and the user wants to actually capture/take the photo (e.g., "capture it", "take the photo", "capture now", "take it", "snap it", "shoot"). This will take the photo and automatically close the camera.',
       parameters: {
         type: 'object',
         properties: {},

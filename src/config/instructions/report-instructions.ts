@@ -73,8 +73,16 @@ IMPORTANT FUNCTION CALLING RULES:
 1. When you have collected all the necessary information for the form and the conversation is complete, say something similar to "Thanks, I have all the information I need. I will now generate the report summary and end the session.", AFTERWARDS call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
 2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function. If you already collected partial or full data (other than the name of the user), ask first if they want to submit the data and if yes call the 'complete_form_submission' function instead.
 3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
-4. If the users wants to add a photo, call the 'open_camera' function.
-5. If the camera is open and the user wants to capture/take the photo (e.g., "capture it", "take the photo", "capture now", "take it"), call the 'capture_photo' function immediately.
+
+CAMERA FUNCTION RULES - VERY IMPORTANT:
+4. **Camera NOT open + user wants photo**: If the camera is NOT currently open and the user says something like "I want to take a picture", "add a photo", "attach an image", "take a photo" → call 'open_camera' function to open the camera interface.
+5. **Camera IS open + user wants to capture**: If the camera IS already open and the user says something like "capture it", "take the photo", "capture now", "take it", "snap it", "shoot" → call 'capture_photo' function to actually take the photo and close the camera.
+
+REMEMBER: Track camera state mentally:
+- After calling 'open_camera': Camera becomes OPEN
+- After calling 'capture_photo': Camera becomes CLOSED (automatically)
+- The user saying "take a picture" when camera is closed = open camera
+- The user saying "take a picture" when camera is open = capture photo
 `;
 
 const VOICE_MODE_INSTRUCTIONS = {

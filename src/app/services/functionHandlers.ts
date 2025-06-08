@@ -311,6 +311,7 @@ export const handleOpenCamera = async (
           WebRTCService.getInstance().sendFunctionResponse(responseCallId || message.call_id, {
             status: 'success',
             message: 'Photo captured successfully',
+            camera_state: 'closed',
             photo: {
               name: file.name,
               size: file.size,
@@ -331,14 +332,61 @@ export const handleOpenCamera = async (
     };
 
     // Handle capture button click
-    captureBtn.onclick = () => capturePhoto();
+    captureBtn.onclick = () => {
+      // Notify AI that photo was captured via button
+      const webrtcService = WebRTCService.getInstance();
+      const dataChannel = (webrtcService as any).dataChannel;
+      
+      if (dataChannel && dataChannel.readyState === 'open') {
+        const stateUpdate = {
+          type: 'conversation.item.create',
+          item: {
+            type: 'message',
+            role: 'user',
+            content: [
+              {
+                type: 'input_text',
+                text: 'I just clicked the capture button and the photo was taken successfully. The camera is now closed.'
+              }
+            ]
+          }
+        };
+        dataChannel.send(JSON.stringify(stateUpdate));
+        console.log('📤 Sent camera state update: closed (via button)');
+      }
+      
+      capturePhoto();
+    };
     
     // Handle close
     closeBtn.onclick = () => {
+      // Notify AI that camera was closed via button
+      const webrtcService = WebRTCService.getInstance();
+      const dataChannel = (webrtcService as any).dataChannel;
+      
+      if (dataChannel && dataChannel.readyState === 'open') {
+        const stateUpdate = {
+          type: 'conversation.item.create',
+          item: {
+            type: 'message',
+            role: 'user',
+            content: [
+              {
+                type: 'input_text',
+                text: 'I just clicked the close button and cancelled the camera. The camera is now closed.'
+              }
+            ]
+          }
+        };
+        dataChannel.send(JSON.stringify(stateUpdate));
+        console.log('📤 Sent camera state update: closed (via close button)');
+      }
+      
       cleanup();
       WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
         status: 'cancelled',
-        message: 'Camera cancelled by user'
+        message: 'Camera cancelled by user',
+        camera_state: 'closed'
       });
     };
     
@@ -352,6 +400,14 @@ export const handleOpenCamera = async (
     overlay.appendChild(captureBtn);
     overlay.appendChild(closeBtn);
     document.body.appendChild(overlay);
+    
+    // Send success response to inform AI that camera is now open
+    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+      status: 'success',
+      message: 'Camera opened successfully',
+      camera_state: 'open',
+      instructions: 'Camera is now open and showing live preview. When user says to capture/take the photo, call capture_photo function.'
+    });
     
     console.log('📸 Camera opened successfully');
     
