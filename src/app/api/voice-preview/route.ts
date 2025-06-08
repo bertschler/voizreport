@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Voice and text are required' }, { status: 400 });
     }
 
-    // Validate voice option
-    const validVoices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse'];
+    // Validate voice option (only voices supported by both TTS and Realtime APIs)
+    const validVoices = ['alloy', 'ash', 'coral', 'echo', 'sage', 'shimmer'];
     if (!validVoices.includes(voice)) {
       return NextResponse.json({ error: 'Invalid voice option' }, { status: 400 });
     }
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Generate speech using OpenAI TTS
     const mp3 = await openai.audio.speech.create({
       model: 'tts-1',
-      voice: voice as 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse',
+      voice: voice as 'alloy' | 'ash' | 'coral' | 'echo' | 'sage' | 'shimmer',
       input: text,
       response_format: 'mp3',
     });

@@ -7,17 +7,15 @@ export const isConnectingAtom = atom<boolean>(false);
 export const errorAtom = atom<string | null>(null);
 
 // Voice selection atoms
-export type VoiceOption = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
+export type VoiceOption = 'alloy' | 'ash' | 'coral' | 'echo' | 'sage' | 'shimmer';
 
 export const VOICE_OPTIONS: Array<{ value: VoiceOption; label: string; description: string }> = [
   { value: 'alloy', label: 'Alloy', description: 'Balanced and versatile voice' },
   { value: 'ash', label: 'Ash', description: 'Clear and articulate voice' },
-  { value: 'ballad', label: 'Ballad', description: 'Smooth and melodic voice' },
   { value: 'coral', label: 'Coral', description: 'Warm and friendly voice' },
   { value: 'echo', label: 'Echo', description: 'Resonant and distinctive voice' },
   { value: 'sage', label: 'Sage', description: 'Wise and thoughtful voice' },
-  { value: 'shimmer', label: 'Shimmer', description: 'Bright and engaging voice' },
-  { value: 'verse', label: 'Verse', description: 'Expressive and dynamic voice' }
+  { value: 'shimmer', label: 'Shimmer', description: 'Bright and engaging voice' }
 ];
 
 export const selectedVoiceAtom = atom<VoiceOption>('alloy');
