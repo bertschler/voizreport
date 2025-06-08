@@ -396,34 +396,6 @@ class WebRTCServiceClass {
     }
   }
 
-  sendVoiceModeUpdate(voiceMode: string): void {
-    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-      console.error('💥 Data channel not available for voice mode update');
-      return;
-    }
-
-    const modeText = voiceMode === 'freeform' 
-      ? 'I switched to freeform mode - I prefer to do most of the talking.'
-      : 'I switched to guided mode - please help me fill out the form step by step.';
-
-    const voiceModeUpdate = {
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'user',
-        content: [
-          {
-            type: 'input_text',
-            text: modeText
-          }
-        ]
-      }
-    };
-    
-    this.dataChannel.send(JSON.stringify(voiceModeUpdate));
-    console.log('📤 Sent voice mode update:', voiceMode);
-  }
-
   sendFunctionResponse(callId: string, response: any): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       console.error('💥 Data channel not available for function response');

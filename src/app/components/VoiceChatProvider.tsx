@@ -62,7 +62,12 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   useEffect(() => {
     if (isSessionActive && previousVoiceMode.current !== voiceMode) {
       console.log('🎙️ Voice mode changed during session:', previousVoiceMode.current, '->', voiceMode);
-      WebRTCService.getInstance().sendVoiceModeUpdate(voiceMode);
+      
+      const modeText = voiceMode === 'freeform' 
+        ? 'I switched to freeform mode - I prefer to do most of the talking.'
+        : 'I switched to guided mode - please help me fill out the form step by step.';
+      
+      WebRTCService.getInstance().sendConversationMessage(modeText);
       previousVoiceMode.current = voiceMode;
     } else {
       previousVoiceMode.current = voiceMode;
