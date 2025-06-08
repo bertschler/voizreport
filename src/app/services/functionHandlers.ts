@@ -1,7 +1,7 @@
 import { WebRTCService } from './webrtcService';
 import { FormSummary } from '@/app/state/voiceChatState';
 import { convertCreatedTemplateToReportTemplate } from '@/app/state/templatesState';
-import { SubmittedReport } from '@/app/data/mockData';
+import { SubmittedReport, PhotoAttachment } from '@/app/data/mockData';
 
 // Global camera state for voice-triggered capture
 let globalCameraState: {
@@ -13,6 +13,9 @@ let globalCameraState: {
   captureFunction: null,
   cleanup: null
 };
+
+// Global photo attachments storage
+let globalPhotoAttachments: PhotoAttachment[] = [];
 
 // Type definitions for function handlers
 export interface FunctionHandlerContext {
@@ -31,6 +34,31 @@ export interface FunctionHandlerContext {
   addReport: (report: SubmittedReport) => void;
   addTemplate: (template: any) => any;
 }
+
+// Photo attachment utilities
+export const addPhotoAttachment = (photo: PhotoAttachment): void => {
+  globalPhotoAttachments.push(photo);
+  console.log('📸 Added photo attachment:', photo.filename, 'Total photos:', globalPhotoAttachments.length);
+};
+
+export const getPhotoAttachments = (): PhotoAttachment[] => {
+  return [...globalPhotoAttachments];
+};
+
+export const clearPhotoAttachments = (): void => {
+  globalPhotoAttachments = [];
+  console.log('📸 Cleared all photo attachments');
+};
+
+export const associatePhotoWithField = (photoId: string, fieldName: string): boolean => {
+  const photo = globalPhotoAttachments.find(p => p.id === photoId);
+  if (photo) {
+    photo.fieldName = fieldName;
+    console.log('📸 Associated photo', photoId, 'with field', fieldName);
+    return true;
+  }
+  return false;
+};
 
 export interface FunctionCallMessage {
   name: string;
@@ -54,6 +82,9 @@ export const createSubmittedReport = (summary: FormSummary, selectedTemplate?: a
   const now = new Date();
   const reportId = Date.now();
   
+  // Get current photo attachments
+  const photoAttachments = getPhotoAttachments();
+  
   return {
     id: reportId,
     title: selectedTemplate?.title || 'Voice Report',
@@ -63,6 +94,7 @@ export const createSubmittedReport = (summary: FormSummary, selectedTemplate?: a
     summary: summary.plainText.substring(0, 150) + (summary.plainText.length > 150 ? '...' : ''),
     plainText: summary.plainText,
     json: summary.json,
+    photoAttachments: photoAttachments.length > 0 ? photoAttachments : undefined,
     isNew: true
   };
 };
@@ -303,24 +335,40 @@ export const handleOpenCamera = async (
       canvas.toBlob((blob) => {
         if (blob) {
           // Create file object
-          const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+          const filename = `photo_${Date.now()}.jpg`;
+          const file = new File([blob], filename, { type: 'image/jpeg' });
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+          // Create photo attachment
+          const photoAttachment: PhotoAttachment = {
+            id: `photo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            filename: filename,
+            size: file.size,
+            type: file.type,
+            dataUrl: dataUrl,
+            capturedAt: new Date().toISOString()
+          };
+
+          // Save photo attachment
+          addPhotoAttachment(photoAttachment);
 
           // TODO save photo to google cloud storage
           
           // Send success response with photo data (use provided call ID or original)
           WebRTCService.getInstance().sendFunctionResponse(responseCallId || message.call_id, {
             status: 'success',
-            message: 'Photo captured successfully',
+            message: `Photo captured and saved as ${filename}. This photo is now attached to the report.`,
             camera_state: 'closed',
             photo: {
-              name: file.name,
+              id: photoAttachment.id,
+              filename: filename,
               size: file.size,
               type: file.type,
-              data_url: canvas.toDataURL('image/jpeg', 0.8)
+              data_url: dataUrl
             }
           });
           
-          console.log('📸 Photo captured:', file.name, file.size, 'bytes');
+          console.log('📸 Photo captured and saved:', filename, file.size, 'bytes');
           
           // Cleanup after successful capture
           console.log('📸 Cleaning up camera...');
@@ -447,6 +495,22 @@ export const handleFormFieldsUpdated = async (
     if (parsedArgs.debug_info) {
       console.log('📋 Debug info:', parsedArgs.debug_info);
     }
+
+    // Send back current photo attachments to keep AI informed
+    const currentPhotos = getPhotoAttachments();
+    if (currentPhotos.length > 0) {
+      WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+        status: 'success',
+        message: 'Form fields updated successfully',
+        photo_attachments: currentPhotos.map(photo => ({
+          id: photo.id,
+          filename: photo.filename,
+          size: photo.size,
+          capturedAt: photo.capturedAt,
+          fieldName: photo.fieldName
+        }))
+      });
+    }
   } catch (error) {
     console.error('💥 Error handling form fields update:', error);
   }
@@ -472,6 +536,18 @@ export const handleCompleteFormSubmission = async (
       summary.json.transcription = transcription;
       summary.plainText += `${transcription}`;
     }
+
+    // Add photo attachments info to summary
+    const currentPhotos = getPhotoAttachments();
+    if (currentPhotos.length > 0) {
+      summary.json.photoAttachments = currentPhotos.map(photo => ({
+        id: photo.id,
+        filename: photo.filename,
+        size: photo.size,
+        capturedAt: photo.capturedAt,
+        fieldName: photo.fieldName
+      }));
+    }
     
     console.log('📋 Generated form summary:', summary);
     
@@ -479,15 +555,20 @@ export const handleCompleteFormSubmission = async (
     const submittedReport = createSubmittedReport(summary, context.selectedTemplate);
     context.addReport(submittedReport);
     
+    // Clear photo attachments after successful submission
+    clearPhotoAttachments();
+    
     // Send success response
+    const photoSummary = currentPhotos.length > 0 ? ` Included ${currentPhotos.length} photo attachment(s).` : '';
     WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
       status: 'success',
-      message: 'Form completed successfully. Report has been generated and saved.',
+      message: `Form completed successfully. Report has been generated and saved.${photoSummary}`,
       summary: {
         total_fields: Object.keys(currentFormData).length,
         completed_fields: Object.keys(currentFormData).filter(key => 
           currentFormData[key] && String(currentFormData[key]).trim() !== ''
-        ).length
+        ).length,
+        photo_attachments: currentPhotos.length
       }
     });
     
@@ -511,6 +592,46 @@ export const handleCompleteFormSubmission = async (
   }
 };
 
+export const handleAssociatePhotoWithField = async (
+  message: FunctionCallMessage,
+  context: FunctionHandlerContext
+): Promise<void> => {
+  console.log('📸 Associate photo with field function called with:', message.arguments);
+  
+  try {
+    const parsedArgs = JSON.parse(message.arguments);
+    const { photo_id, field_name } = parsedArgs;
+    
+    if (!photo_id || !field_name) {
+      throw new Error('photo_id and field_name are required');
+    }
+    
+    const success = associatePhotoWithField(photo_id, field_name);
+    
+    if (success) {
+      WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+        status: 'success',
+        message: `Photo ${photo_id} associated with field ${field_name}`
+      });
+    } else {
+      throw new Error(`Photo ${photo_id} not found`);
+    }
+    
+  } catch (error) {
+    console.error('💥 Error associating photo with field:', error);
+    
+    let errorMessage = 'Failed to associate photo with field';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+      status: 'error',
+      message: errorMessage
+    });
+  }
+};
+
 // Main function handler dispatcher
 export const handleFunctionCall = async (
   message: FunctionCallMessage,
@@ -527,6 +648,7 @@ export const handleFunctionCall = async (
     'complete_form_submission': handleCompleteFormSubmission,
     'open_camera': handleOpenCamera,
     'capture_photo': handleCapturePhoto,
+    'associate_photo_with_field': handleAssociatePhotoWithField,
   };
   
   const handler = handlers[message.name];

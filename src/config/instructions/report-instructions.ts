@@ -83,6 +83,16 @@ REMEMBER: Track camera state mentally:
 - After calling 'capture_photo': Camera becomes CLOSED (automatically)
 - The user saying "take a picture" when camera is closed = open camera
 - The user saying "take a picture" when camera is open = capture photo
+
+PHOTO ATTACHMENT HANDLING:
+6. **Photo attachments**: When photos are captured, they are automatically saved as attachments to the report. You will receive confirmation with the filename and photo ID. Keep track of captured photos and mention them when summarizing the report.
+7. **Form field photos**: If a photo is meant for a specific form field (e.g., "take a photo of the damage for the damage_photo field"), you can call 'associate_photo_with_field' function with the photo_id and field_name after the photo is captured.
+8. **Photo confirmation**: After a photo is captured, briefly confirm it like "Got it, photo saved as [filename]" and continue with the form.
+9. **Photo in summary**: When completing the form, mention any photos that were attached: "I've completed your report with [X] photo attachment(s)."
+10. **Available photo functions**:
+    - 'open_camera': Opens camera interface for photo capture
+    - 'capture_photo': Captures photo when camera is open
+    - 'associate_photo_with_field': Associates a captured photo with a specific form field
 `;
 
 const VOICE_MODE_INSTRUCTIONS = {

@@ -156,11 +156,34 @@ export default function SubmittedReports({
             <p style={{ 
               fontSize: '13px', 
               color: '#64748b',
-              margin: '0 0 12px 0',
+              margin: '0 0 8px 0',
               lineHeight: '1.4'
             }}>
               {report.summary}
             </p>
+
+            {/* Photo attachments indicator */}
+            {report.photoAttachments && report.photoAttachments.length > 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '12px',
+                padding: '6px 10px',
+                backgroundColor: '#f8fafc',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <span style={{ fontSize: '14px' }}>📸</span>
+                <span style={{ 
+                  fontSize: '12px', 
+                  color: '#475569',
+                  fontWeight: '500'
+                }}>
+                  {report.photoAttachments.length} photo attachment{report.photoAttachments.length > 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
             
             <div style={{ 
               fontSize: '12px', 

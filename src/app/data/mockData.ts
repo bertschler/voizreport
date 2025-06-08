@@ -8,6 +8,16 @@ export interface ReportTemplate {
   required_fields?: string[];
 }
 
+export interface PhotoAttachment {
+  id: string;
+  filename: string;
+  size: number;
+  type: string;
+  dataUrl: string;
+  capturedAt: string;
+  fieldName?: string; // If photo is associated with a specific form field
+}
+
 export interface SubmittedReport {
   id: number;
   title: string;
@@ -17,6 +27,7 @@ export interface SubmittedReport {
   summary: string;
   plainText: string;
   json: Record<string, any>;
+  photoAttachments?: PhotoAttachment[];
   isNew?: boolean;
 }
 
