@@ -6,6 +6,7 @@ import { SubmittedReport } from '../data/mockData';
 import { templatesAtom } from '../state/templatesState';
 import FormFieldsDisplay from './FormFieldsDisplay';
 import AdditionalDetailsSection from './AdditionalDetailsSection';
+import PhotoAttachmentViewer from './PhotoAttachmentViewer';
 
 interface ReportDetailsPageProps {
   report: SubmittedReport | null;
@@ -139,6 +140,17 @@ export default function ReportDetailsPage({ report }: ReportDetailsPageProps) {
         }}>
           {report.summary}
         </p>
+
+        {/* Photo Attachments Section */}
+        {report.photoAttachments && report.photoAttachments.length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <PhotoAttachmentViewer 
+              photoAttachments={report.photoAttachments}
+              maxWidth={400}
+              showFilenames={true}
+            />
+          </div>
+        )}
 
         {/* Form Fields Display Section */}
         {formFields.length > 0 && (

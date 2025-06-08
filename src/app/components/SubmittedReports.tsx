@@ -3,6 +3,7 @@
 import React from 'react';
 import { SubmittedReport } from '../data/mockData';
 import { useReports } from '../hooks/useReports';
+import PhotoAttachmentViewer from './PhotoAttachmentViewer';
 
 interface SubmittedReportsProps {
   onViewDetails?: (report: SubmittedReport) => void;
@@ -12,6 +13,7 @@ export default function SubmittedReports({
   onViewDetails 
 }: SubmittedReportsProps) {
   const { reports, markAsRead } = useReports();
+  const [selectedReport, setSelectedReport] = React.useState<SubmittedReport | null>(null);
 
   const handleViewDetails = (report: SubmittedReport) => {
     // Mark as read if it was new
@@ -21,6 +23,9 @@ export default function SubmittedReports({
     
     if (onViewDetails) {
       onViewDetails(report);
+    } else {
+      // Show built-in details modal
+      setSelectedReport(report);
     }
   };
   
@@ -228,6 +233,109 @@ export default function SubmittedReports({
           </div>
         ))}
       </div>
+
+      {/* Report Details Modal */}
+      {selectedReport && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }} onClick={() => setSelectedReport(null)}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '800px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#1e293b',
+                margin: 0
+              }}>
+                {selectedReport.title}
+              </h2>
+              <button
+                onClick={() => setSelectedReport(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{
+                fontSize: '16px',
+                color: '#64748b',
+                margin: '0 0 8px 0'
+              }}>
+                {selectedReport.templateType} • {selectedReport.date}
+              </p>
+            </div>
+
+            {/* Show photo attachments if available */}
+            {selectedReport.photoAttachments && selectedReport.photoAttachments.length > 0 && (
+              <div style={{ marginBottom: '24px' }}>
+                <PhotoAttachmentViewer 
+                  photoAttachments={selectedReport.photoAttachments}
+                  maxWidth={300}
+                  showFilenames={true}
+                />
+              </div>
+            )}
+
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#f8fafc',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#334155',
+                margin: '0 0 12px 0'
+              }}>
+                Report Details
+              </h3>
+              <pre style={{
+                fontSize: '13px',
+                color: '#475569',
+                fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+                whiteSpace: 'pre-wrap',
+                margin: 0,
+                lineHeight: '1.5'
+              }}>
+                {JSON.stringify(selectedReport.json, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add CSS animation for the pulse effect */}
       <style jsx>{`
