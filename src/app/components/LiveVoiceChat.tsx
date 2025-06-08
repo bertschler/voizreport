@@ -16,6 +16,8 @@ import ErrorDisplay from './voice-chat/ErrorDisplay';
 import FormFieldsDisplay from './FormFieldsDisplay';
 import TemplateFieldsDisplay from './TemplateFieldsDisplay';
 import VoiceModeToggle from './voice-chat/VoiceModeToggle';
+import CameraButton from './voice-chat/CameraButton';
+import LivePhotoViewer from './voice-chat/LivePhotoViewer';
 import TemplateCreationProgressComponent from './voice-chat/TemplateCreationProgress';
 import CreatedTemplateResult from './voice-chat/CreatedTemplateResult';
 import TemplateCreationInstructions from './voice-chat/TemplateCreationInstructions';
@@ -97,15 +99,18 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
       {/* Error Display */}
       <ErrorDisplay error={error} />
 
-      {/* Voice Mode Toggle - Top Right Corner (only for report mode) */}
+      {/* Controls - Voice Mode Toggle and Camera Button (only for report mode) */}
       {!isTemplateMode && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: '12px',
           marginBottom: '32px',
+          flexWrap: 'wrap'
         }}>
           <VoiceModeToggle />
+          <CameraButton />
         </div>
       )}
 
@@ -122,6 +127,9 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
           createdTemplate={createdTemplate}
         />
       )}
+
+      {/* Live Photo Viewer (for report mode only) */}
+        <LivePhotoViewer />
 
       {/* Template Instructions (for report mode only) */}
       {!isTemplateMode && template && (
