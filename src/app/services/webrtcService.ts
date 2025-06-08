@@ -1,11 +1,10 @@
 
 import { ReportTemplate } from '@/app/data/mockData';
 import { VoiceChatMode } from '@/app/state/voiceChatState';
-import { VOICE_AI_BASE_INSTRUCTIONS } from '@/config/instructions/base-instructions';
-import { TEMPLATE_CREATION_FUNCTION_INSTRUCTIONS, VOICE_MODE_INSTRUCTIONS, REPORT_FILLING_FUNCTION_INSTRUCTIONS } from '@/config/instructions/function-instructions';
-import { VOICE_AI_TEMPLATE_INSTRUCTIONS } from '@/config/instructions/template-instructions';
-import { getReportFillingTools } from '@/config/instructions/report-filling-tools';
-import { TEMPLATE_CREATION_TOOLS } from '@/config/instructions/template-creation-tools';
+import { getReportInstructionsSystemPrompt } from '@/config/instructions/report-instructions';
+import { getReportTools } from '@/config/instructions/report-tools';
+import { getTemplateInstructionsSystemPrompt } from '@/config/instructions/template-instructions';
+import { TEMPLATE_CREATION_TOOLS } from '@/config/instructions/template-tools';
 
 export interface WebRTCSessionData {
   sessionId: string;
@@ -342,7 +341,7 @@ class WebRTCServiceClass {
     
     const tools = isTemplateCreation 
       ? TEMPLATE_CREATION_TOOLS
-      : getReportFillingTools(template);
+      : getReportTools(template);
     
     const sessionUpdate = {
       type: 'session.update',
@@ -386,26 +385,14 @@ class WebRTCServiceClass {
   private getInstructions(templateInstructions?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode, userName?: string): string {
     const isTemplateCreation = voiceChatMode === 'template-creation';
     
-    // Add user name context if available
-    const userNameContext = userName ? `\n\nThe user's name is ${userName}.` : '';
-    
     if (isTemplateCreation) {
-      // Use template creation instructions
-      const baseInstructions = `${VOICE_AI_TEMPLATE_INSTRUCTIONS}${userNameContext}\n\nToday is ${new Date().toLocaleDateString()}.`;
-      
-      return baseInstructions + TEMPLATE_CREATION_FUNCTION_INSTRUCTIONS;
+      return getTemplateInstructionsSystemPrompt({ userName });
     } else {
-      // Use regular report filling instructions
-      const baseInstructions = templateInstructions 
-        ? `${VOICE_AI_BASE_INSTRUCTIONS}${userNameContext}\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}\n\nToday is ${new Date().toLocaleDateString()}.`
-        : `${VOICE_AI_BASE_INSTRUCTIONS}${userNameContext}`;
-      
-      // Add voice mode specific instructions
-      const voiceModeInstructions = voiceMode === 'freeform' 
-        ? VOICE_MODE_INSTRUCTIONS.FREEFORM
-        : VOICE_MODE_INSTRUCTIONS.GUIDED;
-      
-      return baseInstructions + voiceModeInstructions + REPORT_FILLING_FUNCTION_INSTRUCTIONS;
+      return getReportInstructionsSystemPrompt({ 
+        userName, 
+        templateInstructions,
+        voiceMode,
+      });
     }
   }
 

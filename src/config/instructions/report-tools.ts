@@ -1,6 +1,6 @@
 import { ReportTemplate } from '@/app/data/mockData';
 
-export const getReportFillingTools = (template?: ReportTemplate) => {
+export const getReportTools = (template?: ReportTemplate) => {
   const extractedDataProperties = template?.openai_properties || {};
   const requiredFields = template?.required_fields || [];
   
@@ -17,6 +17,10 @@ export const getReportFillingTools = (template?: ReportTemplate) => {
             description: 'All the form data that has been collected so far during the conversation',
             properties: extractedDataProperties,
             required: requiredFields
+          },
+          debug_info: {
+            type: 'string',
+            description: 'Debug information about the form fields that have been updated. Only include if you (the AI) were having trouble understanding the user\'s response and/or is was very difficult to extract the data (maybe the user was not clear or the response was not in the correct format).'
           }
         },
         required: ['extracted_data']

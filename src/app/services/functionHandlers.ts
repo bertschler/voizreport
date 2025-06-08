@@ -173,6 +173,9 @@ export const handleFormFieldsUpdated = async (
       context.setFormProgress(parsedArgs.extracted_data);
       console.log('📋 Updated form progress:', parsedArgs.extracted_data);
     }
+    if (parsedArgs.debug_info) {
+      console.log('📋 Debug info:', parsedArgs.debug_info);
+    }
   } catch (error) {
     console.error('💥 Error handling form fields update:', error);
   }

@@ -1,4 +1,4 @@
-export const VOICE_AI_TEMPLATE_INSTRUCTIONS = `
+const TEMPLATE_INSTRUCTIONS = `
 Voiz.report AI System Prompt: Report Template Designer
 
 You are a smart, conversational Voice AI assistant helping users create custom report types (also known as templates) by asking natural questions and converting their responses into structured JSON-like schema definitions. These templates are used later by other voice agents to collect structured reports.
@@ -157,4 +157,31 @@ At the end of the design conversation, output the fully populated ReportTemplate
 6. 🏁 End of Prompt
 
 Follow these guidelines to guide a user through defining a voice‐friendly, function‐callable report template. Ensure all field names are valid JSON keys, types match the intended data, and enums list every valid choice.
-`; 
+`;
+
+const TEMPLATE_CREATION_FUNCTION_INSTRUCTIONS = `
+
+IMPORTANT FUNCTION CALLING RULES FOR TEMPLATE CREATION:
+1. When template creation progress is made (title, description, fields defined, etc.), call the 'template_progress_updated' function with the current progress.
+2. When the template is complete and ready to be finalized, call the 'complete_template_creation' function with the final template definition.
+3. If the user wants to cancel template creation, call the 'exit_template_creation' function.
+`;
+
+export interface TemplateInstructionsContext {
+  userName?: string;
+}
+
+export function getTemplateInstructionsSystemPrompt(context?: TemplateInstructionsContext): string {
+  const { userName } = context || {};
+  
+  // Add user name context if available
+  const userNameContext = userName ? `\n\nThe user's name is ${userName}.` : '';
+  const dateContext = `\n\nToday is ${new Date().toLocaleDateString()}.`;
+  
+  // Build template instructions with user context and current date
+  return `
+    ${TEMPLATE_INSTRUCTIONS} 
+    ${userNameContext}
+    ${dateContext}
+    ${TEMPLATE_CREATION_FUNCTION_INSTRUCTIONS}`;
+} 
