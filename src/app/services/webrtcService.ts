@@ -443,6 +443,30 @@ class WebRTCServiceClass {
     console.log('📤 Sent function response back to OpenAI');
   }
 
+  sendConversationMessage(text: string): void {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      console.error('💥 Data channel not available for conversation message');
+      return;
+    }
+
+    const conversationMessage = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [
+          {
+            type: 'input_text',
+            text: text
+          }
+        ]
+      }
+    };
+    
+    this.dataChannel.send(JSON.stringify(conversationMessage));
+    console.log('📤 Sent conversation message:', text);
+  }
+
   async cleanup(): Promise<void> {
     console.log('🧹 WebRTC Service cleanup starting...');
 

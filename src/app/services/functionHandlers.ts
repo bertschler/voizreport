@@ -334,26 +334,9 @@ export const handleOpenCamera = async (
     // Handle capture button click
     captureBtn.onclick = () => {
       // Notify AI that photo was captured via button
-      const webrtcService = WebRTCService.getInstance();
-      const dataChannel = (webrtcService as any).dataChannel;
-      
-      if (dataChannel && dataChannel.readyState === 'open') {
-        const stateUpdate = {
-          type: 'conversation.item.create',
-          item: {
-            type: 'message',
-            role: 'user',
-            content: [
-              {
-                type: 'input_text',
-                text: 'I just clicked the capture button and the photo was taken successfully. The camera is now closed.'
-              }
-            ]
-          }
-        };
-        dataChannel.send(JSON.stringify(stateUpdate));
-        console.log('📤 Sent camera state update: closed (via button)');
-      }
+      WebRTCService.getInstance().sendConversationMessage(
+        'I just clicked the capture button and the photo was taken successfully. The camera is now closed.'
+      );
       
       capturePhoto();
     };
@@ -361,26 +344,9 @@ export const handleOpenCamera = async (
     // Handle close
     closeBtn.onclick = () => {
       // Notify AI that camera was closed via button
-      const webrtcService = WebRTCService.getInstance();
-      const dataChannel = (webrtcService as any).dataChannel;
-      
-      if (dataChannel && dataChannel.readyState === 'open') {
-        const stateUpdate = {
-          type: 'conversation.item.create',
-          item: {
-            type: 'message',
-            role: 'user',
-            content: [
-              {
-                type: 'input_text',
-                text: 'I just clicked the close button and cancelled the camera. The camera is now closed.'
-              }
-            ]
-          }
-        };
-        dataChannel.send(JSON.stringify(stateUpdate));
-        console.log('📤 Sent camera state update: closed (via close button)');
-      }
+      WebRTCService.getInstance().sendConversationMessage(
+        'I just clicked the close button and cancelled the camera. The camera is now closed.'
+      );
       
       cleanup();
       WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
