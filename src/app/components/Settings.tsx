@@ -5,16 +5,15 @@ import { useAtom } from 'jotai';
 import { userNameAtom, setUserNameAtom, voiceModeAtom, setVoiceModeAtom, VOICE_MODE_OPTIONS, VoiceMode } from '../state/settingsState';
 import { selectedVoiceAtom, VOICE_OPTIONS, VoiceOption } from '../state/voiceChatState';
 
-interface SettingsProps {
-  onBack: () => void;
-}
-
-export default function Settings({ onBack }: SettingsProps) {
+export default function Settings() {
   const [userName] = useAtom(userNameAtom);
   const [, setUserName] = useAtom(setUserNameAtom);
   const [voiceMode] = useAtom(voiceModeAtom);
   const [, setVoiceMode] = useAtom(setVoiceModeAtom);
   const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom);
+  const [playingVoice, setPlayingVoice] = React.useState<VoiceOption | null>(null);
+  const [loadingVoice, setLoadingVoice] = React.useState<VoiceOption | null>(null);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const handleNameChange = (value: string) => {
     setUserName(value);
@@ -27,6 +26,75 @@ export default function Settings({ onBack }: SettingsProps) {
   const handleVoiceChange = (voice: VoiceOption) => {
     setSelectedVoice(voice);
   };
+
+  const playVoicePreview = async (voice: VoiceOption) => {
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
+    setLoadingVoice(voice);
+    setPlayingVoice(null);
+
+    try {
+      const response = await fetch('/api/voice-preview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          voice: voice,
+          text: 'Hello! I\'m ready to help you create a report. How can I assist you today?'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate voice preview');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      
+      audio.onplay = () => {
+        setPlayingVoice(voice);
+        setLoadingVoice(null);
+      };
+      
+      audio.onended = () => {
+        setPlayingVoice(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+      
+      audio.onerror = () => {
+        setPlayingVoice(null);
+        setLoadingVoice(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+        console.error('Error playing voice preview');
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error('Voice preview error:', error);
+      setLoadingVoice(null);
+      setPlayingVoice(null);
+    }
+  };
+
+  // Cleanup audio on unmount
+  React.useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div style={{ padding: '20px' }}>
@@ -159,7 +227,7 @@ export default function Settings({ onBack }: SettingsProps) {
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {VOICE_OPTIONS.map((option) => (
-              <label
+              <div
                 key={option.value}
                 style={{
                   display: 'flex',
@@ -169,10 +237,8 @@ export default function Settings({ onBack }: SettingsProps) {
                   border: selectedVoice === option.value ? '2px solid #3b82f6' : '1px solid #d1d5db',
                   borderRadius: '6px',
                   backgroundColor: selectedVoice === option.value ? '#eff6ff' : '#ffffff',
-                  cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onClick={() => handleVoiceChange(option.value)}
               >
                 <input
                   type="radio"
@@ -185,7 +251,7 @@ export default function Settings({ onBack }: SettingsProps) {
                     accentColor: '#3b82f6'
                   }}
                 />
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => handleVoiceChange(option.value)}>
                   <div style={{
                     fontSize: '14px',
                     fontWeight: '500',
@@ -202,7 +268,42 @@ export default function Settings({ onBack }: SettingsProps) {
                     {option.description}
                   </div>
                 </div>
-              </label>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playVoicePreview(option.value);
+                  }}
+                  disabled={loadingVoice === option.value || playingVoice === option.value}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: playingVoice === option.value ? '#ef4444' : '#3b82f6',
+                    backgroundColor: 'transparent',
+                    border: `1px solid ${playingVoice === option.value ? '#ef4444' : '#3b82f6'}`,
+                    borderRadius: '4px',
+                    cursor: loadingVoice === option.value ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    minWidth: '70px',
+                    opacity: loadingVoice === option.value ? 0.6 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (loadingVoice !== option.value && playingVoice !== option.value) {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                      e.currentTarget.style.color = '#ffffff';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (loadingVoice !== option.value && playingVoice !== option.value) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#3b82f6';
+                    }
+                  }}
+                >
+                  {loadingVoice === option.value ? '...' : 
+                   playingVoice === option.value ? '🔊' : '▶️'}
+                </button>
+              </div>
             ))}
           </div>
           <p style={{
@@ -211,7 +312,7 @@ export default function Settings({ onBack }: SettingsProps) {
             margin: '8px 0 0 0',
             fontStyle: 'italic'
           }}>
-            Note: Voice selection applies to new conversations only.
+            Click ▶️ to preview each voice. Voice selection applies to new conversations only.
           </p>
         </div>
 
