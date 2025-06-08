@@ -159,6 +159,176 @@ export const handleCompleteTemplateCreation = async (
 };
 
 // Report filling handlers
+export const handleOpenCamera = async (
+  message: FunctionCallMessage,
+  context: FunctionHandlerContext
+): Promise<void> => {
+  console.log('📸 Open camera function called with:', message.arguments);
+  
+  try {
+    const parsedArgs = JSON.parse(message.arguments);
+    
+    // Check if camera is supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Camera not supported in this browser');
+    }
+    
+    // Request camera access
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        facingMode: parsedArgs.facing_mode || 'environment' // Default to rear camera
+      } 
+    });
+    
+    // Create video element to display camera feed
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    `;
+    
+    // Create overlay container
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    `;
+    
+    // Create capture button
+    const captureBtn = document.createElement('button');
+    captureBtn.textContent = '📸 Capture Photo';
+    captureBtn.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #007AFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    `;
+    
+    // Create close button
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    `;
+    
+    // Cleanup function
+    const cleanup = () => {
+      stream.getTracks().forEach(track => track.stop());
+      overlay.remove();
+    };
+    
+    // Handle capture
+    captureBtn.onclick = () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context?.drawImage(video, 0, 0);
+      
+      // Convert to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          // Create file object
+          const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+          // TODO save photo to google cloud storage
+          
+          // Send success response with photo data
+          WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+            status: 'success',
+            message: 'Photo captured successfully',
+            photo: {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              data_url: canvas.toDataURL('image/jpeg', 0.8)
+            }
+          });
+          
+          console.log('📸 Photo captured:', file.name, file.size, 'bytes');
+        }
+      }, 'image/jpeg', 0.8);
+      
+      cleanup();
+    };
+    
+    // Handle close
+    closeBtn.onclick = () => {
+      cleanup();
+      WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+        status: 'cancelled',
+        message: 'Camera cancelled by user'
+      });
+    };
+    
+    // Add elements to DOM
+    overlay.appendChild(video);
+    overlay.appendChild(captureBtn);
+    overlay.appendChild(closeBtn);
+    document.body.appendChild(overlay);
+    
+    console.log('📸 Camera opened successfully');
+    
+  } catch (error) {
+    console.error('💥 Error opening camera:', error);
+    
+    let errorMessage = 'Failed to open camera';
+    if (error instanceof Error) {
+      if (error.name === 'NotAllowedError') {
+        errorMessage = 'Camera access denied. Please allow camera permission.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = 'No camera found on this device.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
+    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+      status: 'error',
+      message: errorMessage
+    });
+  }
+};
+
 export const handleFormFieldsUpdated = async (
   message: FunctionCallMessage,
   context: FunctionHandlerContext
@@ -254,6 +424,7 @@ export const handleFunctionCall = async (
     'complete_template_creation': handleCompleteTemplateCreation,
     'form_fields_updated': handleFormFieldsUpdated,
     'complete_form_submission': handleCompleteFormSubmission,
+    'open_camera': handleOpenCamera,
   };
   
   const handler = handlers[message.name];
