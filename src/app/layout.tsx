@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import JotaiProvider from "./providers/JotaiProvider";
+import PWAInstaller from "../components/PWAInstaller";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "VoizReport",
   description: "Voice-powered reporting made easy",
+  manifest: "/manifest.json",
+  themeColor: "#1f2937",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "VoizReport",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+  },
 };
 
 export default function RootLayout({
@@ -32,10 +45,11 @@ export default function RootLayout({
           padding: 0,
           fontFamily: 'var(--font-geist-sans)',
           backgroundColor: '#f8fafc',
-          minHeight: '100vh'
+          minHeight: '100dvh' // Dynamic viewport height with automatic fallback
         }}
       >
         <JotaiProvider>
+          <PWAInstaller />
           {children}
         </JotaiProvider>
       </body>

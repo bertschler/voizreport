@@ -275,7 +275,7 @@ class WebRTCServiceClass {
 
     // Send offer to OpenAI's WebRTC endpoint
     console.log('📤 Sending WebRTC offer to OpenAI...');
-    const webrtcResponse = await fetch('https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17', {
+    const webrtcResponse = await fetch('https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2025-06-03', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${sessionData.ephemeralToken}`,
