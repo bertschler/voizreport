@@ -17,6 +17,7 @@ import {
   voiceChatModeAtom,
   templateCreationProgressAtom,
   createdTemplateAtom,
+  selectedVoiceAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
@@ -51,6 +52,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const [voiceChatMode, setVoiceChatMode] = useAtom(voiceChatModeAtom);
   const setTemplateCreationProgress = useSetAtom(templateCreationProgressAtom);
   const setCreatedTemplate = useSetAtom(createdTemplateAtom);
+  const [selectedVoice] = useAtom(selectedVoiceAtom);
   
   // Refs
   const providerInstanceId = useRef(Math.random().toString(36).substr(2, 9));
@@ -185,7 +187,8 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         templateInstructions,
         userName,
         voiceMode,
-        voiceChatMode
+        voiceChatMode,
+        selectedVoice
       );
       
       setSessionId(newSessionId);
@@ -205,7 +208,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     } finally {
       setIsConnecting(false);
     }
-  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setAiResponse, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode]);
+  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setAiResponse, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode, selectedVoice]);
 
   // End session
   const endSession = useCallback(async () => {
@@ -274,7 +277,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     } else {
       console.log('🔍 Conditions not met for auto-start/end');
     }
-  }, [selectedTemplate, isSessionActive, isConnecting, startSession, endSession, voiceChatMode]);
+  }, [selectedTemplate, isSessionActive, isConnecting, startSession, endSession, voiceChatMode, selectedVoice]);
 
   // Cleanup on unmount
   useEffect(() => {

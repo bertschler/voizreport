@@ -1,6 +1,6 @@
 
 import { ReportTemplate } from '@/app/data/mockData';
-import { VoiceChatMode } from '@/app/state/voiceChatState';
+import { VoiceChatMode, VoiceOption } from '@/app/state/voiceChatState';
 import { getReportInstructionsSystemPrompt } from '@/config/instructions/report-instructions';
 import { getReportTools } from '@/config/instructions/report-tools';
 import { getTemplateInstructionsSystemPrompt } from '@/config/instructions/template-instructions';
@@ -121,7 +121,8 @@ class WebRTCServiceClass {
     templateInstructions?: string,
     userName?: string,
     voiceMode?: string,
-    voiceChatMode?: VoiceChatMode
+    voiceChatMode?: VoiceChatMode,
+    selectedVoice?: VoiceOption
   ): Promise<string> {
     // Global lock to prevent multiple simultaneous session starts
     if (globalSessionLock) {
@@ -145,7 +146,7 @@ class WebRTCServiceClass {
     this.isConnecting = true;
 
     try {
-      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode);
+      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice);
       await globalSessionPromise;
       return this.sessionId || '';
     } finally {
@@ -161,7 +162,8 @@ class WebRTCServiceClass {
     templateInstructions?: string,
     userName?: string,
     voiceMode?: string,
-    voiceChatMode?: VoiceChatMode
+    voiceChatMode?: VoiceChatMode,
+    selectedVoice?: VoiceOption
   ): Promise<void> {
     // Clean up any existing session first
     if (this.sessionId) {
@@ -179,7 +181,7 @@ class WebRTCServiceClass {
     const sessionData = await this.createSession();
     
     // Setup connection
-    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode);
+    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice);
   }
 
   async setupConnection(
@@ -189,7 +191,8 @@ class WebRTCServiceClass {
     templateInstructions?: string,
     userName?: string,
     voiceMode?: string,
-    voiceChatMode?: VoiceChatMode
+    voiceChatMode?: VoiceChatMode,
+    selectedVoice?: VoiceOption
   ): Promise<void> {
     this.callbacks = callbacks;
     this.sessionId = sessionData.sessionId;
@@ -234,7 +237,7 @@ class WebRTCServiceClass {
 
     dataChannel.onopen = () => {
       console.log('📡 Data channel opened');
-      this.sendSessionConfiguration(template, templateInstructions, userName, voiceMode, voiceChatMode);
+      this.sendSessionConfiguration(template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice);
       callbacks.onDataChannelOpen();
     };
 
@@ -330,7 +333,7 @@ class WebRTCServiceClass {
     console.log('✅ WebRTC connection established successfully!');
   }
 
-  private sendSessionConfiguration(template?: ReportTemplate, templateInstructions?: string, userName?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode): void {
+  private sendSessionConfiguration(template?: ReportTemplate, templateInstructions?: string, userName?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode, selectedVoice?: VoiceOption): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       console.error('💥 Data channel not available for session configuration');
       return;
@@ -347,7 +350,7 @@ class WebRTCServiceClass {
       type: 'session.update',
       session: {
         instructions,
-        voice: 'alloy',
+        voice: selectedVoice || 'alloy',
         input_audio_transcription: { model: 'whisper-1' },
         turn_detection: { type: 'server_vad' },
         modalities: ['text', 'audio'],

@@ -6,6 +6,22 @@ export const isSessionActiveAtom = atom<boolean>(false);
 export const isConnectingAtom = atom<boolean>(false);
 export const errorAtom = atom<string | null>(null);
 
+// Voice selection atoms
+export type VoiceOption = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
+
+export const VOICE_OPTIONS: Array<{ value: VoiceOption; label: string; description: string }> = [
+  { value: 'alloy', label: 'Alloy', description: 'Balanced and versatile voice' },
+  { value: 'ash', label: 'Ash', description: 'Clear and articulate voice' },
+  { value: 'ballad', label: 'Ballad', description: 'Smooth and melodic voice' },
+  { value: 'coral', label: 'Coral', description: 'Warm and friendly voice' },
+  { value: 'echo', label: 'Echo', description: 'Resonant and distinctive voice' },
+  { value: 'sage', label: 'Sage', description: 'Wise and thoughtful voice' },
+  { value: 'shimmer', label: 'Shimmer', description: 'Bright and engaging voice' },
+  { value: 'verse', label: 'Verse', description: 'Expressive and dynamic voice' }
+];
+
+export const selectedVoiceAtom = atom<VoiceOption>('alloy');
+
 // Audio and transcript state atoms
 export const transcriptAtom = atom<string>('');
 export const aiResponseAtom = atom<string>('');
@@ -130,6 +146,7 @@ export const resetVoiceChatStateAtom = atom(
     set(isSessionActiveAtom, false);
     set(isConnectingAtom, false);
     set(errorAtom, null);
+    set(selectedVoiceAtom, 'alloy');
     set(transcriptAtom, '');
     set(aiResponseAtom, '');
     set(currentSessionIdAtom, '');

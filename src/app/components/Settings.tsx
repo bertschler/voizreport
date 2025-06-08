@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { userNameAtom, setUserNameAtom, voiceModeAtom, setVoiceModeAtom, VOICE_MODE_OPTIONS, VoiceMode } from '../state/settingsState';
+import { selectedVoiceAtom, VOICE_OPTIONS, VoiceOption } from '../state/voiceChatState';
 
 interface SettingsProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ export default function Settings({ onBack }: SettingsProps) {
   const [, setUserName] = useAtom(setUserNameAtom);
   const [voiceMode] = useAtom(voiceModeAtom);
   const [, setVoiceMode] = useAtom(setVoiceModeAtom);
+  const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom);
 
   const handleNameChange = (value: string) => {
     setUserName(value);
@@ -20,6 +22,10 @@ export default function Settings({ onBack }: SettingsProps) {
 
   const handleVoiceModeChange = (mode: VoiceMode) => {
     setVoiceMode(mode);
+  };
+
+  const handleVoiceChange = (voice: VoiceOption) => {
+    setSelectedVoice(voice);
   };
 
   return (
@@ -139,6 +145,74 @@ export default function Settings({ onBack }: SettingsProps) {
               </label>
             ))}
           </div>
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '12px'
+          }}>
+            AI Voice
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {VOICE_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  padding: '10px',
+                  border: selectedVoice === option.value ? '2px solid #3b82f6' : '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  backgroundColor: selectedVoice === option.value ? '#eff6ff' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onClick={() => handleVoiceChange(option.value)}
+              >
+                <input
+                  type="radio"
+                  name="voiceSelection"
+                  value={option.value}
+                  checked={selectedVoice === option.value}
+                  onChange={() => handleVoiceChange(option.value)}
+                  style={{
+                    marginTop: '2px',
+                    accentColor: '#3b82f6'
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '2px'
+                  }}>
+                    {option.label}
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#6b7280',
+                    lineHeight: '1.3'
+                  }}>
+                    {option.description}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+          <p style={{
+            fontSize: '12px',
+            color: '#6b7280',
+            margin: '8px 0 0 0',
+            fontStyle: 'italic'
+          }}>
+            Note: Voice selection applies to new conversations only.
+          </p>
         </div>
 
         <div style={{
