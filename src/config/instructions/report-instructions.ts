@@ -110,6 +110,11 @@ export function getReportInstructionsSystemPrompt(context?: BaseInstructionsCont
 	const dateContext = `\n\nToday is ${new Date().toLocaleDateString()}.`;
 	const templateInstructionsContext = templateInstructions ? `\n\nDetailed information about this specific report and its requirements:\n\n${templateInstructions}` : '';
 	const voiceModeInstructionsContext = voiceMode === 'freeform' ? VOICE_MODE_INSTRUCTIONS.FREEFORM : VOICE_MODE_INSTRUCTIONS.GUIDED;
+	
+	// Automatically detect user's locale from browser
+	const userLocale = typeof navigator !== 'undefined' ? navigator.language || navigator.languages?.[0] : null;
+	console.log('userLocale', navigator, userLocale);
+	const localeContext = userLocale ? `\n\nThe user's locale is ${userLocale}. Please be mindful of language, date formats, number formats, and cultural context when interacting with the user.` : '';
 
 	return `
       ${REPORT_INSTRUCTIONS}
@@ -117,6 +122,7 @@ export function getReportInstructionsSystemPrompt(context?: BaseInstructionsCont
       ${templateInstructionsContext}
 	  ${dateContext}
 	  ${voiceModeInstructionsContext}
+	  ${localeContext}
 	  ${REPORT_FUNCTION_INSTRUCTIONS}
     `;
 } 
