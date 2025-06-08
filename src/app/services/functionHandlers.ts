@@ -3,6 +3,17 @@ import { FormSummary } from '@/app/state/voiceChatState';
 import { convertCreatedTemplateToReportTemplate } from '@/app/state/templatesState';
 import { SubmittedReport } from '@/app/data/mockData';
 
+// Global camera state for voice-triggered capture
+let globalCameraState: {
+  isOpen: boolean;
+  captureFunction: ((responseCallId?: string) => void) | null;
+  cleanup: (() => void) | null;
+} = {
+  isOpen: false,
+  captureFunction: null,
+  cleanup: null
+};
+
 // Type definitions for function handlers
 export interface FunctionHandlerContext {
   // State setters
@@ -251,12 +262,36 @@ export const handleOpenCamera = async (
     
     // Cleanup function
     const cleanup = () => {
-      stream.getTracks().forEach(track => track.stop());
-      overlay.remove();
+      try {
+        console.log('📸 Starting cleanup process...');
+        
+        // Stop camera stream
+        stream.getTracks().forEach(track => {
+          console.log('📸 Stopping track:', track.kind);
+          track.stop();
+        });
+        
+        // Remove overlay from DOM
+        if (overlay && overlay.parentNode) {
+          console.log('📸 Removing camera overlay...');
+          overlay.remove();
+        } else {
+          console.warn('📸 Overlay not found or already removed');
+        }
+        
+        // Clear global camera state
+        globalCameraState.isOpen = false;
+        globalCameraState.captureFunction = null;
+        globalCameraState.cleanup = null;
+        
+        console.log('📸 Camera cleanup completed');
+      } catch (error) {
+        console.error('💥 Error during camera cleanup:', error);
+      }
     };
     
-    // Handle capture
-    captureBtn.onclick = () => {
+    // Create reusable capture function
+    const capturePhoto = (responseCallId?: string) => {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       
@@ -272,8 +307,8 @@ export const handleOpenCamera = async (
 
           // TODO save photo to google cloud storage
           
-          // Send success response with photo data
-          WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+          // Send success response with photo data (use provided call ID or original)
+          WebRTCService.getInstance().sendFunctionResponse(responseCallId || message.call_id, {
             status: 'success',
             message: 'Photo captured successfully',
             photo: {
@@ -285,11 +320,18 @@ export const handleOpenCamera = async (
           });
           
           console.log('📸 Photo captured:', file.name, file.size, 'bytes');
+          
+          // Cleanup after successful capture
+          console.log('📸 Cleaning up camera...');
+          cleanup();
+        } else {
+          console.error('📸 Failed to create blob from canvas');
         }
       }, 'image/jpeg', 0.8);
-      
-      cleanup();
     };
+
+    // Handle capture button click
+    captureBtn.onclick = () => capturePhoto();
     
     // Handle close
     closeBtn.onclick = () => {
@@ -300,6 +342,11 @@ export const handleOpenCamera = async (
       });
     };
     
+    // Set up global camera state for voice capture
+    globalCameraState.isOpen = true;
+    globalCameraState.captureFunction = capturePhoto;
+    globalCameraState.cleanup = cleanup;
+
     // Add elements to DOM
     overlay.appendChild(video);
     overlay.appendChild(captureBtn);
@@ -320,6 +367,38 @@ export const handleOpenCamera = async (
       } else {
         errorMessage = error.message;
       }
+    }
+    
+    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+      status: 'error',
+      message: errorMessage
+    });
+  }
+};
+
+export const handleCapturePhoto = async (
+  message: FunctionCallMessage,
+  context: FunctionHandlerContext
+): Promise<void> => {
+  console.log('📸 Voice capture photo function called with:', message.arguments);
+  
+  try {
+    // Check if camera is currently open
+    if (!globalCameraState.isOpen || !globalCameraState.captureFunction) {
+      throw new Error('Camera is not currently open. Please open the camera first.');
+    }
+
+    // Trigger photo capture with the voice command's call_id
+    globalCameraState.captureFunction(message.call_id);
+    
+    console.log('📸 Photo capture triggered via voice command');
+    
+  } catch (error) {
+    console.error('💥 Error capturing photo via voice:', error);
+    
+    let errorMessage = 'Failed to capture photo';
+    if (error instanceof Error) {
+      errorMessage = error.message;
     }
     
     WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
@@ -425,6 +504,7 @@ export const handleFunctionCall = async (
     'form_fields_updated': handleFormFieldsUpdated,
     'complete_form_submission': handleCompleteFormSubmission,
     'open_camera': handleOpenCamera,
+    'capture_photo': handleCapturePhoto,
   };
   
   const handler = handlers[message.name];

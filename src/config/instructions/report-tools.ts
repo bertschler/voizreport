@@ -61,6 +61,32 @@ export const getReportTools = (template?: ReportTemplate) => {
         properties: {},
         required: []
       }
+    },
+    {
+      type: 'function',
+      name: 'open_camera',
+      description: 'Call this function when the user wants to take a photo or attach a picture. This will open the device camera interface.',
+      parameters: {
+        type: 'object',
+        properties: {
+          facing_mode: {
+            type: 'string',
+            enum: ['user', 'environment'],
+            description: 'Camera facing mode - "user" for front camera, "environment" for rear camera. Defaults to rear camera.'
+          }
+        },
+        required: []
+      }
+    },
+    {
+      type: 'function',
+      name: 'capture_photo',
+      description: 'Call this function immediately when the camera is open and the user wants to capture/take the photo (e.g., "capture it", "take the photo", "capture now", "take it", "snap it"). This will trigger the photo capture process.',
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: []
+      }
     }
   ];
 }; 

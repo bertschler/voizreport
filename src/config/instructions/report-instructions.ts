@@ -74,6 +74,7 @@ IMPORTANT FUNCTION CALLING RULES:
 2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function. If you already collected partial or full data (other than the name of the user), ask first if they want to submit the data and if yes call the 'complete_form_submission' function instead.
 3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or empty if not set yet).
 4. If the users wants to add a photo, call the 'open_camera' function.
+5. If the camera is open and the user wants to capture/take the photo (e.g., "capture it", "take the photo", "capture now", "take it"), call the 'capture_photo' function immediately.
 `;
 
 const VOICE_MODE_INSTRUCTIONS = {
