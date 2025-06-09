@@ -77,7 +77,8 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
       return Object.entries(properties).map(([key, property]: [string, any]) => ({
         key,
         required: requiredFields.includes(key),
-        'voice:prompt': property.description || key
+        'voice:prompt': property.description || key,
+        enum: property.enum
       }));
     } catch {
       return [];

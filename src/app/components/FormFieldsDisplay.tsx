@@ -4,6 +4,7 @@ interface FormField {
   key: string;
   required?: boolean;
   'voice:prompt'?: string;
+  enum?: string[];
 }
 
 interface FormFieldsDisplayProps {
@@ -103,16 +104,29 @@ const FormFieldsDisplay: React.FC<FormFieldsDisplayProps> = ({
                   color: '#64748b',
                   wordBreak: 'break-word'
                 }}>
-                  {String(fieldValue)}
+                  {Array.isArray(fieldValue) ? fieldValue.join(', ') : String(fieldValue)}
                 </div>
               ) : (
-                <div style={{
-                  color: '#94a3b8',
-                  fontSize: '12px',
-                  fontStyle: 'italic'
-                }}>
-                  {field['voice:prompt']}
-                </div>
+                <>
+                  <div style={{
+                    color: '#94a3b8',
+                    fontSize: '12px',
+                    fontStyle: 'italic'
+                  }}>
+                    {field['voice:prompt']}
+                  </div>
+                  {field.enum && field.enum.length > 0 && (
+                    <div style={{
+                      marginTop: '4px',
+                      paddingLeft: '8px',
+                      borderLeft: '2px solid #e2e8f0',
+                      color: '#94a3b8',
+                      fontSize: '11px',
+                    }}>
+                      <strong>Options:</strong> {field.enum.join(', ')}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );
