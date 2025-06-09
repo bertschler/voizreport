@@ -58,7 +58,7 @@ export interface TemplateCreationProgress {
   icon?: string;
   fields?: Array<{
     name: string;
-    type: string;
+    type: "string" | "number" | "boolean";
     description: string;
     required: boolean;
     enum?: string[];

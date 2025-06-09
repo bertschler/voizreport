@@ -5,6 +5,18 @@ interface TemplateFieldsDisplayProps {
   templateProgress: TemplateCreationProgress;
 }
 
+// Helper function to convert technical field types to user-friendly display names
+const getDisplayType = (type: string): string => {
+  const typeMap: { [key: string]: string } = {
+    'string': 'text',
+    'number': 'number',
+    'boolean': 'yes/no',
+    'array': 'multiple choice',
+  };
+  
+  return typeMap[type.toLowerCase()] || type;
+};
+
 const TemplateFieldsDisplay: React.FC<TemplateFieldsDisplayProps> = ({ 
   templateProgress 
 }) => {
@@ -141,27 +153,59 @@ const TemplateFieldsDisplay: React.FC<TemplateFieldsDisplayProps> = ({
             <div style={{ marginLeft: '24px' }}>
               {templateProgress.fields!.map((field, idx) => (
                 <div key={idx} style={{ 
-                  marginBottom: '6px', 
+                  marginBottom: '8px', 
                   fontSize: '13px',
                   color: '#4b5563'
                 }}>
-                  <span style={{ fontWeight: '500' }}>{field.name}</span>
-                  <span style={{ color: '#6b7280', marginLeft: '8px' }}>
-                    ({field.type})
-                  </span>
-                  {field.required && (
-                    <span style={{ color: '#8b5cf6', fontSize: '11px', marginLeft: '4px' }}>
-                      required
+                  {/* Primary: Show description (user-friendly) */}
+                  <div style={{ fontWeight: '500', marginBottom: '2px' }}>
+                    {field.description || field.name}
+                  </div>
+                  
+                  {/* Secondary: Show user-friendly type and technical details */}
+                  <div style={{ 
+                    color: '#6b7280', 
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <span style={{ 
+                      backgroundColor: '#f3f4f6', 
+                      padding: '2px 6px', 
+                      borderRadius: '4px',
+                      fontWeight: '500'
+                    }}>
+                      {getDisplayType(field.type)}
                     </span>
-                  )}
+                    
+                    {field.required && (
+                      <span style={{ 
+                        color: '#8b5cf6', 
+                        fontSize: '11px',
+                        fontWeight: '500'
+                      }}>
+                        required
+                      </span>
+                    )}
+                    
+                    {field.description && field.description !== field.name && (
+                      <span style={{ color: '#9ca3af', fontSize: '11px' }}>
+                        ({field.name})
+                      </span>
+                    )}
+                  </div>
+                  
                   {field.enum && field.enum.length > 0 && (
                     <div style={{ 
                       color: '#9ca3af', 
                       fontSize: '11px',
-                      marginLeft: '16px',
-                      marginTop: '2px'
+                      marginTop: '4px',
+                      paddingLeft: '8px',
+                      borderLeft: '2px solid #e5e7eb'
                     }}>
-                      Options: {field.enum.join(', ')}
+                      <strong>Options:</strong> {field.enum.join(', ')}
                     </div>
                   )}
                 </div>

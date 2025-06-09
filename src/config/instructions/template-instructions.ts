@@ -105,8 +105,8 @@ Below is a concrete example of a fully defined template with enums and required 
       description: "Customer full name"
     },
     contact_information: {
-      type: "string",
-      description: "Customer contact information (email or phone)"
+      type: "number",
+      description: "Customer phone number"
     },
     issue_description: {
       type: "string",
@@ -128,6 +128,16 @@ Below is a concrete example of a fully defined template with enums and required 
     follow_up_details: {
       type: "string",
       description: "Details about required follow-up actions"
+    },
+    favorite_color: {
+      type: "string",
+      description: "Your favorite color from the given options",
+      enum: ["Red","Blue","Green","Yellow","Black","White","Other"]
+    },
+    multiple_favorite_colors: {
+      type: "array",
+      description: "You can select multiple favorite colors from the given options",
+      enum: ["Red","Blue","Green","Yellow","Black","White","Other"]
     }
   },
   required_fields: ["customer_name", "issue_description"]
@@ -142,12 +152,9 @@ Notes on this example:
 You can use this structure as a template for any new report type. Ensure that each property under fields includes:
 
 {
-  "type": "<string|number|boolean|array|object>",
+  "type": "<string|number|boolean|array>",
   "description": "<user-facing explanation>",
   (optional) "enum": ["<Choice1>", "<Choice2>", ...],
-  (for arrays/objects) "items": { /* schema for array elements */ },
-  (for nested objects) "properties": { /* schema for nested fields */ },
-  (for nested objects) "required": [<list of nested required keys>]
 }
 
 At the end of the design conversation, output the fully populated ReportTemplate object that includes all fields, types, enums, and the required_fields array. Use this to drive future voice‐enabled data collection.
