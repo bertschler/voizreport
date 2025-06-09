@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import LiveVoiceChat, { FormSummary } from './components/LiveVoiceChat';
 import VoiceChatProvider from './components/VoiceChatProvider';
@@ -31,17 +31,30 @@ export default function Home() {
   const [templates] = useAtom(templatesAtom);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState<boolean>(false);
+  const [isTemplatesLoaded, setIsTemplatesLoaded] = useState<boolean>(false);
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
   const [showQuickTemplateSelector, setShowQuickTemplateSelector] = useState<boolean>(false);
+  
+  // Handle client-side hydration for templates
+  useEffect(() => {
+    // Mark templates as loaded after first render on client
+    const timer = setTimeout(() => {
+      setIsTemplatesLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   console.log('🏠 Home state:', { 
     activeTab, 
     selectedTemplate: selectedTemplate?.title || 'none', 
     completedFormsCount: completedForms.length,
     showSettings,
-    isCreatingTemplate
+    isCreatingTemplate,
+    templatesCount: templates.length,
+    isTemplatesLoaded
   });
 
   const startReport = (template: ReportTemplate) => {
@@ -178,7 +191,7 @@ export default function Home() {
           }
           onNavigateToSession={handleNavigateToSession}
         >
-          <Settings onBack={handleSettingsBack} />
+          <Settings />
         </PageLayout>
       </VoiceChatProvider>
     );
@@ -293,12 +306,22 @@ export default function Home() {
         onNavigateToSession={handleNavigateToSession}
       >
         {activeTab === 'templates' && (
-          <TemplatesList
-            templates={templates}
-            onStartReport={startReport}
-            onCreateTemplate={handleCreateTemplate}
-            onEditTemplate={handleEditTemplate}
-          />
+          !isTemplatesLoaded ? (
+            <div style={{ 
+              padding: '20px', 
+              textAlign: 'center', 
+              color: '#64748b' 
+            }}>
+              Loading templates...
+            </div>
+          ) : (
+            <TemplatesList
+              templates={templates}
+              onStartReport={startReport}
+              onCreateTemplate={handleCreateTemplate}
+              onEditTemplate={handleEditTemplate}
+            />
+          )
         )}
 
         {activeTab === 'reports' && (
