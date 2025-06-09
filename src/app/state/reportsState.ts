@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
 import { SubmittedReport } from '@/app/data/mockData';
+import { atomWithPersistence } from './atomWithPersistence';
 
 const STORAGE_KEY = 'voizreport_submitted_reports';
 
@@ -23,51 +23,27 @@ const sortReports = (reports: StoredReport[]): StoredReport[] => {
   });
 };
 
-// Base atom with localStorage persistence and error handling
-const reportsStorageAtom = atomWithStorage<StoredReport[]>(STORAGE_KEY, [], {
-  getItem: (key: string, initialValue: StoredReport[]) => {
-    try {
-      const item = localStorage.getItem(key);
-      if (item === null) return initialValue;
-      const parsed = JSON.parse(item);
-      console.log('📂 Loaded reports from localStorage:', parsed.length, 'reports');
-      return Array.isArray(parsed) ? parsed : initialValue;
-    } catch (error) {
-      console.error('💥 Error loading reports from localStorage:', error);
-      return initialValue;
-    }
-  },
-  setItem: (key: string, value: StoredReport[]) => {
-    try {
-      const serialized = JSON.stringify(value);
-      localStorage.setItem(key, serialized);
-      console.log('📁 Saved reports to localStorage:', value.length, 'reports');
-    } catch (error) {
-      console.error('💥 Error saving reports to localStorage:', error);
-      // Try to recover by keeping only essential data
-      try {
-        const essentialReports = value.slice(0, 50).map(report => ({
-          ...report,
-          // Remove potentially large fields if needed
-          plainText: report.plainText?.substring(0, 1000) || '',
-        }));
-        localStorage.setItem(key, JSON.stringify(essentialReports));
-        console.log('🔄 Recovered by saving essential data only');
-      } catch (recoveryError) {
-        console.error('💥 Recovery also failed:', recoveryError);
-      }
-    }
-  },
-  removeItem: (key: string) => {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      console.error('💥 Error removing from localStorage:', error);
-    }
+// Validation function for stored reports
+const validateReports = (value: unknown): value is StoredReport[] => {
+  return Array.isArray(value) && value.every(item => 
+    typeof item === 'object' && 
+    item !== null && 
+    'id' in item && 
+    'savedAt' in item
+  );
+};
+
+// Base atom with automatic persistence - much simpler!
+const reportsStorageAtom = atomWithPersistence<StoredReport[]>(STORAGE_KEY, [], {
+  maxItems: 100,
+  validate: validateReports,
+  onStorageError: (error, fallbackValue) => {
+    console.log('🔄 Using fallback value due to storage error');
+    return fallbackValue;
   }
 });
 
-// Read-only derived atom for sorted reports (no setter to prevent accidental overwrites)
+// Read-only derived atom for sorted reports
 export const submittedReportsAtom = atom((get) => {
   const reports = get(reportsStorageAtom);
   return sortReports(reports);
@@ -82,9 +58,7 @@ export const addReportAtom = atom(
     // Generate unique ID to prevent conflicts
     storedReport.id = Date.now() + Math.floor(Math.random() * 1000);
     const updatedReports = [storedReport, ...existingReports];
-    // Keep only the most recent 100 reports to avoid localStorage size issues
-    const limitedReports = updatedReports.slice(0, 100);
-    set(reportsStorageAtom, limitedReports);
+    set(reportsStorageAtom, updatedReports);
     
     console.log('📁 Report saved via Jotai:', storedReport);
   }

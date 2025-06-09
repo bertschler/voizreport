@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
 import { ReportTemplate } from '@/app/data/mockData';
 import { seedTemplatesIfNeeded } from '@/app/utils/seedTemplates';
+import { atomWithPersistence } from './atomWithPersistence';
 
 const STORAGE_KEY = 'voizreport_templates';
 
@@ -66,71 +66,41 @@ export const convertCreatedTemplateToReportTemplate = (createdTemplate: any): Om
   };
 };
 
-// Base atom with localStorage persistence and error handling
-const templatesStorageAtom = atomWithStorage<StoredTemplate[]>(STORAGE_KEY, [], {
-  getItem: (key: string, initialValue: StoredTemplate[]) => {
-    try {
-      const item = localStorage.getItem(key);
-      if (item === null) {
-        // First time loading - seed with built-in templates
-        const seededTemplates = seedTemplatesIfNeeded([]);
-        return seededTemplates;
-      }
-      const parsed = JSON.parse(item);
-      if (!Array.isArray(parsed)) return initialValue;
-      
-      // Check if we need to seed built-in templates
-      const seededTemplates = seedTemplatesIfNeeded(parsed);
-      console.log('📂 Loaded templates from localStorage:', seededTemplates.length, 'templates');
-      
-      // If seeding occurred, save back to localStorage
-      if (seededTemplates.length !== parsed.length) {
-        try {
-          localStorage.setItem(key, JSON.stringify(seededTemplates));
-        } catch (saveError) {
-          console.error('💥 Error saving seeded templates:', saveError);
-        }
-      }
-      
-      return seededTemplates;
-    } catch (error) {
-      console.error('💥 Error loading templates from localStorage:', error);
-      return seedTemplatesIfNeeded(initialValue);
-    }
-  },
-  setItem: (key: string, value: StoredTemplate[]) => {
-    try {
-      const serialized = JSON.stringify(value);
-      localStorage.setItem(key, serialized);
-      console.log('📁 Saved templates to localStorage:', value.length, 'templates');
-    } catch (error) {
-      console.error('💥 Error saving templates to localStorage:', error);
-      // Try to recover by keeping only essential data
-      try {
-        const essentialTemplates = value.slice(0, 100).map(template => ({
-          ...template,
-          // Remove potentially large fields if needed
-          definition: template.definition?.substring(0, 1000) || '',
-        }));
-        localStorage.setItem(key, JSON.stringify(essentialTemplates));
-        console.log('🔄 Recovered by saving essential data only');
-      } catch (recoveryError) {
-        console.error('💥 Recovery also failed:', recoveryError);
-      }
-    }
-  },
-  removeItem: (key: string) => {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      console.error('💥 Error removing from localStorage:', error);
-    }
+// Validation function for stored templates
+const validateTemplates = (value: unknown): value is StoredTemplate[] => {
+  return Array.isArray(value) && value.every(item => 
+    typeof item === 'object' && 
+    item !== null && 
+    'id' in item && 
+    'savedAt' in item &&
+    'isCustom' in item
+  );
+};
+
+// Custom getter that handles seeding built-in templates
+const templatesStorageAtom = atomWithPersistence<StoredTemplate[]>(STORAGE_KEY, [], {
+  maxItems: 50,
+  validate: validateTemplates,
+  onStorageError: (error, fallbackValue) => {
+    console.log('🔄 Using fallback value and seeding templates due to storage error');
+    return seedTemplatesIfNeeded(fallbackValue);
   }
 });
 
-// Read-only derived atom for sorted templates (no setter to prevent accidental overwrites)
+// Enhanced atom that handles seeding on first load
+const templatesWithSeedingAtom = atom(
+  (get) => {
+    const templates = get(templatesStorageAtom);
+    return seedTemplatesIfNeeded(templates);
+  },
+  (get, set, newTemplates: StoredTemplate[]) => {
+    set(templatesStorageAtom, newTemplates);
+  }
+);
+
+// Read-only derived atom for sorted templates
 export const templatesAtom = atom((get) => {
-  const templates = get(templatesStorageAtom);
+  const templates = get(templatesWithSeedingAtom);
   return sortTemplates(templates);
 });
 
@@ -138,12 +108,10 @@ export const templatesAtom = atom((get) => {
 export const addTemplateAtom = atom(
   null,
   (get, set, template: Omit<ReportTemplate, 'id'>) => {
-    const existingTemplates = get(templatesStorageAtom);
+    const existingTemplates = get(templatesWithSeedingAtom);
     const storedTemplate = createStoredTemplate(template, true);
     const updatedTemplates = [storedTemplate, ...existingTemplates];
-    // Keep only the most recent 50 templates to avoid localStorage size issues
-    const limitedTemplates = updatedTemplates.slice(0, 50);
-    set(templatesStorageAtom, limitedTemplates);
+    set(templatesWithSeedingAtom, updatedTemplates);
     
     console.log('📁 Template saved via Jotai:', storedTemplate);
     return storedTemplate;
@@ -154,7 +122,7 @@ export const addTemplateAtom = atom(
 export const updateTemplateAtom = atom(
   null,
   (get, set, update: { id: number; updates: Partial<ReportTemplate> }) => {
-    const existingTemplates = get(templatesStorageAtom);
+    const existingTemplates = get(templatesWithSeedingAtom);
     const templateIndex = existingTemplates.findIndex(t => t.id === update.id);
     
     if (templateIndex !== -1) {
@@ -163,7 +131,7 @@ export const updateTemplateAtom = atom(
         ...updatedTemplates[templateIndex],
         ...update.updates
       };
-      set(templatesStorageAtom, updatedTemplates);
+      set(templatesWithSeedingAtom, updatedTemplates);
       
       console.log('📁 Template updated via Jotai:', update.id);
     }
@@ -174,9 +142,9 @@ export const updateTemplateAtom = atom(
 export const deleteTemplateAtom = atom(
   null,
   (get, set, templateId: number) => {
-    const existingTemplates = get(templatesStorageAtom);
+    const existingTemplates = get(templatesWithSeedingAtom);
     const filteredTemplates = existingTemplates.filter(t => t.id !== templateId);
-    set(templatesStorageAtom, filteredTemplates);
+    set(templatesWithSeedingAtom, filteredTemplates);
     
     console.log('📁 Template deleted via Jotai:', templateId);
   }
@@ -186,9 +154,9 @@ export const deleteTemplateAtom = atom(
 export const clearCustomTemplatesAtom = atom(
   null,
   (get, set) => {
-    const existingTemplates = get(templatesStorageAtom);
+    const existingTemplates = get(templatesWithSeedingAtom);
     const builtInTemplates = existingTemplates.filter(t => !t.isCustom);
-    set(templatesStorageAtom, builtInTemplates);
+    set(templatesWithSeedingAtom, builtInTemplates);
     console.log('📁 Custom templates cleared via Jotai');
   }
 );
