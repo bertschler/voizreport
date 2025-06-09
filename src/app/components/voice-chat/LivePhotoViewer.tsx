@@ -1,21 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { getPhotoAttachments } from '../../services/functionHandlers';
-import { PhotoAttachment } from '../../data/mockData';
+import React from 'react';
+import { useAtomValue } from 'jotai';
+import { photoAttachmentsAtom } from '../../state/voiceChatState';
 
 export default function LivePhotoViewer() {
-  const [photos, setPhotos] = useState<PhotoAttachment[]>([]);
-
-  useEffect(() => {
-    // Update photos every 500ms to catch newly captured photos
-    const interval = setInterval(() => {
-      const currentPhotos = getPhotoAttachments();
-      setPhotos(currentPhotos);
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
+  const photos = useAtomValue(photoAttachmentsAtom);
 
   if (photos.length === 0) {
     return null;

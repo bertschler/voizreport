@@ -1,7 +1,8 @@
 import { WebRTCService } from './webrtcService';
-import { FormSummary } from '@/app/state/voiceChatState';
+import { FormSummary, photoAttachmentsAtom } from '@/app/state/voiceChatState';
 import { convertCreatedTemplateToReportTemplate } from '@/app/state/templatesState';
 import { SubmittedReport, PhotoAttachment } from '@/app/data/mockData';
+import { store } from './jotaiStore';
 
 // Global camera state for voice-triggered capture
 let globalCameraState: {
@@ -13,9 +14,6 @@ let globalCameraState: {
   captureFunction: null,
   cleanup: null
 };
-
-// Global photo attachments storage
-let globalPhotoAttachments: PhotoAttachment[] = [];
 
 // Type definitions for function handlers
 export interface FunctionHandlerContext {
@@ -35,25 +33,32 @@ export interface FunctionHandlerContext {
   addTemplate: (template: any) => any;
 }
 
-// Photo attachment utilities
+// Photo attachment utilities using Jotai atoms
 export const addPhotoAttachment = (photo: PhotoAttachment): void => {
-  globalPhotoAttachments.push(photo);
-  console.log('📸 Added photo attachment:', photo.filename, 'Total photos:', globalPhotoAttachments.length);
+  const currentPhotos = store.get(photoAttachmentsAtom);
+  const updatedPhotos = [...currentPhotos, photo];
+  store.set(photoAttachmentsAtom, updatedPhotos);
+  console.log('📸 Added photo attachment:', photo.filename, 'Total photos:', updatedPhotos.length);
 };
 
 export const getPhotoAttachments = (): PhotoAttachment[] => {
-  return [...globalPhotoAttachments];
+  return store.get(photoAttachmentsAtom);
 };
 
 export const clearPhotoAttachments = (): void => {
-  globalPhotoAttachments = [];
+  store.set(photoAttachmentsAtom, []);
   console.log('📸 Cleared all photo attachments');
 };
 
 export const associatePhotoWithField = (photoId: string, fieldName: string): boolean => {
-  const photo = globalPhotoAttachments.find(p => p.id === photoId);
-  if (photo) {
-    photo.fieldName = fieldName;
+  const currentPhotos = store.get(photoAttachmentsAtom);
+  const updatedPhotos = currentPhotos.map(photo => 
+    photo.id === photoId ? { ...photo, fieldName } : photo
+  );
+  
+  const wasUpdated = currentPhotos.some(photo => photo.id === photoId);
+  if (wasUpdated) {
+    store.set(photoAttachmentsAtom, updatedPhotos);
     console.log('📸 Associated photo', photoId, 'with field', fieldName);
     return true;
   }

@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import { PhotoAttachment } from '../data/mockData';
 
 // Core session state atoms
 export const sessionIdAtom = atom<string | null>(null);
@@ -45,6 +46,9 @@ export const completedFieldsAtom = atom<Set<string>>(new Set<string>());
 
 // Form progress tracking - constantly updated during conversation
 export const formProgressAtom = atom<Record<string, any>>({});
+
+// Photo attachments atom - tracks captured photos during current session
+export const photoAttachmentsAtom = atom<PhotoAttachment[]>([]);
 
 // Template creation atoms (for template-creation mode)
 export interface TemplateCreationProgress {
@@ -160,6 +164,7 @@ export const resetVoiceChatStateAtom = atom(
     set(templateInstructionsAtom, '');
     set(activeTemplateAtom, null);
     set(selectedTemplateAtom, null);
+    set(photoAttachmentsAtom, []);
   }
 );
 
