@@ -13,6 +13,7 @@ import {
   hasPermissionAtom,
   formDataAtom,
   formProgressAtom,
+  nextFieldToUpdateAtom,
   activeTemplateAtom,
   voiceChatModeAtom,
   templateCreationProgressAtom,
@@ -45,6 +46,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const setHasPermission = useSetAtom(hasPermissionAtom);
   const [formData] = useAtom(formDataAtom);
   const setFormProgress = useSetAtom(formProgressAtom);
+  const setNextFieldToUpdate = useSetAtom(nextFieldToUpdateAtom);
   const setActiveTemplate = useSetAtom(activeTemplateAtom);
   const addReport = useSetAtom(addReportAtom);
   const addTemplate = useSetAtom(addTemplateAtom);
@@ -179,6 +181,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     setTranscript('');
     setAiResponse('');
     setFormProgress({});
+    setNextFieldToUpdate(undefined);
 
     try {
       const templateInstructions = selectedTemplate.title + "\n\n" + selectedTemplate.definition + "\n\nForm fields:\n" + JSON.stringify(selectedTemplate.openai_properties);
@@ -206,6 +209,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setIsSessionActive(false);
       setSessionId(null);
       setFormProgress({});
+      setNextFieldToUpdate(undefined);
       setActiveTemplate(null);
     } finally {
       setIsConnecting(false);
@@ -228,6 +232,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setAiResponse('');
       setError(null);
       setFormProgress({});
+      setNextFieldToUpdate(undefined);
       setActiveTemplate(null);
       setSelectedTemplate(null); // Clear selected template
       setVoiceChatMode('report'); // Reset voice chat mode to default (reports)

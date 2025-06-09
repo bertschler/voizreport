@@ -158,6 +158,7 @@ export const resetVoiceChatStateAtom = atom(
     set(formDataAtom, {});
     set(completedFieldsAtom, new Set());
     set(formProgressAtom, {});
+    set(nextFieldToUpdateAtom, undefined);
     set(templateCreationProgressAtom, {});
     set(isCreatingTemplateAtom, false);
     set(createdTemplateAtom, null);
