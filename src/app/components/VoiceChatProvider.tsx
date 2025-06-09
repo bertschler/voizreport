@@ -18,6 +18,7 @@ import {
   templateCreationProgressAtom,
   createdTemplateAtom,
   selectedVoiceAtom,
+  photoAttachmentsAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
@@ -53,6 +54,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const setTemplateCreationProgress = useSetAtom(templateCreationProgressAtom);
   const setCreatedTemplate = useSetAtom(createdTemplateAtom);
   const [selectedVoice] = useAtom(selectedVoiceAtom);
+  const setPhotoAttachments = useSetAtom(photoAttachmentsAtom);
   
   // Refs
   const providerInstanceId = useRef(Math.random().toString(36).substr(2, 9));
@@ -229,6 +231,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setActiveTemplate(null);
       setSelectedTemplate(null); // Clear selected template
       setVoiceChatMode('report'); // Reset voice chat mode to default (reports)
+      setPhotoAttachments([]); // Clear photo attachments
       
       console.log('✅ Session ended successfully');
       

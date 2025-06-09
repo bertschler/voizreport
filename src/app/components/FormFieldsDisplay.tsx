@@ -72,8 +72,8 @@ const FormFieldsDisplay: React.FC<FormFieldsDisplayProps> = ({
         gap: '8px'
       }}>
         {formFields.map((field: FormField, index: number) => {
-          const isCompleted = formProgress.hasOwnProperty(field.key);
           const fieldValue = formProgress[field.key];
+          const isCompleted = formProgress.hasOwnProperty(field.key) && fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
           
           return (
             <div key={index} style={{
