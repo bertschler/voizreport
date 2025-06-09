@@ -46,6 +46,7 @@ export const completedFieldsAtom = atom<Set<string>>(new Set<string>());
 
 // Form progress tracking - constantly updated during conversation
 export const formProgressAtom = atom<Record<string, any>>({});
+export const nextFieldToUpdateAtom = atom<string | undefined>(undefined);
 
 // Photo attachments atom - tracks captured photos during current session
 export const photoAttachmentsAtom = atom<PhotoAttachment[]>([]);

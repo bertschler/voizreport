@@ -8,6 +8,7 @@ import {
   aiResponseAtom,
   hasPermissionAtom,
   formProgressAtom,
+  nextFieldToUpdateAtom,
   selectedTemplateAtom,
   voiceChatModeAtom,
   templateCreationProgressAtom,
@@ -31,6 +32,7 @@ export interface VoiceChatState {
   aiResponse: string;
   error: string | null;
   formProgress: Record<string, any>;
+  nextFieldToUpdate: string | undefined;
   voiceChatMode: VoiceChatMode;
   templateCreationProgress: TemplateCreationProgress;
   isCreatingTemplate: boolean;
@@ -54,6 +56,7 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
   const [aiResponse] = useAtom(aiResponseAtom);
   const [hasPermission] = useAtom(hasPermissionAtom);
   const [formProgress] = useAtom(formProgressAtom);
+  const [nextFieldToUpdate] = useAtom(nextFieldToUpdateAtom);
   const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
   const [voiceChatMode, setVoiceChatMode] = useAtom(voiceChatModeAtom);
   const [templateCreationProgress] = useAtom(templateCreationProgressAtom);
@@ -107,6 +110,7 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
     aiResponse,
     error,
     formProgress,
+    nextFieldToUpdate,
     voiceChatMode,
     templateCreationProgress,
     isCreatingTemplate,

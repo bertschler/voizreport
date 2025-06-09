@@ -40,7 +40,8 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
     isCreatingTemplate,
     createdTemplate,
     endSession,
-    startTemplateCreation
+    startTemplateCreation,
+    nextFieldToUpdate
   } = useVoiceChat();
 
   // Cleanup effect only
@@ -159,6 +160,7 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
           <FormFieldsDisplay
             formFields={formFields}
             formProgress={formProgress}
+            nextFieldToUpdate={nextFieldToUpdate}
           />
         </div>
       )}

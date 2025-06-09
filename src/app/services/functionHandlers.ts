@@ -1,5 +1,5 @@
 import { WebRTCService } from './webrtcService';
-import { FormSummary, photoAttachmentsAtom } from '@/app/state/voiceChatState';
+import { FormSummary, photoAttachmentsAtom, nextFieldToUpdateAtom } from '@/app/state/voiceChatState';
 import { convertCreatedTemplateToReportTemplate } from '@/app/state/templatesState';
 import { SubmittedReport, PhotoAttachment } from '@/app/data/mockData';
 import { store } from './jotaiStore';
@@ -497,6 +497,13 @@ export const handleFormFieldsUpdated = async (
       context.setFormProgress(parsedArgs.extracted_data);
       console.log('📋 Updated form progress:', parsedArgs.extracted_data);
     }
+    
+    // Update next field to update if provided
+    if (parsedArgs.next_field_to_update !== undefined) {
+      store.set(nextFieldToUpdateAtom, parsedArgs.next_field_to_update || undefined);
+      console.log('📋 Updated next field to update:', parsedArgs.next_field_to_update);
+    }
+    
     if (parsedArgs.debug_info) {
       console.log('📋 Debug info:', parsedArgs.debug_info);
     }

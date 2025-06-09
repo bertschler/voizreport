@@ -10,11 +10,13 @@ interface FormField {
 interface FormFieldsDisplayProps {
   formFields: FormField[];
   formProgress: Record<string, any>;
+  nextFieldToUpdate?: string;
 }
 
 const FormFieldsDisplay: React.FC<FormFieldsDisplayProps> = ({ 
   formFields, 
-  formProgress 
+  formProgress,
+  nextFieldToUpdate
 }) => {
   if (formFields.length === 0) {
     return null;
@@ -82,8 +84,22 @@ const FormFieldsDisplay: React.FC<FormFieldsDisplayProps> = ({
               backgroundColor: isCompleted ? '#ffffff' : '#fafafa',
               borderRadius: '8px',
               border: isCompleted ? '1px solid #22c55e' : '1px solid #e2e8f0',
-              fontSize: '13px'
+              fontSize: '13px',
+              position: 'relative'
             }}>
+              {field.key === nextFieldToUpdate && !isCompleted && (
+                <div style={{
+                  position: 'absolute',
+                  left: '-32px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontSize: '20px',
+                  zIndex: 10,
+                  color: '#8b5cf6'
+                }}>
+                  👉
+                </div>
+              )}
               <div style={{
                 fontWeight: '600',
                 color: isCompleted ? '#475569' : '#64748b',
