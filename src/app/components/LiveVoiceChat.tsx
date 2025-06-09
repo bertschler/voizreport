@@ -11,10 +11,8 @@
 import React, { useEffect } from 'react';
 import { useVoiceChat, FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate } from '../hooks/useVoiceChat';
 import { ReportTemplate } from '../data/mockData';
-import SmartMicButton from './SmartMicButton';
 import ErrorDisplay from './voice-chat/ErrorDisplay';
 import FormFieldsDisplay from './FormFieldsDisplay';
-import TemplateFieldsDisplay from './TemplateFieldsDisplay';
 import VoiceModeToggle from './voice-chat/VoiceModeToggle';
 import CameraButton from './voice-chat/CameraButton';
 import LivePhotoViewer from './voice-chat/LivePhotoViewer';

@@ -18,12 +18,16 @@ export const getReportTools = (template?: ReportTemplate) => {
             properties: extractedDataProperties,
             required: requiredFields
           },
+          next_field_to_update: {
+            type: 'string',
+            description: 'The name of the next form field that should be updated. This is used to guide the user to the next field that needs to be updated. If there are no more fields to update, leave this blank.'
+          },
           debug_info: {
             type: 'string',
-            description: 'Debug information about the form fields that have been updated. Only include if you (the AI) were having trouble understanding the user\'s response and/or is was very difficult to extract the data (maybe the user was not clear or the response was not in the correct format).'
+            description: 'Debug information only. All notes that could be helpful to improve the accuracy of the form fields in the future. This must not intervene the natural flow of the conversation, e.g. if ambiguous or not clear, still ask or dobuble check the user\'s response. Can be left blank if everything went well.'
           }
         },
-        required: ['extracted_data']
+        required: ['extracted_data', 'next_field_to_update', 'debug_info']
       }
     },
     {
