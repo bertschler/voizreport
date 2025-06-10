@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAtom } from 'jotai';
+import UserProfile from '@/components/UserProfile';
 import { userNameAtom, setUserNameAtom, voiceModeAtom, setVoiceModeAtom, VOICE_MODE_OPTIONS, VoiceMode } from '../state/settingsState';
 import { selectedVoiceAtom, VOICE_OPTIONS, VoiceOption, selectedModelAtom, MODEL_OPTIONS, ModelOption } from '../state/voiceChatState';
 
@@ -117,6 +118,13 @@ export default function Settings() {
         }}>
           User Settings
         </h2>
+
+        <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '12px' }}>
+            Account
+          </h3>
+          <UserProfile />
+        </div>
 
         <div style={{ marginBottom: '20px' }}>
           <label style={{

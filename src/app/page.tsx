@@ -2,6 +2,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAtom } from 'jotai';
+import AuthGuard from '@/components/AuthGuard';
+import AuthDebug from '@/components/AuthDebug';
 import LiveVoiceChat, { FormSummary } from './components/LiveVoiceChat';
 import VoiceChatProvider from './components/VoiceChatProvider';
 import MobileHeader from "./components/MobileHeader";
@@ -146,7 +148,8 @@ export default function Home() {
   // If report details is open, show the report details page
   if (selectedReport) {
     return (
-      <VoiceChatProvider
+      <AuthGuard>
+        <VoiceChatProvider
         onSessionReady={handleSessionReady}
         onFormCompleted={handleFormCompletion}
       >
@@ -169,13 +172,15 @@ export default function Home() {
           <ReportDetailsPage report={selectedReport} onBack={handleReportDetailsBack} />
         </PageLayout>
       </VoiceChatProvider>
+      </AuthGuard>
     );
   }
 
   // If settings is open, show the settings page
   if (showSettings) {
     return (
-      <VoiceChatProvider
+      <AuthGuard>
+        <VoiceChatProvider
         onSessionReady={handleSessionReady}
         onFormCompleted={handleFormCompletion}
       >
@@ -194,13 +199,15 @@ export default function Home() {
           <Settings />
         </PageLayout>
       </VoiceChatProvider>
+      </AuthGuard>
     );
   }
 
   // If template creation mode is active, show the template creation interface
   if (isCreatingTemplate) {
     return (
-      <VoiceChatProvider
+      <AuthGuard>
+        <VoiceChatProvider
         onSessionReady={handleSessionReady}
         onFormCompleted={handleFormCompletion}
       >
@@ -236,6 +243,7 @@ export default function Home() {
           />
         </PageLayout>
       </VoiceChatProvider>
+      </AuthGuard>
     );
   }
 
@@ -243,7 +251,8 @@ export default function Home() {
   if (selectedTemplate) {
     console.log('🏠 selectedTemplate:', selectedTemplate);
     return (
-      <VoiceChatProvider
+      <AuthGuard>
+        <VoiceChatProvider
         onSessionReady={handleSessionReady}
         onFormCompleted={handleFormCompletion}
       >
@@ -277,12 +286,15 @@ export default function Home() {
           />
         </PageLayout>
       </VoiceChatProvider>
+      </AuthGuard>
     );
   }
 
   // Main interface with tabs
   return (
-    <VoiceChatProvider
+    <AuthGuard>
+      <AuthDebug />
+      <VoiceChatProvider
       onSessionReady={handleSessionReady}
       onFormCompleted={handleFormCompletion}
     >
@@ -340,5 +352,6 @@ export default function Home() {
         />
       </PageLayout>
     </VoiceChatProvider>
+    </AuthGuard>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import JotaiProvider from "./providers/JotaiProvider";
+import SessionProvider from "./providers/SessionProvider";
 import PWAInstaller from "../components/PWAInstaller";
 
 const geistSans = Geist({
@@ -48,10 +49,12 @@ export default function RootLayout({
           height: '100svh' // Small viewport height - always fits visible area on mobile
         }}
       >
-        <JotaiProvider>
-          <PWAInstaller />
-          {children}
-        </JotaiProvider>
+        <SessionProvider>
+          <JotaiProvider>
+            <PWAInstaller />
+            {children}
+          </JotaiProvider>
+        </SessionProvider>
       </body>
     </html>
   );
