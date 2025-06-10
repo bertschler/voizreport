@@ -1,6 +1,6 @@
 
 import { ReportTemplate } from '@/app/data/mockData';
-import { VoiceChatMode, VoiceOption } from '@/app/state/voiceChatState';
+import { VoiceChatMode, VoiceOption, ModelOption } from '@/app/state/voiceChatState';
 import { getReportInstructionsSystemPrompt } from '@/config/instructions/report-instructions';
 import { getReportTools } from '@/config/instructions/report-tools';
 import { getTemplateInstructionsSystemPrompt } from '@/config/instructions/template-instructions';
@@ -94,10 +94,11 @@ class WebRTCServiceClass {
     }
   }
 
-  async createSession(): Promise<WebRTCSessionData> {
+  async createSession(selectedModel?: ModelOption): Promise<WebRTCSessionData> {
     console.log('🔗 Creating OpenAI WebRTC session...');
     
-    const response = await fetch(`/api/voice-ai-openai`, {
+    const modelParam = selectedModel ? `?model=${encodeURIComponent(selectedModel)}` : '';
+    const response = await fetch(`/api/voice-ai-openai${modelParam}`, {
       method: 'GET',
     });
 
@@ -122,7 +123,8 @@ class WebRTCServiceClass {
     userName?: string,
     voiceMode?: string,
     voiceChatMode?: VoiceChatMode,
-    selectedVoice?: VoiceOption
+    selectedVoice?: VoiceOption,
+    selectedModel?: ModelOption
   ): Promise<string> {
     // Global lock to prevent multiple simultaneous session starts
     if (globalSessionLock) {
@@ -146,7 +148,7 @@ class WebRTCServiceClass {
     this.isConnecting = true;
 
     try {
-      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice);
+      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel);
       await globalSessionPromise;
       return this.sessionId || '';
     } finally {
@@ -163,7 +165,8 @@ class WebRTCServiceClass {
     userName?: string,
     voiceMode?: string,
     voiceChatMode?: VoiceChatMode,
-    selectedVoice?: VoiceOption
+    selectedVoice?: VoiceOption,
+    selectedModel?: ModelOption
   ): Promise<void> {
     // Clean up any existing session first
     if (this.sessionId) {
@@ -178,10 +181,10 @@ class WebRTCServiceClass {
     }
 
     // Create session
-    const sessionData = await this.createSession();
+    const sessionData = await this.createSession(selectedModel);
     
     // Setup connection
-    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice);
+    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel);
   }
 
   async setupConnection(
@@ -192,7 +195,8 @@ class WebRTCServiceClass {
     userName?: string,
     voiceMode?: string,
     voiceChatMode?: VoiceChatMode,
-    selectedVoice?: VoiceOption
+    selectedVoice?: VoiceOption,
+    selectedModel?: ModelOption
   ): Promise<void> {
     this.callbacks = callbacks;
     this.sessionId = sessionData.sessionId;
@@ -278,7 +282,8 @@ class WebRTCServiceClass {
 
     // Send offer to OpenAI's WebRTC endpoint
     console.log('📤 Sending WebRTC offer to OpenAI...');
-    const webrtcResponse = await fetch('https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2025-06-03', {
+    const modelToUse = selectedModel || 'gpt-4o-realtime-preview-2025-06-03';
+    const webrtcResponse = await fetch(`https://api.openai.com/v1/realtime?model=${modelToUse}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${sessionData.ephemeralToken}`,

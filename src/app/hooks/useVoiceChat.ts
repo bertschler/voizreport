@@ -14,14 +14,16 @@ import {
   templateCreationProgressAtom,
   isCreatingTemplateAtom,
   createdTemplateAtom,
+  selectedModelAtom,
   FormSummary,
   VoiceChatMode,
   TemplateCreationProgress,
-  CreatedTemplate
+  CreatedTemplate,
+  ModelOption
 } from '@/app/state/voiceChatState';
 
 // Re-export types for external use
-export type { FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate };
+export type { FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate, ModelOption };
 
 export interface VoiceChatState {
   sessionId: string | null;
@@ -37,6 +39,7 @@ export interface VoiceChatState {
   templateCreationProgress: TemplateCreationProgress;
   isCreatingTemplate: boolean;
   createdTemplate: CreatedTemplate | null;
+  selectedModel: ModelOption;
 }
 
 export interface VoiceChatActions {
@@ -62,6 +65,7 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
   const [templateCreationProgress] = useAtom(templateCreationProgressAtom);
   const [isCreatingTemplate, setIsCreatingTemplate] = useAtom(isCreatingTemplateAtom);
   const [createdTemplate, setCreatedTemplate] = useAtom(createdTemplateAtom);
+  const [selectedModel] = useAtom(selectedModelAtom);
 
   // End session by clearing selected template (provider will handle cleanup)
   const endSession = () => {
@@ -115,6 +119,7 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
     templateCreationProgress,
     isCreatingTemplate,
     createdTemplate,
+    selectedModel,
     
     // Actions
     endSession,

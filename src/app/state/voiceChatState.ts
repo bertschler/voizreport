@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { PhotoAttachment } from '../data/mockData';
+import { atomWithPersistence } from './atomWithPersistence';
 
 // Core session state atoms
 export const sessionIdAtom = atom<string | null>(null);
@@ -19,7 +20,28 @@ export const VOICE_OPTIONS: Array<{ value: VoiceOption; label: string; descripti
   { value: 'shimmer', label: 'Shimmer', description: 'Bright and engaging voice' }
 ];
 
-export const selectedVoiceAtom = atom<VoiceOption>('alloy');
+export const selectedVoiceAtom = atomWithPersistence<VoiceOption>('voiceChat_selectedVoice', 'alloy', {
+  enableLogging: false,
+  validate: (value): value is VoiceOption => {
+    return typeof value === 'string' && VOICE_OPTIONS.some(option => option.value === value);
+  }
+});
+
+// Model selection atoms
+export type ModelOption = 'gpt-4o-realtime-preview-2025-06-03' | 'gpt-4o-mini-realtime-preview-2024-12-17' | 'gpt-4o-realtime-preview-2024-12-17';
+
+export const MODEL_OPTIONS: Array<{ value: ModelOption; label: string; description: string }> = [
+  { value: 'gpt-4o-realtime-preview-2025-06-03', label: 'GPT-4o Realtime (Latest)', description: 'Latest GPT-4o model with advanced capabilities' },
+  { value: 'gpt-4o-mini-realtime-preview-2024-12-17', label: 'GPT-4o Mini Realtime', description: 'Faster, more cost-effective model' },
+  { value: 'gpt-4o-realtime-preview-2024-12-17', label: 'GPT-4o Realtime (Dec 2024)', description: 'Previous version of GPT-4o realtime model' }
+];
+
+export const selectedModelAtom = atomWithPersistence<ModelOption>('voiceChat_selectedModel', 'gpt-4o-realtime-preview-2025-06-03', {
+  enableLogging: false,
+  validate: (value): value is ModelOption => {
+    return typeof value === 'string' && MODEL_OPTIONS.some(option => option.value === value);
+  }
+});
 
 // Audio and transcript state atoms
 export const transcriptAtom = atom<string>('');
@@ -150,6 +172,7 @@ export const resetVoiceChatStateAtom = atom(
     set(isConnectingAtom, false);
     set(errorAtom, null);
     set(selectedVoiceAtom, 'alloy');
+    set(selectedModelAtom, 'gpt-4o-realtime-preview-2025-06-03');
     set(transcriptAtom, '');
     set(aiResponseAtom, '');
     set(currentSessionIdAtom, '');

@@ -19,6 +19,7 @@ import {
   templateCreationProgressAtom,
   createdTemplateAtom,
   selectedVoiceAtom,
+  selectedModelAtom,
   photoAttachmentsAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
@@ -56,6 +57,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const setTemplateCreationProgress = useSetAtom(templateCreationProgressAtom);
   const setCreatedTemplate = useSetAtom(createdTemplateAtom);
   const [selectedVoice] = useAtom(selectedVoiceAtom);
+  const [selectedModel] = useAtom(selectedModelAtom);
   const setPhotoAttachments = useSetAtom(photoAttachmentsAtom);
   
   // Refs
@@ -193,7 +195,8 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         userName,
         voiceMode,
         voiceChatMode,
-        selectedVoice
+        selectedVoice,
+        selectedModel
       );
       
       setSessionId(newSessionId);
@@ -214,7 +217,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     } finally {
       setIsConnecting(false);
     }
-  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setAiResponse, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode, selectedVoice]);
+  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setAiResponse, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel]);
 
   // End session
   const endSession = useCallback(async () => {
@@ -285,7 +288,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     } else {
       console.log('🔍 Conditions not met for auto-start/end');
     }
-  }, [selectedTemplate, isSessionActive, isConnecting, startSession, endSession, voiceChatMode, selectedVoice]);
+  }, [selectedTemplate, isSessionActive, isConnecting, startSession, endSession, voiceChatMode, selectedVoice, selectedModel]);
 
   // Cleanup on unmount
   useEffect(() => {

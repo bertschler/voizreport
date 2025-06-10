@@ -3,7 +3,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { userNameAtom, setUserNameAtom, voiceModeAtom, setVoiceModeAtom, VOICE_MODE_OPTIONS, VoiceMode } from '../state/settingsState';
-import { selectedVoiceAtom, VOICE_OPTIONS, VoiceOption } from '../state/voiceChatState';
+import { selectedVoiceAtom, VOICE_OPTIONS, VoiceOption, selectedModelAtom, MODEL_OPTIONS, ModelOption } from '../state/voiceChatState';
 
 export default function Settings() {
   const [userName] = useAtom(userNameAtom);
@@ -11,6 +11,7 @@ export default function Settings() {
   const [voiceMode] = useAtom(voiceModeAtom);
   const [, setVoiceMode] = useAtom(setVoiceModeAtom);
   const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom);
+  const [selectedModel, setSelectedModel] = useAtom(selectedModelAtom);
   const [playingVoice, setPlayingVoice] = React.useState<VoiceOption | null>(null);
   const [loadingVoice, setLoadingVoice] = React.useState<VoiceOption | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -25,6 +26,10 @@ export default function Settings() {
 
   const handleVoiceChange = (voice: VoiceOption) => {
     setSelectedVoice(voice);
+  };
+
+  const handleModelChange = (model: ModelOption) => {
+    setSelectedModel(model);
   };
 
   const playVoicePreview = async (voice: VoiceOption) => {
@@ -213,6 +218,74 @@ export default function Settings() {
               </label>
             ))}
           </div>
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '12px'
+          }}>
+            AI Model
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {MODEL_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  padding: '12px',
+                  border: selectedModel === option.value ? '2px solid #3b82f6' : '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  backgroundColor: selectedModel === option.value ? '#eff6ff' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onClick={() => handleModelChange(option.value)}
+              >
+                <input
+                  type="radio"
+                  name="modelSelection"
+                  value={option.value}
+                  checked={selectedModel === option.value}
+                  onChange={() => handleModelChange(option.value)}
+                  style={{
+                    marginTop: '2px',
+                    accentColor: '#3b82f6'
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '4px'
+                  }}>
+                    {option.label}
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    lineHeight: '1.4'
+                  }}>
+                    {option.description}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+          <p style={{
+            fontSize: '12px',
+            color: '#6b7280',
+            margin: '8px 0 0 0',
+            fontStyle: 'italic'
+          }}>
+            Model selection applies to new conversations only.
+          </p>
         </div>
 
         <div style={{ marginBottom: '20px' }}>
