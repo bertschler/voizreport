@@ -155,7 +155,7 @@ export default function QuickTemplateSelector({
               margin: '0',
               letterSpacing: '-0.025em'
             }}>
-              AI Voice Studio
+              CREATE
             </h2>
             <div style={{
               width: '8px',
@@ -172,7 +172,7 @@ export default function QuickTemplateSelector({
             margin: '0',
             fontWeight: '500'
           }}>
-            Choose your intelligence pathway
+            Choose a report template and start speaking
           </p>
         </div>
 
