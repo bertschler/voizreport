@@ -336,6 +336,7 @@ export default function Home() {
           isVisible={showQuickTemplateSelector}
           onSelectTemplate={handleQuickTemplateSelect}
           onClose={handleCloseQuickTemplateSelector}
+          onCreateTemplate={handleCreateTemplate}
         />
       </PageLayout>
     </VoiceChatProvider>

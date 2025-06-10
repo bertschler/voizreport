@@ -8,6 +8,7 @@ interface QuickTemplateSelectorProps {
   templates: StoredTemplate[];
   isVisible: boolean;
   onSelectTemplate: (template: ReportTemplate) => void;
+  onCreateTemplate?: () => void;
   onClose: () => void;
 }
 
@@ -15,6 +16,7 @@ export default function QuickTemplateSelector({
   templates, 
   isVisible, 
   onSelectTemplate, 
+  onCreateTemplate,
   onClose 
 }: QuickTemplateSelectorProps) {
   const [hoveredTemplate, setHoveredTemplate] = useState<number | null>(null);
@@ -181,6 +183,64 @@ export default function QuickTemplateSelector({
           gap: '16px',
           marginBottom: '28px'
         }}>
+          {/* Create New Template Button */}
+          {onCreateTemplate && (
+            <button
+              onClick={onCreateTemplate}
+              onMouseEnter={() => setHoveredTemplate(-1)}
+              onMouseLeave={() => setHoveredTemplate(null)}
+              className={`template-button ${hoveredTemplate === -1 ? 'hovered' : ''}`}
+              style={{
+                background: hoveredTemplate === -1 
+                  ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%)'
+                  : 'rgba(255, 255, 255, 0.4)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: hoveredTemplate === -1 
+                  ? '2px solid rgba(16, 185, 129, 0.3)'
+                  : '2px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '20px',
+                padding: '24px 20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                minHeight: '120px',
+                position: 'relative',
+                overflow: 'hidden',
+                willChange: 'transform',
+                animation: 'templateSlideIn 0.4s ease-out 0s both'
+              }}
+            >
+              {/* Plus Icon with subtle animation */}
+              <div style={{
+                fontSize: '36px',
+                marginBottom: '12px',
+                lineHeight: '1',
+                transition: 'transform 0.2s ease',
+                transform: hoveredTemplate === -1 ? 'scale(1.1) rotate(90deg)' : 'scale(1)',
+                color: hoveredTemplate === -1 ? '#10B981' : '#64748b'
+              }}>
+                ✨
+              </div>
+              
+              {/* Title */}
+              <h3 style={{
+                fontSize: '15px',
+                fontWeight: '700',
+                color: hoveredTemplate === -1 ? '#10B981' : '#475569',
+                margin: '0',
+                lineHeight: '1.3',
+                transition: 'color 0.2s ease',
+                letterSpacing: '-0.01em'
+              }}>
+                Create New
+              </h3>
+            </button>
+          )}
+          
           {templates.map((template, index) => (
             <button
               key={template.id}
@@ -209,7 +269,7 @@ export default function QuickTemplateSelector({
                 position: 'relative',
                 overflow: 'hidden',
                 willChange: 'transform',
-                animation: `templateSlideIn 0.4s ease-out ${index * 0.08}s both`
+                animation: `templateSlideIn 0.4s ease-out ${(index + 1) * 0.08}s both`
               }}
             >
               {/* Icon */}
