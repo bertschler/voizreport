@@ -18,6 +18,7 @@ import {
   voiceChatModeAtom,
   templateCreationProgressAtom,
   createdTemplateAtom,
+  isCreatingTemplateAtom,
   selectedVoiceAtom,
   selectedModelAtom,
   photoAttachmentsAtom,
@@ -56,6 +57,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const [voiceChatMode, setVoiceChatMode] = useAtom(voiceChatModeAtom);
   const setTemplateCreationProgress = useSetAtom(templateCreationProgressAtom);
   const setCreatedTemplate = useSetAtom(createdTemplateAtom);
+  const setIsCreatingTemplate = useSetAtom(isCreatingTemplateAtom);
   const [selectedVoice] = useAtom(selectedVoiceAtom);
   const [selectedModel] = useAtom(selectedModelAtom);
   const setPhotoAttachments = useSetAtom(photoAttachmentsAtom);
@@ -241,12 +243,17 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setVoiceChatMode('report'); // Reset voice chat mode to default (reports)
       setPhotoAttachments([]); // Clear photo attachments
       
+      // Reset template creation states
+      setTemplateCreationProgress({});
+      setCreatedTemplate(null);
+      setIsCreatingTemplate(false);
+      
       console.log('✅ Session ended successfully');
       
     } catch (error) {
       console.error('💥 Error during session cleanup:', error);
     }
-  }, [setIsSessionActive, setIsConnecting, setSessionId, setTranscript, setAiResponse, setError, setFormProgress, setActiveTemplate, setSelectedTemplate, setVoiceChatMode]);
+  }, [setIsSessionActive, setIsConnecting, setSessionId, setTranscript, setAiResponse, setError, setFormProgress, setActiveTemplate, setSelectedTemplate, setVoiceChatMode, setPhotoAttachments, setTemplateCreationProgress, setCreatedTemplate, setIsCreatingTemplate]);
 
   // Handle function calls from OpenAI using the extracted handler service
   const handleFunctionCallWrapper = useCallback(async (message: any) => {

@@ -43,7 +43,6 @@ export interface VoiceChatState {
 }
 
 export interface VoiceChatActions {
-  endSession: () => void;
   setVoiceChatMode: (mode: VoiceChatMode) => void;
   startTemplateCreation: () => void;
   clearCreatedTemplate: () => void;
@@ -62,17 +61,11 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
   const [nextFieldToUpdate] = useAtom(nextFieldToUpdateAtom);
   const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
   const [voiceChatMode, setVoiceChatMode] = useAtom(voiceChatModeAtom);
-  const [templateCreationProgress] = useAtom(templateCreationProgressAtom);
+  const [templateCreationProgress, setTemplateCreationProgress] = useAtom(templateCreationProgressAtom);
   const [isCreatingTemplate, setIsCreatingTemplate] = useAtom(isCreatingTemplateAtom);
   const [createdTemplate, setCreatedTemplate] = useAtom(createdTemplateAtom);
   const [selectedModel] = useAtom(selectedModelAtom);
 
-  // End session by clearing selected template (provider will handle cleanup)
-  const endSession = () => {
-    console.log('🔒 Ending session via useVoiceChat hook');
-    setSelectedTemplate(null);
-    setIsCreatingTemplate(false);
-  };
 
   // Start template creation mode
   const startTemplateCreation = () => {
@@ -122,7 +115,6 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
     selectedModel,
     
     // Actions
-    endSession,
     setVoiceChatMode,
     startTemplateCreation,
     clearCreatedTemplate

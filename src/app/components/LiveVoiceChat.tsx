@@ -39,7 +39,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
     templateCreationProgress,
     isCreatingTemplate,
     createdTemplate,
-    endSession,
     startTemplateCreation,
     nextFieldToUpdate
   } = useVoiceChat();

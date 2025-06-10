@@ -4,7 +4,7 @@ import { VoiceChatMode, VoiceOption, ModelOption } from '@/app/state/voiceChatSt
 import { getReportInstructionsSystemPrompt } from '@/config/instructions/report-instructions';
 import { getReportTools } from '@/config/instructions/report-tools';
 import { getTemplateInstructionsSystemPrompt } from '@/config/instructions/template-instructions';
-import { getTemplateTools, TEMPLATE_CREATION_TOOLS } from '@/config/instructions/template-tools';
+import { getTemplateTools } from '@/config/instructions/template-tools';
 
 export interface WebRTCSessionData {
   sessionId: string;
