@@ -1,4 +1,3 @@
-
 import { ReportTemplate } from '@/app/data/mockData';
 import { VoiceChatMode, VoiceOption, ModelOption } from '@/app/state/voiceChatState';
 import { getReportInstructionsSystemPrompt } from '@/config/instructions/report-instructions';
@@ -18,10 +17,6 @@ export interface WebRTCServiceCallbacks {
   onError: (error: string) => void;
 }
 
-// Global session lock to prevent React Strict Mode race conditions
-let globalSessionLock = false;
-let globalSessionPromise: Promise<void> | null = null;
-
 // Singleton WebRTC Service to prevent multiple instances
 class WebRTCServiceClass {
   private static instance: WebRTCServiceClass | null = null;
@@ -31,6 +26,7 @@ class WebRTCServiceClass {
   private sessionId: string | null = null;
   private isConnecting: boolean = false;
   private callbacks: WebRTCServiceCallbacks | null = null;
+  private sessionPromise: Promise<string> | null = null;
   
   // Audio element - will be initialized lazily
   private audioElement: HTMLAudioElement | null = null;
@@ -47,7 +43,7 @@ class WebRTCServiceClass {
     return WebRTCServiceClass.instance;
   }
 
-  private initializeAudioElement() {
+  private initializeAudioElement(): void {
     // Only initialize if we're in a browser environment and haven't already initialized
     if (typeof window === 'undefined' || typeof document === 'undefined') {
       console.warn('🎧 Cannot initialize audio element: not in browser environment');
@@ -126,35 +122,27 @@ class WebRTCServiceClass {
     selectedVoice?: VoiceOption,
     selectedModel?: ModelOption
   ): Promise<string> {
-    // Global lock to prevent multiple simultaneous session starts
-    if (globalSessionLock) {
-      console.log('🔒 Session start blocked by global lock, waiting...');
-      if (globalSessionPromise) {
-        await globalSessionPromise;
-      }
-      // Return existing session if available
-      if (this.sessionId) {
-        return this.sessionId;
-      }
+    // If already connecting, return the existing promise
+    if (this.sessionPromise) {
+      console.log('📞 Session already in progress, returning existing promise');
+      return this.sessionPromise;
     }
 
-    if (this.isConnecting || this.sessionId) {
-      console.log('⚠️ Session already active/connecting:', this.sessionId);
-      return this.sessionId || '';
+    // If already connected, return existing session
+    if (this.sessionId && !this.isConnecting) {
+      console.log('✅ Session already active:', this.sessionId);
+      return this.sessionId;
     }
 
-    // Set global lock
-    globalSessionLock = true;
-    this.isConnecting = true;
-
+    // Create new session promise
+    this.sessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel);
+    
     try {
-      globalSessionPromise = this._performSessionStart(callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel);
-      await globalSessionPromise;
-      return this.sessionId || '';
+      const result = await this.sessionPromise;
+      return result;
     } finally {
-      globalSessionLock = false;
-      globalSessionPromise = null;
-      this.isConnecting = false;
+      // Clear the promise once it's resolved/rejected
+      this.sessionPromise = null;
     }
   }
 
@@ -167,24 +155,32 @@ class WebRTCServiceClass {
     voiceChatMode?: VoiceChatMode,
     selectedVoice?: VoiceOption,
     selectedModel?: ModelOption
-  ): Promise<void> {
-    // Clean up any existing session first
-    if (this.sessionId) {
-      console.log('🔄 Cleaning up existing session before starting new one');
-      await this.cleanup();
-    }
+  ): Promise<string> {
+    this.isConnecting = true;
 
-    // Request microphone permission
-    const hasPermission = await this.requestMicrophonePermission();
-    if (!hasPermission) {
-      throw new Error('Microphone permission required');
-    }
+    try {
+      // Clean up any existing session first
+      if (this.sessionId) {
+        console.log('🔄 Cleaning up existing session before starting new one');
+        await this.cleanup();
+      }
 
-    // Create session
-    const sessionData = await this.createSession(selectedModel);
-    
-    // Setup connection
-    await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel);
+      // Request microphone permission
+      const hasPermission = await this.requestMicrophonePermission();
+      if (!hasPermission) {
+        throw new Error('Microphone permission required');
+      }
+
+      // Create session
+      const sessionData = await this.createSession(selectedModel);
+      
+      // Setup connection
+      await this.setupConnection(sessionData, callbacks, template, templateInstructions, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel);
+      
+      return this.sessionId || '';
+    } finally {
+      this.isConnecting = false;
+    }
   }
 
   async setupConnection(
