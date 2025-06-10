@@ -24,6 +24,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* globals.css */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  /* For iOS Safari */
+  height: -webkit-fill-available;
+  /* For modern Android Chrome */
+  height: 100svh;
+  /* For all other engines that support it */
+  height: 100dvh;
+  overflow-x: hidden;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;

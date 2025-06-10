@@ -42,16 +42,8 @@ export default function RootLayout({
       <body 
         className={`${geistSans.variable} ${geistMono.variable}`}
         style={{
-          margin: 0,
-          padding: 0,
           fontFamily: 'var(--font-geist-sans)',
           backgroundColor: '#f8fafc',
-          height: 100%;
-          /* For iOS Safari: */
-          height: "-webkit-fill-available",
-          /* For modern Android Chrome: */
-          height: "100svh",   /* “small viewport height” */
-          height: "100dvh",   /* “dynamic viewport height” */
         }}
       >
         <SessionProvider>
