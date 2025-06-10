@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@auth/core": "^0.34.2",
     "@google-cloud/storage": "^7.16.0",
     "@google/genai": "^1.3.0",
     "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta",

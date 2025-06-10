@@ -1,32 +1,57 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function UserProfile() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
 
-  if (!session?.user) return null
+  if (!user) return null
 
   return (
-    <div className="flex items-center space-x-3">
-      {session.user.image && (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {user.image && (
         <img
-          src={session.user.image}
-          alt={session.user.name || 'User'}
-          className="w-8 h-8 rounded-full"
+          src={user.image}
+          alt={user.name || 'User'}
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%'
+          }}
         />
       )}
-      <div className="flex flex-col">
-        <span className="text-sm font-medium text-gray-900">
-          {session.user.name}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{
+          fontSize: '14px',
+          fontWeight: '500',
+          color: '#111827'
+        }}>
+          {user.name}
         </span>
-        <span className="text-xs text-gray-500">
-          {session.user.email}
+        <span style={{
+          fontSize: '12px',
+          color: '#6b7280'
+        }}>
+          {user.email}
         </span>
       </div>
       <button
         onClick={() => signOut()}
-        className="text-xs text-red-600 hover:text-red-800"
+        style={{
+          fontSize: '12px',
+          color: '#dc2626',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '4px 8px'
+        }}
+        onMouseEnter={(e) => {
+          (e.target as HTMLButtonElement).style.color = '#991b1b'
+        }}
+        onMouseLeave={(e) => {
+          (e.target as HTMLButtonElement).style.color = '#dc2626'
+        }}
       >
         Sign out
       </button>

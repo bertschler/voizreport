@@ -10,7 +10,6 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
-      // Persist the OAuth access_token and or the user id to the token right after signin
       if (account) {
         token.accessToken = account.access_token
         token.refreshToken = account.refresh_token
@@ -18,14 +17,10 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      // Send properties to the client, like an access_token and user id from a provider.
       session.accessToken = token.accessToken as string
       session.refreshToken = token.refreshToken as string
       return session
     },
-  },
-  pages: {
-    signIn: '/auth/signin',
   },
   session: {
     strategy: "jwt",

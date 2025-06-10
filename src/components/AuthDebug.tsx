@@ -1,11 +1,9 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function AuthDebug() {
-  const { data: session, status } = useSession()
-  const { isAuthenticated, isLoading, showAuthModal } = useAuth()
+  const { session, user, status, isAuthenticated, isLoading, showAuthModal } = useAuth()
 
   return (
     <div style={{
@@ -25,7 +23,7 @@ export default function AuthDebug() {
       <div>Authenticated: {isAuthenticated ? 'YES' : 'NO'}</div>
       <div>Loading: {isLoading ? 'YES' : 'NO'}</div>
       <div>Show Modal: {showAuthModal ? 'YES' : 'NO'}</div>
-      <div>User: {session?.user?.name || 'none'}</div>
+      <div>User: {user?.name || 'none'}</div>
     </div>
   )
 } 
