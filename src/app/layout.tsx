@@ -45,7 +45,7 @@ export default function RootLayout({
           padding: 0,
           fontFamily: 'var(--font-geist-sans)',
           backgroundColor: '#f8fafc',
-          minHeight: '100dvh' // Dynamic viewport height with automatic fallback
+          height: '100svh' // Small viewport height - always fits visible area on mobile
         }}
       >
         <JotaiProvider>
