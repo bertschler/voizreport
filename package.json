@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.16.0",
     "@google/genai": "^1.3.0",
     "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta",
     "@types/ws": "^8.18.1",
+    "google-auth-library": "^9.15.1",
     "jotai": "^2.12.5",
     "next": "15.3.3",
     "openai": "^5.0.2",
