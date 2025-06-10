@@ -1,4 +1,6 @@
+import { useAtomValue } from 'jotai';
 import React from 'react';
+import { isSessionReadyAtom } from '../state/voiceChatState';
 
 interface FormField {
   key: string;
@@ -18,6 +20,8 @@ const FormFieldsDisplay: React.FC<FormFieldsDisplayProps> = ({
   formProgress,
   nextFieldToUpdate
 }) => {
+  const isReady = useAtomValue(isSessionReadyAtom);
+  
   if (formFields.length === 0) {
     return null;
   }
@@ -87,7 +91,7 @@ const FormFieldsDisplay: React.FC<FormFieldsDisplayProps> = ({
               fontSize: '13px',
               position: 'relative'
             }}>
-              {field.key === nextFieldToUpdate && !isCompleted && (
+              {isReady && (field.key === nextFieldToUpdate || (!nextFieldToUpdate && index === 0)) && !isCompleted && (
                 <div style={{
                   position: 'absolute',
                   left: '-32px',
