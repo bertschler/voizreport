@@ -4,7 +4,7 @@ import { VoiceChatMode, VoiceOption, ModelOption } from '@/app/state/voiceChatSt
 import { getReportInstructionsSystemPrompt } from '@/config/instructions/report-instructions';
 import { getReportTools } from '@/config/instructions/report-tools';
 import { getTemplateInstructionsSystemPrompt } from '@/config/instructions/template-instructions';
-import { TEMPLATE_CREATION_TOOLS } from '@/config/instructions/template-tools';
+import { getTemplateTools, TEMPLATE_CREATION_TOOLS } from '@/config/instructions/template-tools';
 
 export interface WebRTCSessionData {
   sessionId: string;
@@ -348,7 +348,7 @@ class WebRTCServiceClass {
     const isTemplateCreation = voiceChatMode === 'template-creation';
     
     const tools = isTemplateCreation 
-      ? TEMPLATE_CREATION_TOOLS
+      ? getTemplateTools()
       : getReportTools(template);
     
     const sessionUpdate = {
@@ -368,11 +368,11 @@ class WebRTCServiceClass {
     
     // Send initial greeting trigger after a short delay to ensure session update is processed
     setTimeout(() => {
-      this.triggerInitialGreeting();
+      this.triggerStartSpeaking();
     }, 100);
   }
 
-  private triggerInitialGreeting(): void {
+  private triggerStartSpeaking(): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       console.error('💥 Data channel not available for initial greeting');
       return;

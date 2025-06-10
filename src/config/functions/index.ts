@@ -44,33 +44,56 @@ export {
   handleExitTemplateCreation 
 } from './exit-template-creation';
 
-// Function handler dispatcher
+// Function handler registry
 import { FunctionCallMessage, FunctionHandlerContext } from './types';
 
+type FunctionHandler = (message: FunctionCallMessage, context: FunctionHandlerContext) => Promise<void>;
+
+class FunctionRegistry {
+  private handlers = new Map<string, FunctionHandler>();
+  
+  register(name: string, handler: FunctionHandler): void {
+    this.handlers.set(name, handler);
+  }
+  
+  async handle(message: FunctionCallMessage, context: FunctionHandlerContext): Promise<void> {
+    console.log('🎯 Handling function call:', message.name, message.arguments);
+    
+    const handler = this.handlers.get(message.name);
+    if (handler) {
+      await handler(message, context);
+    } else {
+      console.warn('⚠️ Unknown function call:', message.name);
+    }
+  }
+}
+
+// Create and populate the registry
+const registry = new FunctionRegistry();
+
+// Register handlers immediately (no dynamic imports needed)
+import { handleExitConversation } from './exit-conversation';
+import { handleExitTemplateCreation } from './exit-template-creation';
+import { handleTemplateProgressUpdated } from './template-progress-updated';
+import { handleCompleteTemplateCreation } from './complete-template-creation';
+import { handleFormFieldsUpdated } from './form-fields-updated';
+import { handleCompleteFormSubmission } from './complete-form-submission';
+import { handleOpenCamera } from './open-camera';
+import { handleCapturePhoto } from './capture-photo';
+
+registry.register('exit_conversation', handleExitConversation);
+registry.register('exit_template_creation', handleExitTemplateCreation);
+registry.register('template_progress_updated', handleTemplateProgressUpdated);
+registry.register('complete_template_creation', handleCompleteTemplateCreation);
+registry.register('form_fields_updated', handleFormFieldsUpdated);
+registry.register('complete_form_submission', handleCompleteFormSubmission);
+registry.register('open_camera', handleOpenCamera);
+registry.register('capture_photo', handleCapturePhoto);
+
+// Export the main dispatcher
 export const handleFunctionCall = async (
   message: FunctionCallMessage,
   context: FunctionHandlerContext
 ): Promise<void> => {
-  console.log('🎯 Handling function call:', message.name, message.arguments);
-  
-  // Dynamic imports to avoid circular dependencies
-  const handlers: Record<string, () => Promise<any>> = {
-    'exit_conversation': () => import('./exit-conversation').then(m => m.handleExitConversation),
-    'exit_template_creation': () => import('./exit-template-creation').then(m => m.handleExitTemplateCreation),
-    'template_progress_updated': () => import('./template-progress-updated').then(m => m.handleTemplateProgressUpdated),
-    'complete_template_creation': () => import('./complete-template-creation').then(m => m.handleCompleteTemplateCreation),
-    'form_fields_updated': () => import('./form-fields-updated').then(m => m.handleFormFieldsUpdated),
-    'complete_form_submission': () => import('./complete-form-submission').then(m => m.handleCompleteFormSubmission),
-    'open_camera': () => import('./open-camera').then(m => m.handleOpenCamera),
-    'capture_photo': () => import('./capture-photo').then(m => m.handleCapturePhoto),
-  };
-  
-  const handlerLoader = handlers[message.name];
-  if (handlerLoader) {
-    const handler = await handlerLoader();
-    await handler(message, context);
-  } else {
-    console.warn('⚠️ Unknown function call:', message.name);
-    // Note: WebRTCService import moved to individual function files to avoid circular imports
-  }
+  await registry.handle(message, context);
 }; 

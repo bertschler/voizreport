@@ -4,7 +4,7 @@ import {
   getExitTemplateCreationTool
 } from '../functions';
 
-export const TEMPLATE_CREATION_TOOLS = [
+export const getTemplateTools = () => [
   getTemplateProgressUpdatedTool(),
   getCompleteTemplateCreationTool(),
   getExitTemplateCreationTool()
