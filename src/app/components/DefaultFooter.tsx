@@ -72,7 +72,8 @@ export default function DefaultFooter({
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
-          zIndex: 1
+          zIndex: 1,
+          paddingBottom: "env(safe-area-inset-bottom)",
         }}>
           {tabs.map((tab, index) => (
             <button

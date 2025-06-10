@@ -46,7 +46,12 @@ export default function RootLayout({
           padding: 0,
           fontFamily: 'var(--font-geist-sans)',
           backgroundColor: '#f8fafc',
-          height: '100svh' // Small viewport height - always fits visible area on mobile
+          height: 100%;
+          /* For iOS Safari: */
+          height: "-webkit-fill-available",
+          /* For modern Android Chrome: */
+          height: "100svh",   /* “small viewport height” */
+          height: "100dvh",   /* “dynamic viewport height” */
         }}
       >
         <SessionProvider>

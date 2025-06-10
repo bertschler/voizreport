@@ -293,7 +293,6 @@ export default function Home() {
   // Main interface with tabs
   return (
     <AuthGuard>
-      <AuthDebug />
       <VoiceChatProvider
       onSessionReady={handleSessionReady}
       onFormCompleted={handleFormCompletion}
