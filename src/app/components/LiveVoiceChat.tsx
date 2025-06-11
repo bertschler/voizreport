@@ -6,7 +6,7 @@
 // <LiveVoiceChat template={someTemplate} mode="report" />
 // 
 // For template creation mode (new functionality):
-// <LiveVoiceChat mode="template-creation" />
+// <LiveVoiceChat mode="template" />
 
 import React, { useEffect } from 'react';
 import { useVoiceChat, FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate } from '../hooks/useVoiceChat';
@@ -19,6 +19,7 @@ import LivePhotoViewer from './voice-chat/LivePhotoViewer';
 import TemplateCreationProgressComponent from './voice-chat/TemplateCreationProgress';
 import CreatedTemplateResult from './voice-chat/CreatedTemplateResult';
 import TemplateCreationInstructions from './voice-chat/TemplateCreationInstructions';
+import { TurnIndicator } from './TurnIndicator';
 
 interface LiveVoiceChatProps {
   template?: ReportTemplate;
@@ -40,10 +41,10 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
     formProgress,
     voiceChatMode,
     templateCreationProgress,
-    isCreatingTemplate,
     createdTemplate,
     startTemplateCreation,
-    nextFieldToUpdate
+    nextFieldToUpdate,
+    isSessionActive,
   } = useVoiceChat();
 
   // Cleanup effect only
@@ -53,24 +54,17 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
     };
   }, []);
 
-  // Auto-start template creation if mode is template-creation
+  // Auto-start template creation if mode is template
   useEffect(() => {
-    console.log(`${ts()} 🔍 LiveVoiceChat effect triggered:`);
-    console.log(`${ts()} 🔍   mode:`, mode);
-    console.log(`${ts()} 🔍   voiceChatMode:`, voiceChatMode);
-    console.log(`${ts()} 🔍   isCreatingTemplate:`, isCreatingTemplate);
-    
-    if (mode === 'template-creation' && voiceChatMode !== 'template-creation') {
+    if (mode === 'template' && voiceChatMode !== 'template') {
       console.log(`${ts()} 🎯 Auto-starting template creation mode`);
       startTemplateCreation();
-    } else {
-      console.log(`${ts()} 🔍 Conditions not met for template creation start`);
     }
   }, [mode, voiceChatMode, startTemplateCreation]);
 
   // Parse form fields from openai_properties for instructions (report mode only)
   const getFormFields = () => {
-    if (!template || voiceChatMode === 'template-creation') return [];
+    if (!template || voiceChatMode === 'template') return [];
     
     try {
       const properties = template.openai_properties || {};
@@ -87,7 +81,8 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
   };
 
   const formFields = getFormFields();
-  const isTemplateMode = voiceChatMode === 'template-creation';
+  const isReportMode = voiceChatMode === 'report';
+  const isTemplateMode = voiceChatMode === 'template';
 
   return (
     <div style={{
@@ -102,7 +97,7 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
       <ErrorDisplay error={error} />
 
       {/* Controls - Voice Mode Toggle and Camera Button (only for report mode) */}
-      {!isTemplateMode && (
+      {isReportMode && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -115,6 +110,10 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
           <CameraButton />
         </div>
       )}
+
+      {isSessionActive && <>
+        <TurnIndicator/>
+      </>}
 
       {/* Template Creation Progress */}
       {isTemplateMode && (

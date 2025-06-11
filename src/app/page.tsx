@@ -250,8 +250,8 @@ export default function Home() {
           onNavigateToSession={handleNavigateToSession}
         >
           <LiveVoiceChat 
-            key="template-creation"
-            mode="template-creation"
+            key="template"
+            mode="template"
           />
         </PageLayout>
       </VoiceChatProvider>

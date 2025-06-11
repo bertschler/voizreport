@@ -341,7 +341,7 @@ class WebRTCServiceClass {
     }
 
     const instructions = this.getInstructions(templateInstructions, voiceMode, voiceChatMode, userName);
-    const isTemplateCreation = voiceChatMode === 'template-creation';
+    const isTemplateCreation = voiceChatMode === 'template';
     
     const tools = isTemplateCreation 
       ? getTemplateTools()
@@ -363,9 +363,7 @@ class WebRTCServiceClass {
     console.log(`📤 Sent ${isTemplateCreation ? 'template creation' : 'report filling'} session configuration`);
     
     // Send initial greeting trigger after a short delay to ensure session update is processed
-    setTimeout(() => {
-      this.triggerStartSpeaking();
-    }, 100);
+    //setTimeout(() => { this.triggerStartSpeaking(); }, 100);
   }
 
   private triggerStartSpeaking(): void {
@@ -387,7 +385,7 @@ class WebRTCServiceClass {
   }
 
   private getInstructions(templateInstructions?: string, voiceMode?: string, voiceChatMode?: VoiceChatMode, userName?: string): string {
-    const isTemplateCreation = voiceChatMode === 'template-creation';
+    const isTemplateCreation = voiceChatMode === 'template';
     
     if (isTemplateCreation) {
       return getTemplateInstructionsSystemPrompt({ userName });

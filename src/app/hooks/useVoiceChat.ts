@@ -67,11 +67,11 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
     console.log('🎯 Current voiceChatMode:', voiceChatMode);
     console.log('🎯 Current selectedTemplate:', selectedTemplate?.title || 'none');
     
-    setVoiceChatMode('template-creation');
+    setVoiceChatMode('template');
     setIsCreatingTemplate(true);
     const templateCreationTemplate = { 
       // Special template indicator for template creation mode
-      id: 'template-creation',
+      id: 'template',
       title: 'Template Creation',
       description: 'Create a new report template',
       definition: 'Template creation session',

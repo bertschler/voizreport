@@ -58,8 +58,11 @@ export const currentSessionIdAtom = atom<string>('');
 export const isStartingSessionAtom = atom<boolean>(false);
 
 // Voice chat mode atoms
-export type VoiceChatMode = 'report' | 'template-creation';
+export type VoiceChatMode = 'report' | 'template';
 export const voiceChatModeAtom = atom<VoiceChatMode>('report');
+
+// Current turn tracking atom
+export const currentTurnAtom = atom<'user' | 'assistant' | 'idle'>('idle');
 
 // Form data atoms (for report mode)
 export const formDataAtom = atom<Record<string, any>>({});
@@ -72,7 +75,7 @@ export const nextFieldToUpdateAtom = atom<string | undefined>(undefined);
 // Photo attachments atom - tracks captured photos during current session
 export const photoAttachmentsAtom = atom<PhotoAttachment[]>([]);
 
-// Template creation atoms (for template-creation mode)
+// Template creation atoms (for template mode)
 export interface TemplateCreationProgress {
   title?: string;
   description?: string;
@@ -88,7 +91,7 @@ export interface TemplateCreationProgress {
   currentPhase?: 'core-attributes' | 'field-definition' | 'review';
 }
 
-export const templateCreationProgressAtom = atom<TemplateCreationProgress>({});
+export const templateCreationProgressAtom = atom<Record<string, any>>({});
 export const isCreatingTemplateAtom = atom<boolean>(false);
 
 // Template creation result atom

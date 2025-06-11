@@ -21,6 +21,7 @@ import {
   selectedVoiceAtom,
   selectedModelAtom,
   photoAttachmentsAtom,
+  currentTurnAtom,
   FormSummary
 } from '@/app/state/voiceChatState';
 import { addReportAtom } from '@/app/state/reportsState';
@@ -61,6 +62,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const [selectedVoice] = useAtom(selectedVoiceAtom);
   const [selectedModel] = useAtom(selectedModelAtom);
   const setPhotoAttachments = useSetAtom(photoAttachmentsAtom);
+  const [currentTurn, setCurrentTurn] = useAtom(currentTurnAtom);
   
   // Refs
   const providerInstanceId = useRef(Math.random().toString(36).substr(2, 9));
@@ -85,13 +87,20 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     }
   }, [voiceMode, isSessionActive]);
 
-
-
-  // Handle realtime messages from OpenAI
+  /**
+   * Handle realtime messages from OpenAI Realtime API
+   * This function tracks conversation turns and updates the currentTurn state
+   * 
+   * Turn states:
+   * - 'user': User is speaking or has just finished speaking
+   * - 'assistant': AI is generating or outputting a response  
+   * - 'idle': No active speech from either party
+   */
   const handleRealtimeMessage = (message: any, messageSessionId?: string) => {
     switch (message.type) {
       case 'session.created':
         console.log(`${ts()} ✅ Session created successfully`);
+        setCurrentTurn('idle');
         break;
         
       case 'session.updated':
@@ -100,18 +109,59 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         
       case 'input_audio_buffer.speech_started':
         console.log(`${ts()} 🎤 User started speaking`);
+        setCurrentTurn('user');
+        console.log(`${ts()} 🔄 Turn: USER`);
         break;
         
       case 'input_audio_buffer.speech_stopped':
         console.log(`${ts()} 🎤 User stopped speaking`);
+        // Don't immediately change turn - wait for AI response to start
+        console.log(`${ts()} 🔄 Turn: transitioning from USER`);
+        break;
+
+      case 'output_audio_buffer.started':
+        console.log(`${ts()} 🎧 AI started responding`);
+        setCurrentTurn('assistant');
+        console.log(`${ts()} 🔄 Turn: ASSISTANT`);
         break;
 
       case 'output_audio_buffer.stopped':
         console.log(`${ts()} 🎤 Audio buffer stopped`);
+        setCurrentTurn('idle');
+        console.log(`${ts()} 🔄 Turn: IDLE`);
+        break;
+
+      case 'response.created':
+        console.log(`${ts()} 🤖 AI response generation started`);
+        setCurrentTurn('assistant');
+        console.log(`${ts()} 🔄 Turn: ASSISTANT (response started)`);
+        break;
+
+      case 'response.done':
+        console.log(`${ts()} 🤖 AI response generation completed`);
+        setCurrentTurn('idle');
+        console.log(`${ts()} 🔄 Turn: IDLE (response completed)`);
+        break;
+
+      case 'response.cancelled':
+        console.log(`${ts()} 🛑 AI response was cancelled/interrupted`);
+        setCurrentTurn('user'); // Likely user interrupted
+        console.log(`${ts()} 🔄 Turn: USER (interrupted AI)`);
         break;
         
       case 'conversation.item.input_audio_transcription.completed':
         console.log(`${ts()} 💬 User transcript:`, message.transcript);
+        break;
+
+      case 'conversation.item.created':
+        if (message.item && message.item.role) {
+          console.log(`${ts()} 📝 New conversation item - Role: ${message.item.role.toUpperCase()}`);
+          if (message.item.role === 'user') {
+            console.log(`${ts()} 🔄 Turn confirmed: USER (conversation item)`);
+          } else if (message.item.role === 'assistant') {
+            console.log(`${ts()} 🔄 Turn confirmed: ASSISTANT (conversation item)`);
+          }
+        }
         break;
 
       case 'response.audio_transcript.done':
@@ -126,27 +176,28 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       case 'error':
         console.error(`${ts()} 💥 OpenAI error:`, message.error);
         setError(`OpenAI error: ${message.error.message || message.error}`);
+        setCurrentTurn('idle');
+        console.log(`${ts()} 🔄 Turn: IDLE (error occurred)`);
         break;
 
-      case 'output_audio_buffer.started':
-      case 'output_audio_buffer.started':
-      case 'conversation.item.created':
-      case 'response.created':
-      case 'response.output_item.added':
-      case 'response.content_part.added':
       case 'conversation.item.input_audio_transcription.delta':
       case 'response.audio_transcript.delta':
       case 'response.audio.done':
+      case 'response.content_part.added':
       case 'response.content_part.done':
+      case 'response.output_item.added':
       case 'response.output_item.done':
-      case 'response.done':
       case 'rate_limits.updated':
       case 'response.function_call_arguments.delta':
+        // These are streaming/progress events, don't log them to reduce noise
         break;
 
       default:
         console.log(`${ts()} 📝 Unhandled message type:`, message.type);
     }
+
+    // Log current turn state for debugging
+    console.log(`${ts()} 🔍 Current turn: ${currentTurn.toUpperCase()}`);
   };
 
   // WebRTC service callbacks
