@@ -2,51 +2,148 @@
 
 import React from 'react';
 import { useCurrentTurn } from '@/app/hooks/useCurrentTurn';
+import { useVoiceChat } from '../hooks/useVoiceChat';
 
 /**
- * Example component showing how to use turn tracking
- * Displays whose turn it is in the conversation
+ * Professional turn indicator component with sophisticated design
+ * Displays whose turn it is in the conversation with modern styling
  */
 export function TurnIndicator() {
   const { currentTurn, isUserTurn, isAssistantTurn, isIdle, isActive } = useCurrentTurn();
+  const { isSessionActive } = useVoiceChat();
 
-  const getTurnColor = () => {
+  const getTurnStyles = () => {
+    const baseStyles = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '8px 16px',
+      fontSize: '14px',
+      fontWeight: '500',
+      letterSpacing: '0.025em',
+      transition: 'all 0.3s ease',
+      position: 'relative' as const,
+      overflow: 'hidden' as const,
+      marginBottom: '16px',
+    };
+
+    // Override with connecting state if session is not active
+    if (!isSessionActive) {
+      return {
+        ...baseStyles,
+        color: '#9ca3af',
+        borderColor: 'rgba(156, 163, 175, 0.1)',
+      };
+    }
+
     switch (currentTurn) {
       case 'user':
-        return 'text-blue-600 bg-blue-50';
+        return {
+          ...baseStyles,
+          color: '#1e40af',
+        };
       case 'assistant':
-        return 'text-green-600 bg-green-50';
+        return {
+          ...baseStyles,
+          color: '#047857',
+        };
       case 'idle':
-        return 'text-gray-600 bg-gray-50';
+        return {
+          ...baseStyles,
+        };
       default:
-        return 'text-gray-600 bg-gray-50';
+        return {
+          ...baseStyles,
+          background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(75, 85, 99, 0.04) 100%)',
+          color: '#6b7280',
+          borderColor: 'rgba(107, 114, 128, 0.15)',
+          boxShadow: '0 2px 8px rgba(107, 114, 128, 0.08)',
+        };
     }
   };
 
-  const getTurnIcon = () => {
+  const getIndicatorStyles = () => {
+    const baseIndicatorStyles = {
+      width: '8px',
+      height: '8px',
+      borderRadius: '50%',
+      position: 'relative' as const,
+      flexShrink: 0,
+    };
+
+    // Override with connecting state if session is not active
+    if (!isSessionActive) {
+      return {
+        ...baseIndicatorStyles,
+        background: 'linear-gradient(45deg, #d1d5db, #9ca3af)',
+        boxShadow: '0 0 4px rgba(156, 163, 175, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+      };
+    }
+
     switch (currentTurn) {
       case 'user':
-        return '🎤';
+        return {
+          ...baseIndicatorStyles,
+          background: 'linear-gradient(45deg, #3b82f6, #1d4ed8)',
+        };
       case 'assistant':
-        return '🤖';
+        return {
+          ...baseIndicatorStyles,
+          background: 'linear-gradient(45deg, #10b981, #059669)',
+        };
       case 'idle':
-        return '⏸️';
+        return {
+          ...baseIndicatorStyles,
+          background: 'linear-gradient(45deg, #6b7280, #4b5563)',
+        };
       default:
-        return '❓';
+        return {
+          ...baseIndicatorStyles,
+          background: '#9ca3af',
+        };
     }
   };
+
+  const getStatusText = () => {
+    if (!isSessionActive) return 'Connecting';
+    if (isUserTurn) return 'Speaking';
+    if (isAssistantTurn) return 'Responding';
+    if (isIdle) return 'Listening';
+    return 'Unknown';
+  };
+
+  const pulseKeyframes = `
+    @keyframes sophisticatedPulse {
+      0%, 100% { 
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% { 
+        transform: scale(1.6);
+        opacity: 0.7;
+      }
+    }
+  `;
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getTurnColor()}`}>
-      <span className="text-lg">{getTurnIcon()}</span>
-      <span>
-        {isUserTurn && 'User Speaking'}
-        {isAssistantTurn && 'AI Responding'}
-        {isIdle && 'Idle'}
-      </span>
-      {isActive && (
-        <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
-      )}
-    </div>
+    <>
+      <style>{pulseKeyframes}</style>
+      <div style={getTurnStyles()}>
+        <div 
+          style={{
+            ...getIndicatorStyles(),
+            ...(isActive ? {
+              animation: 'sophisticatedPulse 2s ease-in-out infinite',
+            } : {})
+          }}
+        />
+        <span style={{ 
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          userSelect: 'none' as const,
+        }}>
+          {getStatusText()}
+        </span>
+      </div>
+    </>
   );
 } 

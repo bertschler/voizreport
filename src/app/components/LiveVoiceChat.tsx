@@ -44,7 +44,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
     createdTemplate,
     startTemplateCreation,
     nextFieldToUpdate,
-    isSessionActive,
   } = useVoiceChat();
 
   // Cleanup effect only
@@ -96,6 +95,8 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
       {/* Error Display */}
       <ErrorDisplay error={error} />
 
+      <TurnIndicator/>
+
       {/* Controls - Voice Mode Toggle and Camera Button (only for report mode) */}
       {isReportMode && (
         <div style={{
@@ -110,10 +111,6 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
           <CameraButton />
         </div>
       )}
-
-      {isSessionActive && <>
-        <TurnIndicator/>
-      </>}
 
       {/* Template Creation Progress */}
       {isTemplateMode && (

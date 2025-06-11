@@ -120,27 +120,23 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         break;
 
       case 'output_audio_buffer.started':
-        console.log(`${ts()} 🎧 AI started responding`);
+        console.log(`${ts()} 🎧 AI Audio Buffer started`);
         setCurrentTurn('assistant');
         console.log(`${ts()} 🔄 Turn: ASSISTANT`);
         break;
 
       case 'output_audio_buffer.stopped':
-        console.log(`${ts()} 🎤 Audio buffer stopped`);
+        console.log(`${ts()} 🎤 AI Audio buffer stopped`);
         setCurrentTurn('idle');
         console.log(`${ts()} 🔄 Turn: IDLE`);
         break;
 
       case 'response.created':
         console.log(`${ts()} 🤖 AI response generation started`);
-        setCurrentTurn('assistant');
-        console.log(`${ts()} 🔄 Turn: ASSISTANT (response started)`);
         break;
 
       case 'response.done':
         console.log(`${ts()} 🤖 AI response generation completed`);
-        setCurrentTurn('idle');
-        console.log(`${ts()} 🔄 Turn: IDLE (response completed)`);
         break;
 
       case 'response.cancelled':
