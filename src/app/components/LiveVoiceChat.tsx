@@ -29,8 +29,11 @@ interface LiveVoiceChatProps {
 export type { FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate };
 
 const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'report' }: LiveVoiceChatProps) {
+  // Helper function to add timestamps to logs
+  const ts = () => new Date().toISOString().substring(11, 23) + " LiveVoiceChat";
+  
   const componentInstanceId = React.useRef(Math.random().toString(36).substr(2, 9));
-  console.log('🏗️ LiveVoiceChat component created/re-rendered. Instance ID:', componentInstanceId.current);
+  console.log(`${ts()} 🏗️ LiveVoiceChat component created/re-rendered. Instance ID:`, componentInstanceId.current);
 
   const {
     error,
@@ -46,22 +49,22 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
   // Cleanup effect only
   useEffect(() => {
     return () => {
-      console.log('🗑️ LiveVoiceChat cleanup. Instance:', componentInstanceId.current);
+      console.log(`${ts()} 🗑️ LiveVoiceChat cleanup. Instance:`, componentInstanceId.current);
     };
   }, []);
 
   // Auto-start template creation if mode is template-creation
   useEffect(() => {
-    console.log('🔍 LiveVoiceChat effect triggered:');
-    console.log('🔍   mode:', mode);
-    console.log('🔍   voiceChatMode:', voiceChatMode);
-    console.log('🔍   isCreatingTemplate:', isCreatingTemplate);
+    console.log(`${ts()} 🔍 LiveVoiceChat effect triggered:`);
+    console.log(`${ts()} 🔍   mode:`, mode);
+    console.log(`${ts()} 🔍   voiceChatMode:`, voiceChatMode);
+    console.log(`${ts()} 🔍   isCreatingTemplate:`, isCreatingTemplate);
     
     if (mode === 'template-creation' && voiceChatMode !== 'template-creation') {
-      console.log('🎯 Auto-starting template creation mode');
+      console.log(`${ts()} 🎯 Auto-starting template creation mode`);
       startTemplateCreation();
     } else {
-      console.log('🔍 Conditions not met for template creation start');
+      console.log(`${ts()} 🔍 Conditions not met for template creation start`);
     }
   }, [mode, voiceChatMode, startTemplateCreation]);
 

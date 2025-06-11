@@ -37,7 +37,7 @@ interface VoiceChatProviderProps {
 
 export default function VoiceChatProvider({ children, onSessionReady, onFormCompleted }: VoiceChatProviderProps) {
   // Helper function to add timestamps to logs
-  const ts = () => new Date().toISOString().substring(11, 23);
+  const ts = () => new Date().toISOString().substring(11, 23) + " VoiceChatProvider";
   
   // Jotai atoms
   const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
@@ -141,6 +141,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       case 'response.output_item.done':
       case 'response.done':
       case 'rate_limits.updated':
+      case 'response.function_call_arguments.delta':
         break;
 
       default:
@@ -295,20 +296,22 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
 
   // Auto-start session when template is selected
   useEffect(() => {
-    console.log(`${ts()} 🔍 VoiceChatProvider effect triggered:`);
-    console.log(`${ts()} 🔍   selectedTemplate:`, selectedTemplate?.title || 'none');
-    console.log(`${ts()} 🔍   isSessionActive:`, isSessionActive);
-    console.log(`${ts()} 🔍   isConnecting:`, isConnecting);
-    console.log(`${ts()} 🔍   voiceChatMode:`, voiceChatMode);
-    
     if (selectedTemplate && !isSessionActive && !isConnecting) {
       console.log(`${ts()} 🎯 Auto-starting session for selected template:`, selectedTemplate.title);
       startSession();
     } else if (!selectedTemplate && isSessionActive) {
       console.log(`${ts()} 🛑 Template cleared, ending session`);
       endSession();
+    } else if (isConnecting) {
+      console.log(`${ts()} 🔍 Session is connecting, waiting...`);
+    } else if (isSessionActive) {
+      console.log(`${ts()} 🔍 Session is already active`);
     } else {
       console.log(`${ts()} 🔍 Conditions not met for auto-start/end`);
+      console.log(`${ts()} 🔍   selectedTemplate:`, selectedTemplate?.title || 'none');
+      console.log(`${ts()} 🔍   isSessionActive:`, isSessionActive);
+      console.log(`${ts()} 🔍   isConnecting:`, isConnecting);
+      console.log(`${ts()} 🔍   voiceChatMode:`, voiceChatMode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplate, isSessionActive, isConnecting, voiceChatMode]);
