@@ -67,12 +67,12 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const previousVoiceMode = useRef(voiceMode);
   const sessionStartInProgress = useRef(false);
   
-  console.log('🏗️ VoiceChatProvider created. Instance:', providerInstanceId.current);
+  console.log(`${ts()} 🏗️ VoiceChatProvider re-rendered. Instance:`, providerInstanceId.current);
 
   // Handle voice mode changes during active session
   useEffect(() => {
     if (isSessionActive && previousVoiceMode.current !== voiceMode) {
-      console.log('🎙️ Voice mode changed during session:', previousVoiceMode.current, '->', voiceMode);
+      console.log(`${ts()} 🎙️ Voice mode changed during session:`, previousVoiceMode.current, '->', voiceMode);
       
       const modeText = voiceMode === 'freeform' 
         ? 'I switched to freeform mode - I prefer to do most of the talking.'
@@ -91,40 +91,40 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const handleRealtimeMessage = (message: any, messageSessionId?: string) => {
     switch (message.type) {
       case 'session.created':
-        console.log('✅ Session created successfully');
+        console.log(`${ts()} ✅ Session created successfully`);
         break;
         
       case 'session.updated':
-        console.log('✅ Session configuration updated');
+        console.log(`${ts()} ✅ Session configuration updated`);
         break;
         
       case 'input_audio_buffer.speech_started':
-        console.log('🎤 User started speaking');
+        console.log(`${ts()} 🎤 User started speaking`);
         break;
         
       case 'input_audio_buffer.speech_stopped':
-        console.log('🎤 User stopped speaking');
+        console.log(`${ts()} 🎤 User stopped speaking`);
         break;
 
       case 'output_audio_buffer.stopped':
-        console.log('🎤 Audio buffer stopped');
+        console.log(`${ts()} 🎤 Audio buffer stopped`);
         break;
         
       case 'conversation.item.input_audio_transcription.completed':
-        console.log('💬 User transcript:', message.transcript);
+        console.log(`${ts()} 💬 User transcript:`, message.transcript);
         break;
 
       case 'response.audio_transcript.done':
-        console.log('💬 AI response complete:', message.transcript);
+        console.log(`${ts()} 💬 AI response complete:`, message.transcript);
         break;
 
       case 'response.function_call_arguments.done':
-        console.log('🔧 Function call completed:', message);
+        console.log(`${ts()} 🔧 Function call completed:`, message);
         handleFunctionCallWrapper(message);
         break;
         
       case 'error':
-        console.error('💥 OpenAI error:', message.error);
+        console.error(`${ts()} 💥 OpenAI error:`, message.error);
         setError(`OpenAI error: ${message.error.message || message.error}`);
         break;
 
@@ -144,7 +144,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         break;
 
       default:
-        console.log('📝 Unhandled message type:', message.type);
+        console.log(`${ts()} 📝 Unhandled message type:`, message.type);
     }
   };
 
@@ -152,11 +152,11 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   const webrtcCallbacks: WebRTCServiceCallbacks = {
     onRealtimeMessage: handleRealtimeMessage,
     onTrack: () => {
-      console.log('🎧 Received remote audio track (handled by service)');
+      console.log(`${ts()} 🎧 Received remote audio track (handled by service)`);
       // Audio is now handled entirely by the service
     },
     onDataChannelOpen: () => {
-      console.log('📡 Data channel opened - session ready');
+      console.log(`${ts()} 📡 Data channel opened - session ready`);
       if (onSessionReady && sessionId) {
         onSessionReady(sessionId);
       }
@@ -169,21 +169,21 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   // Start session
   const startSession = useCallback(async () => {
     if (!selectedTemplate) {
-      console.log('⚠️ No template selected, cannot start session');
+      console.log(`${ts()} ⚠️ No template selected, cannot start session`);
       return;
     }
 
     // Prevent concurrent starts
     if (sessionStartInProgress.current) {
-      console.log('⚠️ Session start already in progress, skipping');
+      console.log(`${ts()} ⚠️ Session start already in progress, skipping`);
       return;
     }
 
-    console.log('🚀 Starting session for template:', selectedTemplate.title);
+    console.log(`${ts()} 🚀 Starting session for template:`, selectedTemplate.title);
     
     // Sync local state with service state first
     if (WebRTCService.getInstance().isSessionActive()) {
-      console.log('📋 Service already has active session, syncing state');
+      console.log(`${ts()} 📋 Service already has active session, syncing state`);
       setSessionId(WebRTCService.getInstance().getCurrentSessionId());
       setIsSessionActive(true);
       setIsConnecting(false);
@@ -192,7 +192,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     }
 
     if (WebRTCService.getInstance().isSessionConnecting()) {
-      console.log('⏳ Service is already connecting, waiting...');
+      console.log(`${ts()} ⏳ Service is already connecting, waiting...`);
       setIsConnecting(true);
       return;
     }
@@ -222,10 +222,10 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setHasPermission(true);
       setActiveTemplate(selectedTemplate);
       
-      console.log('🎉 Session started successfully!');
+      console.log(`${ts()} 🎉 Session started successfully!`);
       
     } catch (error) {
-      console.error('💥 Failed to start session:', error);
+      console.error(`${ts()} 💥 Failed to start session:`, error);
       setError(error instanceof Error ? error.message : 'Failed to start conversation');
       setIsSessionActive(false);
       setSessionId(null);
@@ -240,7 +240,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
 
   // End session
   const endSession = useCallback(async () => {
-    console.log('🔒 Ending session...');
+    console.log(`${ts()} 🔒 Ending session...`);
     
     setIsSessionActive(false);
     setIsConnecting(false);
@@ -263,10 +263,10 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setCreatedTemplate(null);
       setIsCreatingTemplate(false);
       
-      console.log('✅ Session ended successfully');
+      console.log(`${ts()} ✅ Session ended successfully`);
       
     } catch (error) {
-      console.error('💥 Error during session cleanup:', error);
+      console.error(`${ts()} 💥 Error during session cleanup:`, error);
     }
   }, [setIsSessionActive, setIsConnecting, setSessionId, setError, setFormProgress, setActiveTemplate, setSelectedTemplate, setVoiceChatMode, setPhotoAttachments, setTemplateCreationProgress, setCreatedTemplate, setIsCreatingTemplate]);
 
@@ -295,20 +295,20 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
 
   // Auto-start session when template is selected
   useEffect(() => {
-    console.log('🔍 VoiceChatProvider effect triggered:');
-    console.log('🔍   selectedTemplate:', selectedTemplate?.title || 'none');
-    console.log('🔍   isSessionActive:', isSessionActive);
-    console.log('🔍   isConnecting:', isConnecting);
-    console.log('🔍   voiceChatMode:', voiceChatMode);
+    console.log(`${ts()} 🔍 VoiceChatProvider effect triggered:`);
+    console.log(`${ts()} 🔍   selectedTemplate:`, selectedTemplate?.title || 'none');
+    console.log(`${ts()} 🔍   isSessionActive:`, isSessionActive);
+    console.log(`${ts()} 🔍   isConnecting:`, isConnecting);
+    console.log(`${ts()} 🔍   voiceChatMode:`, voiceChatMode);
     
     if (selectedTemplate && !isSessionActive && !isConnecting) {
-      console.log('🎯 Auto-starting session for selected template:', selectedTemplate.title);
+      console.log(`${ts()} 🎯 Auto-starting session for selected template:`, selectedTemplate.title);
       startSession();
     } else if (!selectedTemplate && isSessionActive) {
-      console.log('🛑 Template cleared, ending session');
+      console.log(`${ts()} 🛑 Template cleared, ending session`);
       endSession();
     } else {
-      console.log('🔍 Conditions not met for auto-start/end');
+      console.log(`${ts()} 🔍 Conditions not met for auto-start/end`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplate, isSessionActive, isConnecting, voiceChatMode]);
@@ -317,10 +317,10 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   useEffect(() => {
     const instanceId = providerInstanceId.current; // Copy to avoid ref warning
     return () => {
-      console.log('🗑️ VoiceChatProvider cleanup. Instance:', instanceId);
+      console.log(`${ts()} 🗑️ VoiceChatProvider cleanup. Instance:`, instanceId);
       setSelectedTemplate(null); // This will trigger endSession via the effect above
     };
-  }, [setSelectedTemplate]); // Added missing dependency
+  }, [setSelectedTemplate]);
 
   return <>{children}</>;
 } 
