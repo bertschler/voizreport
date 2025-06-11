@@ -4,7 +4,6 @@ import {
   isSessionActiveAtom,
   isConnectingAtom,
   errorAtom,
-  transcriptAtom,
   hasPermissionAtom,
   formProgressAtom,
   nextFieldToUpdateAtom,
@@ -29,7 +28,6 @@ export interface VoiceChatState {
   isSessionActive: boolean;
   hasPermission: boolean;
   isConnecting: boolean;
-  transcript: string;
   error: string | null;
   formProgress: Record<string, any>;
   nextFieldToUpdate: string | undefined;
@@ -52,7 +50,6 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
   const [isSessionActive] = useAtom(isSessionActiveAtom);
   const [isConnecting] = useAtom(isConnectingAtom);
   const [error] = useAtom(errorAtom);
-  const [transcript] = useAtom(transcriptAtom);
   const [hasPermission] = useAtom(hasPermissionAtom);
   const [formProgress] = useAtom(formProgressAtom);
   const [nextFieldToUpdate] = useAtom(nextFieldToUpdateAtom);
@@ -100,7 +97,6 @@ export function useVoiceChat(): VoiceChatState & VoiceChatActions {
     isSessionActive,
     hasPermission,
     isConnecting,
-    transcript,
     error,
     formProgress,
     nextFieldToUpdate,

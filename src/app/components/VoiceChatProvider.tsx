@@ -36,13 +36,15 @@ interface VoiceChatProviderProps {
 }
 
 export default function VoiceChatProvider({ children, onSessionReady, onFormCompleted }: VoiceChatProviderProps) {
+  // Helper function to add timestamps to logs
+  const ts = () => new Date().toISOString().substring(11, 23);
+  
   // Jotai atoms
   const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
   const [isSessionActive, setIsSessionActive] = useAtom(isSessionActiveAtom);
   const [isConnecting, setIsConnecting] = useAtom(isConnectingAtom);
   const setError = useSetAtom(errorAtom);
-  const setTranscript = useSetAtom(transcriptAtom);
   const setHasPermission = useSetAtom(hasPermissionAtom);
   const [formData] = useAtom(formDataAtom);
   const setFormProgress = useSetAtom(formProgressAtom);
@@ -87,8 +89,6 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
 
   // Handle realtime messages from OpenAI
   const handleRealtimeMessage = (message: any, messageSessionId?: string) => {
-    console.log('📨 Received message:', message.type, 'from session:', messageSessionId);
-    
     switch (message.type) {
       case 'session.created':
         console.log('✅ Session created successfully');
@@ -100,23 +100,20 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         
       case 'input_audio_buffer.speech_started':
         console.log('🎤 User started speaking');
-        setTranscript('Speaking...');
         break;
         
       case 'input_audio_buffer.speech_stopped':
         console.log('🎤 User stopped speaking');
         break;
+
+      case 'output_audio_buffer.stopped':
+        console.log('🎤 Audio buffer stopped');
+        break;
         
       case 'conversation.item.input_audio_transcription.completed':
         console.log('💬 User transcript:', message.transcript);
-        setTranscript(message.transcript || '');
         break;
-        
-      case 'response.audio_transcript.delta':
-        // Don't update React state for every delta - audio is handled by WebRTC service
-        // This prevents excessive re-renders during AI speech
-        break;
-        
+
       case 'response.audio_transcript.done':
         console.log('💬 AI response complete:', message.transcript);
         break;
@@ -130,7 +127,22 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         console.error('💥 OpenAI error:', message.error);
         setError(`OpenAI error: ${message.error.message || message.error}`);
         break;
-        
+
+      case 'output_audio_buffer.started':
+      case 'output_audio_buffer.started':
+      case 'conversation.item.created':
+      case 'response.created':
+      case 'response.output_item.added':
+      case 'response.content_part.added':
+      case 'conversation.item.input_audio_transcription.delta':
+      case 'response.audio_transcript.delta':
+      case 'response.audio.done':
+      case 'response.content_part.done':
+      case 'response.output_item.done':
+      case 'response.done':
+      case 'rate_limits.updated':
+        break;
+
       default:
         console.log('📝 Unhandled message type:', message.type);
     }
@@ -188,7 +200,6 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     sessionStartInProgress.current = true;
     setIsConnecting(true);
     setError(null);
-    setTranscript('');
     setFormProgress({});
     setNextFieldToUpdate(undefined);
 
@@ -225,7 +236,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       sessionStartInProgress.current = false;
       setIsConnecting(false);
     }
-  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel]);
+  }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel]);
 
   // End session
   const endSession = useCallback(async () => {
@@ -239,7 +250,6 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       
       // Reset state
       setSessionId(null);
-      setTranscript('');
       setError(null);
       setFormProgress({});
       setNextFieldToUpdate(undefined);
@@ -258,7 +268,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     } catch (error) {
       console.error('💥 Error during session cleanup:', error);
     }
-  }, [setIsSessionActive, setIsConnecting, setSessionId, setTranscript, setError, setFormProgress, setActiveTemplate, setSelectedTemplate, setVoiceChatMode, setPhotoAttachments, setTemplateCreationProgress, setCreatedTemplate, setIsCreatingTemplate]);
+  }, [setIsSessionActive, setIsConnecting, setSessionId, setError, setFormProgress, setActiveTemplate, setSelectedTemplate, setVoiceChatMode, setPhotoAttachments, setTemplateCreationProgress, setCreatedTemplate, setIsCreatingTemplate]);
 
   // Handle function calls from OpenAI using the extracted handler service
   const handleFunctionCallWrapper = useCallback(async (message: any) => {
