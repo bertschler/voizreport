@@ -72,7 +72,7 @@ const REPORT_FUNCTION_INSTRUCTIONS = `
 IMPORTANT FUNCTION CALLING RULES:
 1. When you have collected all the necessary information for the form and the conversation is complete, say something similar to "Thanks, I have all the information I need. I will now generate the report summary and end the session.", AFTERWARDS call the 'complete_form_submission' function with all the extracted data. This will automatically generate the report summary and end the session. Do not ask the user if they want to submit - simply call the function when you determine the form is complete.
 2. If the user wants to cancel, stop, exit, abort, or end the conversation at any time, call the 'exit_conversation' function. If you already collected partial or full data (other than the name of the user), ask first if they want to submit the data and if yes call the 'complete_form_submission' function instead.
-3. If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values (or blank fields if not set yet).
+3. Important: If a field in the form is set or updated, call the 'form_fields_updated' function passing all fields with the current values, at a minimum after changing to the next field. You can call this function multiple times, the more the better, even if the field is not fully specified. This gives the user the opportunity to correct or go ahead faster.
 
 CAMERA FUNCTION RULES - VERY IMPORTANT:
 4. **Camera NOT open + user wants photo**: If the camera is NOT currently open and the user says something like "I want to take a picture", "add a photo", "attach an image", "take a photo" → call 'open_camera' function to open the camera interface.

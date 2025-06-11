@@ -45,7 +45,6 @@ export const selectedModelAtom = atomWithPersistence<ModelOption>('voiceChat_sel
 
 // Audio and transcript state atoms
 export const transcriptAtom = atom<string>('');
-export const aiResponseAtom = atom<string>('');
 export const hasPermissionAtom = atom<boolean>(false);
 
 // WebRTC connection atoms
@@ -174,7 +173,6 @@ export const resetVoiceChatStateAtom = atom(
     set(selectedVoiceAtom, 'alloy');
     set(selectedModelAtom, 'gpt-4o-realtime-preview-2025-06-03');
     set(transcriptAtom, '');
-    set(aiResponseAtom, '');
     set(currentSessionIdAtom, '');
     set(isStartingSessionAtom, false);
     set(voiceChatModeAtom, 'report');
