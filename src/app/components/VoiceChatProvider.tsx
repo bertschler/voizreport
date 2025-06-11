@@ -65,6 +65,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
   // Refs
   const providerInstanceId = useRef(Math.random().toString(36).substr(2, 9));
   const previousVoiceMode = useRef(voiceMode);
+  const sessionStartInProgress = useRef(false);
   
   console.log('🏗️ VoiceChatProvider created. Instance:', providerInstanceId.current);
 
@@ -114,7 +115,8 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
         break;
         
       case 'response.audio_transcript.delta':
-        setAiResponse(prev => prev + (message.delta || ''));
+        // Don't update React state for every delta - audio is handled by WebRTC service
+        // This prevents excessive re-renders during AI speech
         break;
         
       case 'response.audio_transcript.done':
@@ -162,6 +164,12 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       return;
     }
 
+    // Prevent concurrent starts
+    if (sessionStartInProgress.current) {
+      console.log('⚠️ Session start already in progress, skipping');
+      return;
+    }
+
     console.log('🚀 Starting session for template:', selectedTemplate.title);
     
     // Sync local state with service state first
@@ -180,6 +188,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       return;
     }
 
+    sessionStartInProgress.current = true;
     setIsConnecting(true);
     setError(null);
     setTranscript('');
@@ -217,6 +226,7 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
       setNextFieldToUpdate(undefined);
       setActiveTemplate(null);
     } finally {
+      sessionStartInProgress.current = false;
       setIsConnecting(false);
     }
   }, [selectedTemplate, setSessionId, setIsSessionActive, setIsConnecting, setActiveTemplate, setError, setTranscript, setAiResponse, setFormProgress, setHasPermission, userName, voiceMode, voiceChatMode, selectedVoice, selectedModel]);
@@ -295,7 +305,8 @@ export default function VoiceChatProvider({ children, onSessionReady, onFormComp
     } else {
       console.log('🔍 Conditions not met for auto-start/end');
     }
-  }, [selectedTemplate, isSessionActive, isConnecting, startSession, endSession, voiceChatMode, selectedVoice, selectedModel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTemplate, isSessionActive, isConnecting, voiceChatMode]);
 
   // Cleanup on unmount
   useEffect(() => {

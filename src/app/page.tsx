@@ -17,8 +17,10 @@ import DefaultFooter from "./components/DefaultFooter";
 import QuickTemplateSelector from "./components/QuickTemplateSelector";
 import PageLayout from "./components/PageLayout";
 import { ReportTemplate, SubmittedReport } from './data/mockData';
-import { selectedTemplateAtom } from './state/voiceChatState';
+import { selectedTemplateAtom, isCreatingTemplateAtom, voiceChatModeAtom } from './state/voiceChatState';
 import { templatesAtom } from './state/templatesState';
+import { useVoiceChat } from './hooks/useVoiceChat';
+import { useSetAtom } from 'jotai';
 
 const tabs: Tab[] = [
   { id: 'templates', label: 'Create' },
@@ -32,8 +34,12 @@ export default function Home() {
   const [selectedTemplate, setSelectedTemplate] = useAtom(selectedTemplateAtom);
   const [templates] = useAtom(templatesAtom);
   const [completedForms, setCompletedForms] = useState<FormSummary[]>([]);
-  const [isCreatingTemplate, setIsCreatingTemplate] = useState<boolean>(false);
   const [isTemplatesLoaded, setIsTemplatesLoaded] = useState<boolean>(false);
+  
+  // Use global state for template creation
+  const { isCreatingTemplate, startTemplateCreation } = useVoiceChat();
+  const setIsCreatingTemplate = useSetAtom(isCreatingTemplateAtom);
+  const setVoiceChatMode = useSetAtom(voiceChatModeAtom);
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<SubmittedReport | null>(null);
@@ -68,7 +74,7 @@ export default function Home() {
   const goBack = () => {
     console.log('🔙 goBack called, clearing selectedTemplate:', selectedTemplate?.title || 'none');
     setSelectedTemplate(null);
-    setIsCreatingTemplate(false);
+    exitTemplateCreation();
   };
 
   const handleTabChange = (tabId: string) => {
@@ -77,8 +83,14 @@ export default function Home() {
 
   const handleCreateTemplate = () => {
     console.log('🎨 Starting template creation mode');
-    setIsCreatingTemplate(true);
+    startTemplateCreation();
   };
+
+  const exitTemplateCreation = useCallback(() => {
+    console.log('🔙 Exiting template creation mode');
+    setIsCreatingTemplate(false);
+    setVoiceChatMode('report');
+  }, [setIsCreatingTemplate, setVoiceChatMode]);
 
   const handleEditTemplate = (template: ReportTemplate) => {
     console.log('Edit template:', template);
@@ -111,7 +123,7 @@ export default function Home() {
     // Navigate back to main interface and switch to reports tab
     setTimeout(() => {
       setSelectedTemplate(null);
-      setIsCreatingTemplate(false);
+      exitTemplateCreation();
       setActiveTab('reports');
       
       // Dispatch custom event to refresh reports list
@@ -126,8 +138,8 @@ export default function Home() {
   const handleNavigateToSession = useCallback((template: ReportTemplate) => {
     console.log('🎯 Navigating back to active session:', template.title);
     setSelectedTemplate(template);
-    setIsCreatingTemplate(false);
-  }, [setSelectedTemplate]);
+    exitTemplateCreation();
+  }, [setSelectedTemplate, exitTemplateCreation]);
 
   const handleStartNewSession = useCallback(() => {
     console.log('🎤 Opening quick template selector');
@@ -138,8 +150,8 @@ export default function Home() {
     console.log('🎯 Quick template selected:', template.title);
     setShowQuickTemplateSelector(false);
     setSelectedTemplate(template);
-    setIsCreatingTemplate(false);
-  }, [setSelectedTemplate]);
+    exitTemplateCreation();
+  }, [setSelectedTemplate, exitTemplateCreation]);
 
   const handleCloseQuickTemplateSelector = useCallback(() => {
     setShowQuickTemplateSelector(false);
@@ -230,7 +242,7 @@ export default function Home() {
               onStartNewSession={handleStartNewSession}
               onStopSession={() => {
                 setSelectedTemplate(null);
-                setIsCreatingTemplate(false);
+                exitTemplateCreation();
               }}
               showTabs={false}
             />
