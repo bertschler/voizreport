@@ -220,7 +220,7 @@ export default function QuickTemplateSelector({
                 marginBottom: '12px',
                 lineHeight: '1',
                 transition: 'transform 0.2s ease',
-                transform: hoveredTemplate === -1 ? 'scale(1.1) rotate(90deg)' : 'scale(1)',
+                transform: hoveredTemplate === -1 ? 'scale(1.1) rotate(180deg)' : 'scale(1)',
                 color: hoveredTemplate === -1 ? '#10B981' : '#64748b'
               }}>
                 ✨
