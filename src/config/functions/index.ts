@@ -1,6 +1,8 @@
 // Export types
 import { FunctionCallMessage, FunctionHandlerContext } from "@/app/types/core";
 
+export type { FunctionCallMessage, FunctionHandlerContext };
+
 // Export form-related functions
 export { 
   getFormFieldsUpdatedTool, 
