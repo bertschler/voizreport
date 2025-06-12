@@ -67,22 +67,36 @@ export const handleFormFieldsUpdated = async (
       console.log('📋 Debug info:', parsedArgs.debug_info);
     }
 
-    // Send back current photo attachments to keep AI informed
+    // Always send function response back to enable two-phase flow (function execution + audio response)
     const currentPhotos = getPhotoAttachments();
-    if (currentPhotos.length > 0) {
-      WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
-        status: 'success',
-        message: 'Form fields updated successfully',
-        photo_attachments: currentPhotos.map(photo => ({
-          id: photo.id,
-          filename: photo.filename,
-          size: photo.size,
-          capturedAt: photo.capturedAt,
-          fieldName: photo.fieldName
-        }))
-      });
-    }
+    const functionResponse = {
+      status: 'success',
+      message: 'Form fields updated successfully',
+      extracted_data: parsedArgs.extracted_data,
+      next_field_to_update: parsedArgs.next_field_to_update,
+      photo_attachments: currentPhotos.length > 0 ? currentPhotos.map(photo => ({
+        id: photo.id,
+        filename: photo.filename,
+        size: photo.size,
+        capturedAt: photo.capturedAt,
+        fieldName: photo.fieldName
+      })) : []
+    };
+
+    // Use the new method that implements two-phase flow: function response + audio generation
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, functionResponse);
+    console.log('📋 Sent function response and triggered audio generation for two-phase flow');
+    
   } catch (error) {
     console.error('💥 Error handling form fields update:', error);
+    
+    // Send error response and still trigger audio generation
+    const errorResponse = {
+      status: 'error',
+      message: 'Failed to update form fields',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+    
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, errorResponse);
   }
 }; 

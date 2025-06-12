@@ -426,6 +426,34 @@ class WebRTCServiceClass {
     console.log('📤 Sent function response back to OpenAI');
   }
 
+  // New method to trigger response generation after function call
+  triggerResponseGeneration(): void {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      console.error('💥 Data channel not available for response generation');
+      return;
+    }
+
+    const responseCreate = {
+      type: 'response.create',
+      response: {
+        modalities: ['text', 'audio']
+      }
+    };
+    
+    this.dataChannel.send(JSON.stringify(responseCreate));
+    console.log('📤 Triggered new response generation for audio stream');
+  }
+
+  // Combined method for two-phase flow: send function response + trigger new generation
+  sendFunctionResponseWithAudio(callId: string, response: any): void {
+    this.sendFunctionResponse(callId, response);
+    
+    // Trigger new response generation after a short delay to ensure function response is processed
+    setTimeout(() => {
+      this.triggerResponseGeneration();
+    }, 50);
+  }
+
   sendConversationMessage(text: string): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       console.error('💥 Data channel not available for conversation message');
