@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { ReportTemplate } from "@/app/types/core";
 
@@ -12,6 +12,29 @@ interface PageLayoutProps {
   onNavigateToSession?: (template: ReportTemplate) => void;
 }
 
+// Hook to detect mobile devices and screen size
+function useMobileDetection() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent;
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isSmallScreen = window.innerWidth <= 768;
+      setIsMobile(isMobileUA || isSmallScreen);
+    };
+
+    // Check on mount
+    checkMobile();
+
+    // Check on resize
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 export default function PageLayout({ 
   children, 
   header, 
@@ -21,8 +44,8 @@ export default function PageLayout({
 }: PageLayoutProps) {
   return (
     <div style={{ 
-      height: 'var(--vh-dynamic)',
-      minHeight: 'var(--vh-static)',
+      height: 'var(--vh-dynamic)', // Use CSS custom property for dynamic viewport height
+      minHeight: 'var(--vh-static)', // Fallback for browsers that don't support dvh
       backgroundColor: '#f8fafc',
       maxWidth: '430px',
       margin: '0 auto',
@@ -49,28 +72,81 @@ export default function PageLayout({
       
       {/* Mobile Browser Address Bar Safe Area - Bottom Padding Component */}
       <MobileSafeAreaBottom />
+      
+      {/* Also add a simple test div that should always be visible */}
+      <div style={{
+        height: '40px',
+        backgroundColor: '#00ff00',
+        color: 'black',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '12px',
+        flexShrink: 0
+      }}>
+        TEST: This should always show (40px green)
+      </div>
     </div>
   );
 }
 
 // Bottom component that acts as padding for mobile browser address bar space
 function MobileSafeAreaBottom() {
+  const isMobile = useMobileDetection();
+
+  // Debug logging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('🔍 MobileSafeAreaBottom Debug:', {
+        isMobile,
+        userAgent: navigator.userAgent,
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        documentHeight: document.documentElement.clientHeight
+      });
+    }
+  }, [isMobile]);
+
+  // Don't render on desktop
+  if (!isMobile) {
+    console.log('🚫 Not rendering MobileSafeAreaBottom - desktop detected');
+    return null;
+  }
+
+  console.log('✅ Rendering MobileSafeAreaBottom - mobile detected');
+
   return (
     <div 
       className="mobile-safe-area-bottom"
       style={{
-        height: 'var(--mobile-browser-bar-height)',
-        minHeight: '0px',
-        maxHeight: '100px',
+        height: '80px', // Fixed height - simple and reliable
+        minHeight: '60px', // Minimum height
+        maxHeight: '100px', // Maximum height  
         background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%)',
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        paddingBottom: 'var(--safe-area-inset-bottom)'
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)', // Safe area padding with fallback
+        flexShrink: 0, // Prevent it from shrinking
+        // Force the height with important and additional properties for debugging
+        border: '2px solid red', // Temporary debug border
+        backgroundColor: '#ff000020' // Temporary debug background
       }}
     >
+      {/* Debug text */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '5px', 
+        left: '5px', 
+        fontSize: '10px', 
+        color: '#666',
+        zIndex: 1000
+      }}>
+        Mobile Bottom: 80px
+      </div>
+      
       {/* Optional: Voice sine wave visualization */}
       <VoiceSineWave />
     </div>
