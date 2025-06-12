@@ -7,7 +7,7 @@ import { getTemplateTools } from '@/config/instructions/template-tools';
 
 export interface WebRTCSessionData {
   sessionId: string;
-  ephemeralToken: string;
+  ephemeralToken: string; // Short-lived token (2 hours) for WebRTC bootstrap only
 }
 
 export interface WebRTCServiceCallbacks {
@@ -18,6 +18,10 @@ export interface WebRTCServiceCallbacks {
 }
 
 // Singleton WebRTC Service to prevent multiple instances
+// Uses OpenAI's recommended approach:
+// 1. Create ephemeral token with minimal config (no custom instructions)
+// 2. Use session.update via WebRTC data channel for dynamic configuration
+// 3. Ephemeral tokens expire in ~2 hours and are used only for connection bootstrap
 class WebRTCServiceClass {
   private static instance: WebRTCServiceClass | null = null;
   private peerConnection: RTCPeerConnection | null = null;
@@ -340,6 +344,9 @@ class WebRTCServiceClass {
       return;
     }
 
+    // Dynamic session configuration via session.update
+    // This approach allows us to customize instructions, tools, and voice settings
+    // after the WebRTC connection is established, without recreating the session
     const instructions = this.getInstructions(templateInstructions, voiceMode, voiceChatMode, userName);
     const isTemplateCreation = voiceChatMode === 'template';
     
@@ -347,20 +354,22 @@ class WebRTCServiceClass {
       ? getTemplateTools()
       : getReportTools(template);
     
+    // Send session.update to configure the assistant's behavior dynamically
     const sessionUpdate = {
       type: 'session.update',
       session: {
-        instructions,
-        voice: selectedVoice || 'alloy',
+        instructions, // Custom instructions based on context
+        voice: selectedVoice || 'alloy', // Selected voice option
         input_audio_transcription: { model: 'whisper-1' },
-        turn_detection: { type: 'server_vad' },
-        modalities: ['text', 'audio'],
-        tools
+        turn_detection: { type: 'server_vad' }, // Server-side voice activity detection
+        modalities: ['text', 'audio'], // Enable both text and audio
+        tools // Context-specific function tools
       }
     };
     
     this.dataChannel.send(JSON.stringify(sessionUpdate));
     console.log(`📤 Sent ${isTemplateCreation ? 'template creation' : 'report filling'} session configuration`);
+    console.log('🔧 Session configured with custom instructions and tools via session.update');
     
     // Send initial greeting trigger after a short delay to ensure session update is processed
     //setTimeout(() => { this.triggerStartSpeaking(); }, 100);

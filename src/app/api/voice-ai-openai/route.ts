@@ -2,12 +2,14 @@ import { NextRequest } from 'next/server';
 
 // Create ephemeral token for WebRTC session
 async function createEphemeralToken(apiKey: string, model: string = 'gpt-4o-realtime-preview-2025-06-03') {
-  // Create minimal session - instructions will be set by client via WebRTC
+  // Create minimal session config - instructions will be set dynamically via session.update
+  // OpenAI provides default system instructions when none are specified
   const sessionConfig = {
     model: model,
-    voice: 'alloy',
-    modalities: ['text', 'audio'],
-    instructions: 'You are a helpful AI assistant.' // Minimal placeholder - will be overridden by client
+    voice: 'alloy', // Default voice, can be overridden via session.update
+    modalities: ['text', 'audio']
+    // Omitting 'instructions' to use OpenAI's default system prompt
+    // Custom instructions will be sent via session.update after WebRTC connection
   };
 
   const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
@@ -64,7 +66,6 @@ export async function GET(request: NextRequest) {
         ephemeralToken: ephemeralToken,
         endpoint: 'https://api.openai.com/v1/realtime',
         model: model,
-        instructions: 'Use WebRTC for real-time audio conversation'
       }),
       {
         status: 200,
