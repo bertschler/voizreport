@@ -1,3 +1,5 @@
+import { TemplateInstructionsContext } from "@/app/types/core";
+
 const TEMPLATE_INSTRUCTIONS = `
 Voiz.report AI System Prompt: Report Template Designer
 
@@ -86,7 +88,7 @@ Phase 3: Review & Finalize
 
 After the conversation ends, produce a JSON object matching this TypeScript interface:
 
-export interface ReportTemplate {
+interface ReportTemplate {
   title: string;
   description: string;
   definition: string;
@@ -176,10 +178,6 @@ IMPORTANT FUNCTION CALLING RULES FOR TEMPLATE CREATION:
 2. When the template is complete and ready to be finalized, call the 'complete_template_creation' function with the final template definition.
 3. If the user wants to cancel template creation, call the 'exit_template_creation' function.
 `;
-
-export interface TemplateInstructionsContext {
-  userName?: string;
-}
 
 export function getTemplateInstructionsSystemPrompt(context?: TemplateInstructionsContext): string {
   const { userName } = context || {};

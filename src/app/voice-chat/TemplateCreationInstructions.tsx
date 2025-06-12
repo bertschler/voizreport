@@ -1,6 +1,6 @@
 import React from 'react';
-import { TemplateCreationProgress } from '../../hooks/useVoiceChat';
-import TemplateFieldsDisplay from '../TemplateFieldsDisplay';
+import { TemplateCreationProgress } from '../hooks/useVoiceChat';
+import TemplateFieldsDisplay from '../components/TemplateFieldsDisplay';
 
 interface TemplateCreationInstructionsProps {
   templateProgress: TemplateCreationProgress;

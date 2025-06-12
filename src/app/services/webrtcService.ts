@@ -1,9 +1,9 @@
-import { ReportTemplate } from '@/app/data/mockData';
 import { VoiceChatMode, VoiceOption, ModelOption } from '@/app/state/voiceChatState';
 import { getReportInstructionsSystemPrompt } from '@/config/instructions/report-instructions';
 import { getReportTools } from '@/config/instructions/report-tools';
 import { getTemplateInstructionsSystemPrompt } from '@/config/instructions/template-instructions';
 import { getTemplateTools } from '@/config/instructions/template-tools';
+import { ReportTemplate } from "@/app/types/core";
 
 export interface WebRTCSessionData {
   sessionId: string;
@@ -98,7 +98,7 @@ class WebRTCServiceClass {
     console.log('🔗 Creating OpenAI WebRTC session...');
     
     const modelParam = selectedModel ? `?model=${encodeURIComponent(selectedModel)}` : '';
-    const response = await fetch(`/api/voice-ai-openai${modelParam}`, {
+    const response = await fetch(`/api/voice-token${modelParam}`, {
       method: 'GET',
     });
 

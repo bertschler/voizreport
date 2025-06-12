@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ReportTemplate } from '../data/mockData';
+
+import { ReportTemplate } from "@/app/types/core";
 
 interface PageLayoutProps {
   children: React.ReactNode;

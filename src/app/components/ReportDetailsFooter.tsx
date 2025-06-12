@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SubmittedReport } from '../data/mockData';
+
+import { SubmittedReport } from "@/app/types/core";
 
 interface ReportDetailsFooterProps {
   report: SubmittedReport;

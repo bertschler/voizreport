@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { SubmittedReport } from '../data/mockData';
 import { useReports } from '../hooks/useReports';
 import PhotoAttachmentViewer from './PhotoAttachmentViewer';
+import { SubmittedReport } from "@/app/types/core";
 
 interface SubmittedReportsProps {
   onViewDetails?: (report: SubmittedReport) => void;

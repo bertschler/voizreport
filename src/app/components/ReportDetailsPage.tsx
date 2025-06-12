@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { SubmittedReport } from '../data/mockData';
 import { templatesAtom } from '../state/templatesState';
 import FormFieldsDisplay from './FormFieldsDisplay';
 import AdditionalDetailsSection from './AdditionalDetailsSection';
 import PhotoAttachmentViewer from './PhotoAttachmentViewer';
+import { SubmittedReport } from "@/app/types/core";
 
 interface ReportDetailsPageProps {
   report: SubmittedReport | null;

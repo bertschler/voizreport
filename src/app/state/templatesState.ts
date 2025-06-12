@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
-import { ReportTemplate } from '@/app/data/mockData';
 import { seedTemplatesIfNeeded } from '@/app/utils/seedTemplates';
 import { atomWithPersistence } from './atomWithPersistence';
+import { ReportTemplate } from "@/app/types/core";
 
 const STORAGE_KEY = 'voizreport_templates';
 

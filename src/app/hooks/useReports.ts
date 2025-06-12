@@ -6,10 +6,10 @@ import {
   deleteReportAtom,
   markReportAsReadAtom,
   clearAllReportsAtom,
-  unreadReportsCountAtom,
-  StoredReport
+  unreadReportsCountAtom
 } from '@/app/state/reportsState';
-import { SubmittedReport } from '@/app/data/mockData';
+
+import { StoredReport, SubmittedReport } from "@/app/types/core";
 
 export interface UseReportsReturn {
   reports: StoredReport[];

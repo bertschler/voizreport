@@ -3,7 +3,8 @@
 import React from 'react';
 import { Tab } from './TabNavigation';
 import SmartMicButton from './SmartMicButton';
-import { ReportTemplate } from '../data/mockData';
+
+import { ReportTemplate } from "@/app/types/core";
 
 interface DefaultFooterProps {
   tabs: Tab[];

@@ -1,5 +1,5 @@
 // Export types
-export type { FunctionHandlerContext, FunctionCallMessage } from './types';
+import { FunctionCallMessage, FunctionHandlerContext } from "@/app/types/core";
 
 // Export form-related functions
 export { 
@@ -45,7 +45,6 @@ export {
 } from './exit-template-creation';
 
 // Function handler registry
-import { FunctionCallMessage, FunctionHandlerContext } from './types';
 
 type FunctionHandler = (message: FunctionCallMessage, context: FunctionHandlerContext) => Promise<void>;
 
@@ -96,4 +95,4 @@ export const handleFunctionCall = async (
   context: FunctionHandlerContext
 ): Promise<void> => {
   await registry.handle(message, context);
-}; 
+};

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import AiButton from '../AiButton';
+import AiButton from '../components/AiButton';
 import RecordingAnimation from './RecordingAnimation';
 
 interface VoiceActionButtonProps {

@@ -1,6 +1,6 @@
 import { WebRTCService } from '@/app/services/webrtcService';
-import { FunctionHandlerContext, FunctionCallMessage } from './types';
 import { globalCameraState } from './open-camera';
+import { FunctionCallMessage, FunctionHandlerContext } from "@/app/types/core";
 
 // Tool definition
 export const getCapturePhotoTool = () => {
@@ -42,7 +42,7 @@ export const handleCapturePhoto = async (
       errorMessage = error.message;
     }
     
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'error',
       message: errorMessage
     });

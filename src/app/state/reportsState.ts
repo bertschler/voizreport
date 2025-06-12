@@ -1,12 +1,8 @@
 import { atom } from 'jotai';
-import { SubmittedReport } from '@/app/data/mockData';
 import { atomWithPersistence } from './atomWithPersistence';
+import { StoredReport, SubmittedReport } from "@/app/types/core";
 
 const STORAGE_KEY = 'voizreport_submitted_reports';
-
-export interface StoredReport extends SubmittedReport {
-  savedAt: string;
-}
 
 // Helper function to create a new stored report
 const createStoredReport = (report: SubmittedReport): StoredReport => ({

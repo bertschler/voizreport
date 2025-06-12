@@ -3,25 +3,25 @@
 // Usage examples:
 // 
 // For report filling mode (existing functionality):
-// <LiveVoiceChat template={someTemplate} mode="report" />
+// <VoiceChatComponent template={someTemplate} mode="report" />
 // 
 // For template creation mode (new functionality):
-// <LiveVoiceChat mode="template" />
+// <VoiceChatComponent mode="template" />
 
 import React, { useEffect } from 'react';
 import { useVoiceChat, FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate } from '../hooks/useVoiceChat';
-import { ReportTemplate } from '../data/mockData';
-import ErrorDisplay from './voice-chat/ErrorDisplay';
-import FormFieldsDisplay from './FormFieldsDisplay';
-import VoiceModeToggle from './voice-chat/VoiceModeToggle';
-import CameraButton from './voice-chat/CameraButton';
-import LivePhotoViewer from './voice-chat/LivePhotoViewer';
-import TemplateCreationProgressComponent from './voice-chat/TemplateCreationProgress';
-import CreatedTemplateResult from './voice-chat/CreatedTemplateResult';
-import TemplateCreationInstructions from './voice-chat/TemplateCreationInstructions';
-import { TurnIndicator } from './TurnIndicator';
+import ErrorDisplay from './ErrorDisplay';
+import FormFieldsDisplay from '../components/FormFieldsDisplay';
+import VoiceModeToggle from './VoiceModeToggle';
+import CameraButton from './CameraButton';
+import LivePhotoViewer from './LivePhotoViewer';
+import TemplateCreationProgressComponent from './TemplateCreationProgress';
+import CreatedTemplateResult from './CreatedTemplateResult';
+import TemplateCreationInstructions from './TemplateCreationInstructions';
+import { TurnIndicator } from '../components/TurnIndicator';
+import { ReportTemplate } from "@/app/types/core";
 
-interface LiveVoiceChatProps {
+interface Props {
   template?: ReportTemplate;
   mode?: VoiceChatMode;
 }
@@ -29,12 +29,12 @@ interface LiveVoiceChatProps {
 // Export the types for external use
 export type { FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate };
 
-const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'report' }: LiveVoiceChatProps) {
+const VoiceChatComponent = React.memo(function VoiceChatComponent({ template, mode = 'report' }: Props) {
   // Helper function to add timestamps to logs
-  const ts = () => new Date().toISOString().substring(11, 23) + " LiveVoiceChat";
+  const ts = () => new Date().toISOString().substring(11, 23) + " VoiceChatComponent";
   
   const componentInstanceId = React.useRef(Math.random().toString(36).substr(2, 9));
-  console.log(`${ts()} 🏗️ LiveVoiceChat component created/re-rendered. Instance ID:`, componentInstanceId.current);
+  console.log(`${ts()} 🏗️ created/re-rendered. Instance ID:`, componentInstanceId.current);
 
   const {
     error,
@@ -49,7 +49,7 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
   // Cleanup effect only
   useEffect(() => {
     return () => {
-      console.log(`${ts()} 🗑️ LiveVoiceChat cleanup. Instance:`, componentInstanceId.current);
+      console.log(`${ts()} 🗑️ cleanup. Instance:`, componentInstanceId.current);
     };
   }, []);
 
@@ -173,4 +173,4 @@ const LiveVoiceChat = React.memo(function LiveVoiceChat({ template, mode = 'repo
   );
 });
 
-export default LiveVoiceChat; 
+export default VoiceChatComponent;

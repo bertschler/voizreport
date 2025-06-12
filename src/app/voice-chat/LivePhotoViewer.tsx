@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAtomValue } from 'jotai';
-import { photoAttachmentsAtom } from '../../state/voiceChatState';
+import { photoAttachmentsAtom } from '../state/voiceChatState';
 
 export default function LivePhotoViewer() {
   const photos = useAtomValue(photoAttachmentsAtom);

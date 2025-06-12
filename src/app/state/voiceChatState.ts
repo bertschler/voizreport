@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
-import { PhotoAttachment } from '../data/mockData';
 import { atomWithPersistence } from './atomWithPersistence';
+import { PhotoAttachment } from "@/app/types/core";
 
 // Core session state atoms
 export const sessionIdAtom = atom<string | null>(null);
@@ -74,22 +74,6 @@ export const nextFieldToUpdateAtom = atom<string | undefined>(undefined);
 
 // Photo attachments atom - tracks captured photos during current session
 export const photoAttachmentsAtom = atom<PhotoAttachment[]>([]);
-
-// Template creation atoms (for template mode)
-export interface TemplateCreationProgress {
-  title?: string;
-  description?: string;
-  definition?: string;
-  icon?: string;
-  fields?: Array<{
-    name: string;
-    type: "string" | "number" | "boolean";
-    description: string;
-    required: boolean;
-    enum?: string[];
-  }>;
-  currentPhase?: 'core-attributes' | 'field-definition' | 'review';
-}
 
 export const templateCreationProgressAtom = atom<Record<string, any>>({});
 export const isCreatingTemplateAtom = atom<boolean>(false);

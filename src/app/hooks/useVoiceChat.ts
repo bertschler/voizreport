@@ -15,10 +15,10 @@ import {
   selectedModelAtom,
   FormSummary,
   VoiceChatMode,
-  TemplateCreationProgress,
   CreatedTemplate,
   ModelOption
 } from '@/app/state/voiceChatState';
+import { TemplateCreationProgress } from "@/app/types/core";
 
 // Re-export types for external use
 export type { FormSummary, VoiceChatMode, TemplateCreationProgress, CreatedTemplate, ModelOption };

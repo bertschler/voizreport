@@ -1,8 +1,7 @@
 import { WebRTCService } from '@/app/services/webrtcService';
 import { photoAttachmentsAtom } from '@/app/state/voiceChatState';
 import { store } from '@/app/services/jotaiStore';
-import { PhotoAttachment } from '@/app/data/mockData';
-import { FunctionHandlerContext, FunctionCallMessage } from './types';
+import { FunctionCallMessage, FunctionHandlerContext, PhotoAttachment } from "@/app/types/core";
 
 // Global camera state for voice-triggered capture
 let globalCameraState: {
@@ -200,7 +199,7 @@ export const handleOpenCamera = async (
           // TODO save photo to google cloud storage
           
           // Send success response with photo data (use provided call ID or original)
-          WebRTCService.getInstance().sendFunctionResponse(responseCallId || message.call_id, {
+          WebRTCService.getInstance().sendFunctionResponseWithAudio(responseCallId || message.call_id, {
             status: 'success',
             message: `Photo captured and saved as ${filename}. This photo is now attached to the report.`,
             camera_state: 'closed',
@@ -242,7 +241,7 @@ export const handleOpenCamera = async (
       );
       
       cleanup();
-      WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+      WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
         status: 'cancelled',
         message: 'Camera cancelled by user',
         camera_state: 'closed'
@@ -261,7 +260,7 @@ export const handleOpenCamera = async (
     document.body.appendChild(overlay);
     
     // Send success response to inform AI that camera is now open
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'success',
       message: 'Camera opened successfully',
       camera_state: 'open',
@@ -284,7 +283,7 @@ export const handleOpenCamera = async (
       }
     }
     
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'error',
       message: errorMessage
     });

@@ -1,4 +1,4 @@
-import { reportTemplates } from '@/app/data/mockData';
+import { reportTemplates } from '@/config/data/templates';
 import { StoredTemplate } from '@/app/state/templatesState';
 
 // Convert built-in templates to StoredTemplate format

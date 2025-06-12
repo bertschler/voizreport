@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ReportTemplate } from '../data/mockData';
 import { StoredTemplate } from '../state/templatesState';
+import { ReportTemplate } from "@/app/types/core";
 
 interface QuickTemplateSelectorProps {
   templates: StoredTemplate[];

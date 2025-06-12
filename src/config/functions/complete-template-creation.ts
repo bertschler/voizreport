@@ -1,6 +1,7 @@
 import { WebRTCService } from '@/app/services/webrtcService';
 import { convertCreatedTemplateToReportTemplate } from '@/app/state/templatesState';
-import { FunctionHandlerContext, FunctionCallMessage } from './types';
+
+import { FunctionCallMessage, FunctionHandlerContext } from "@/app/types/core";
 
 // Tool definition
 export const getCompleteTemplateCreationTool = () => {
@@ -72,7 +73,7 @@ export const handleCompleteTemplateCreation = async (
     }
     
     // Send success response
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'success',
       message: 'Template created successfully!'
     });
@@ -95,7 +96,7 @@ export const handleCompleteTemplateCreation = async (
   } catch (error) {
     console.error('💥 Error handling template creation completion:', error);
     
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'error',
       message: 'Failed to complete template creation'
     });

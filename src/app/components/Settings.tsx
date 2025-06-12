@@ -3,8 +3,9 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import UserProfile from '@/components/UserProfile';
-import { userNameAtom, setUserNameAtom, voiceModeAtom, setVoiceModeAtom, VOICE_MODE_OPTIONS, VoiceMode } from '../state/settingsState';
+import { userNameAtom, setUserNameAtom, voiceModeAtom, setVoiceModeAtom, VOICE_MODE_OPTIONS } from '../state/settingsState';
 import { selectedVoiceAtom, VOICE_OPTIONS, VoiceOption, selectedModelAtom, MODEL_OPTIONS, ModelOption } from '../state/voiceChatState';
+import { VoiceMode } from "@/app/types/core";
 
 export default function Settings() {
   const [userName] = useAtom(userNameAtom);

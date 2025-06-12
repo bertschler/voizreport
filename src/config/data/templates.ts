@@ -1,35 +1,4 @@
-export interface ReportTemplate {
-  id: number;
-  title: string;
-  description: string;
-  definition: string;
-  icon: string;
-  openai_properties: Record<string, any>;
-  required_fields?: string[];
-}
-
-export interface PhotoAttachment {
-  id: string;
-  filename: string;
-  size: number;
-  type: string;
-  dataUrl: string;
-  capturedAt: string;
-  fieldName?: string; // If photo is associated with a specific form field
-}
-
-export interface SubmittedReport {
-  id: number;
-  title: string;
-  templateType: string;
-  date: string;
-  status: 'Completed' | 'Under Review' | 'Draft';
-  summary: string;
-  plainText: string;
-  json: Record<string, any>;
-  photoAttachments?: PhotoAttachment[];
-  isNew?: boolean;
-}
+import { ReportTemplate } from "@/app/types/core";
 
 export const reportTemplates: ReportTemplate[] = [
   {

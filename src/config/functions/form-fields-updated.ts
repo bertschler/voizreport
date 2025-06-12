@@ -1,8 +1,7 @@
 import { WebRTCService } from '@/app/services/webrtcService';
 import { photoAttachmentsAtom, nextFieldToUpdateAtom } from '@/app/state/voiceChatState';
 import { store } from '@/app/services/jotaiStore';
-import { ReportTemplate } from '@/app/data/mockData';
-import { FunctionHandlerContext, FunctionCallMessage } from './types';
+import { FunctionCallMessage, FunctionHandlerContext, ReportTemplate } from "@/app/types/core";
 
 // Photo attachment utilities
 const getPhotoAttachments = () => {

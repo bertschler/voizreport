@@ -1,5 +1,5 @@
 import React from 'react';
-import { TemplateCreationProgress as TemplateCreationProgressType } from '../../hooks/useVoiceChat';
+import { TemplateCreationProgress as TemplateCreationProgressType } from '../hooks/useVoiceChat';
 
 interface TemplateCreationProgressProps {
   templateCreationProgress: TemplateCreationProgressType;

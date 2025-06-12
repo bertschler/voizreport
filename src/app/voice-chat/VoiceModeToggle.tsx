@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAtom } from 'jotai';
-import { voiceModeAtom, setVoiceModeAtom, currentVoiceModeOptionAtom } from '../../state/settingsState';
+import { voiceModeAtom, setVoiceModeAtom, currentVoiceModeOptionAtom } from '../state/settingsState';
 
 interface VoiceModeToggleProps {
   style?: React.CSSProperties;

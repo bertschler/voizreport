@@ -1,4 +1,3 @@
-import { ReportTemplate } from '@/app/data/mockData';
 import {
   getFormFieldsUpdatedTool,
   getCompleteFormSubmissionTool,
@@ -6,6 +5,7 @@ import {
   getOpenCameraTool,
   getCapturePhotoTool
 } from '../functions';
+import { ReportTemplate } from "@/app/types/core";
 
 export const getReportTools = (template?: ReportTemplate) => {
   return [

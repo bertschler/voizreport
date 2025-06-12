@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import AiButton from './AiButton';
-import { ReportTemplate } from '../data/mockData';
 import { StoredTemplate } from '../state/templatesState';
+import { ReportTemplate } from "@/app/types/core";
 
 interface TemplatesListProps {
   templates: StoredTemplate[];

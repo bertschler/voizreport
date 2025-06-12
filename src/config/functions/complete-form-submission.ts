@@ -1,8 +1,13 @@
 import { WebRTCService } from '@/app/services/webrtcService';
 import { photoAttachmentsAtom } from '@/app/state/voiceChatState';
 import { store } from '@/app/services/jotaiStore';
-import { ReportTemplate, SubmittedReport, PhotoAttachment } from '@/app/data/mockData';
-import { FunctionHandlerContext, FunctionCallMessage } from './types';
+import {
+  FunctionCallMessage,
+  FunctionHandlerContext,
+  PhotoAttachment,
+  ReportTemplate,
+  SubmittedReport
+} from "@/app/types/core";
 
 // Photo attachment utilities
 const getPhotoAttachments = (): PhotoAttachment[] => {
@@ -125,7 +130,7 @@ export const handleCompleteFormSubmission = async (
     
     // Send success response
     const photoSummary = currentPhotos.length > 0 ? ` Included ${currentPhotos.length} photo attachment(s).` : '';
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'success',
       message: `Form completed successfully. Report has been generated and saved.${photoSummary}`,
       summary: {
@@ -150,7 +155,7 @@ export const handleCompleteFormSubmission = async (
   } catch (error) {
     console.error('💥 Error handling form submission:', error);
     
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'error',
       message: 'Failed to complete form submission'
     });

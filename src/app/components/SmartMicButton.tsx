@@ -4,7 +4,8 @@ import React, { useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import Microphone2 from '../svg/Microphone2';
 import { isSessionActiveAtom, activeTemplateAtom, isConnectingAtom } from '@/app/state/voiceChatState';
-import { ReportTemplate } from '../data/mockData';
+
+import { ReportTemplate } from "@/app/types/core";
 
 interface SmartMicButtonProps {
   onNavigateToSession?: (template: ReportTemplate) => void;
@@ -57,7 +58,6 @@ export default function SmartMicButton({ onNavigateToSession, onStartNewSession,
   const handleMicClick = () => {
     if (isSessionActive && activeTemplate) {
       if (onStopSession) {
-        // Stop current session (when used in LiveVoiceChat)
         console.log('🛑 Stopping current session:', activeTemplate.title);
         onStopSession();
       } else if (onNavigateToSession) {

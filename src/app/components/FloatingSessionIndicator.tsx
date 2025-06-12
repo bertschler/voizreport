@@ -3,7 +3,8 @@
 import React, { useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import { isSessionActiveAtom, activeTemplateAtom, isConnectingAtom } from '@/app/state/voiceChatState';
-import { ReportTemplate } from '@/app/data/mockData';
+
+import { ReportTemplate } from "@/app/types/core";
 
 // Add CSS animations
 const addStylesheet = () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreatedTemplate } from '../../hooks/useVoiceChat';
+import { CreatedTemplate } from '../hooks/useVoiceChat';
 
 interface CreatedTemplateResultProps {
   createdTemplate: CreatedTemplate;

@@ -1,14 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-
-// Voice mode types
-export type VoiceMode = 'guided' | 'freeform';
-
-export interface VoiceModeOption {
-  value: VoiceMode;
-  label: string;
-  description: string;
-}
+import { VoiceMode, VoiceModeOption } from "@/app/types/core";
 
 export const VOICE_MODE_OPTIONS: VoiceModeOption[] = [
   {

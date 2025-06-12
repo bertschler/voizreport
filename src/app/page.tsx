@@ -4,8 +4,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import AuthGuard from '@/components/AuthGuard';
 import AuthDebug from '@/components/AuthDebug';
-import LiveVoiceChat, { FormSummary } from './components/LiveVoiceChat';
-import VoiceChatProvider from './components/VoiceChatProvider';
+import VoiceChatComponent, { FormSummary } from '@/app/voice-chat/VoiceChatComponent';
+import VoiceChatProvider from '@/app/voice-chat/VoiceChatProvider';
 import MobileHeader from "./components/MobileHeader";
 import { Tab } from "./components/TabNavigation";
 import TemplatesList from "./components/TemplatesList";
@@ -16,11 +16,11 @@ import ReportDetailsFooter from "./components/ReportDetailsFooter";
 import DefaultFooter from "./components/DefaultFooter";
 import QuickTemplateSelector from "./components/QuickTemplateSelector";
 import PageLayout from "./components/PageLayout";
-import { ReportTemplate, SubmittedReport } from './data/mockData';
 import { selectedTemplateAtom, isCreatingTemplateAtom, voiceChatModeAtom } from './state/voiceChatState';
 import { templatesAtom } from './state/templatesState';
 import { useVoiceChat } from './hooks/useVoiceChat';
 import { useSetAtom } from 'jotai';
+import { ReportTemplate, SubmittedReport } from "@/app/types/core";
 
 const tabs: Tab[] = [
   { id: 'templates', label: 'Create' },
@@ -249,7 +249,7 @@ export default function Home() {
           }
           onNavigateToSession={handleNavigateToSession}
         >
-          <LiveVoiceChat 
+          <VoiceChatComponent
             key="template"
             mode="template"
           />
@@ -291,7 +291,7 @@ export default function Home() {
           }
           onNavigateToSession={handleNavigateToSession}
         >
-          <LiveVoiceChat 
+          <VoiceChatComponent
             key={`voice-chat-${selectedTemplate.id}`}
             template={selectedTemplate}
             mode="report"

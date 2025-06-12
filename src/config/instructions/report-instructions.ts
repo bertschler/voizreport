@@ -98,7 +98,7 @@ const VOICE_MODE_INSTRUCTIONS = {
 };
 
 
-export interface BaseInstructionsContext {
+interface BaseInstructionsContext {
 	userName?: string;
 	templateInstructions?: string;
 	voiceMode?: string;

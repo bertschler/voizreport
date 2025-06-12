@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { WebRTCService } from '../../services/webrtcService';
+import { WebRTCService } from '../services/webrtcService';
 
 export default function CameraButton() {
   const handleCameraClick = () => {

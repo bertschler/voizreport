@@ -1,4 +1,4 @@
-import { FunctionHandlerContext, FunctionCallMessage } from './types';
+import { FunctionCallMessage, FunctionHandlerContext } from "@/app/types/core";
 
 // Tool definition
 export const getExitConversationTool = () => {

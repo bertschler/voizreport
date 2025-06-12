@@ -1,5 +1,6 @@
 import { WebRTCService } from '@/app/services/webrtcService';
-import { FunctionHandlerContext, FunctionCallMessage } from './types';
+
+import { FunctionCallMessage, FunctionHandlerContext } from "@/app/types/core";
 
 // Tool definition
 export const getTemplateProgressUpdatedTool = () => {
@@ -68,14 +69,14 @@ export const handleTemplateProgressUpdated = async (
     }
     
     // Send success response
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'success',
       message: 'Template progress updated successfully'
     });
   } catch (error) {
     console.error('💥 Error handling template progress update:', error);
     
-    WebRTCService.getInstance().sendFunctionResponse(message.call_id, {
+    WebRTCService.getInstance().sendFunctionResponseWithAudio(message.call_id, {
       status: 'error',
       message: 'Failed to update template progress'
     });

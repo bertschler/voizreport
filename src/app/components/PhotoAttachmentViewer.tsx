@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { PhotoAttachment } from '../data/mockData';
+
+import { PhotoAttachment } from "@/app/types/core";
 
 interface PhotoAttachmentViewerProps {
   photoAttachments: PhotoAttachment[];
