@@ -1,6 +1,21 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Mobile viewport height variables for consistent behavior */
+  --vh-static: 100vh;
+  --vh-dynamic: 100dvh;
+  --vh-small: 100svh;
+  --vh-large: 100lvh;
+  
+  /* Mobile safe area variables */
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-right: env(safe-area-inset-right);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
+  --safe-area-inset-left: env(safe-area-inset-left);
+  
+  /* Mobile browser address bar height difference */
+  --mobile-browser-bar-height: calc(var(--vh-static) - var(--vh-dynamic));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,14 +43,39 @@ body {
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  /* For iOS Safari */
+  /* Use dynamic viewport height as primary */
+  height: var(--vh-dynamic);
+  /* Fallbacks for older browsers */
   height: -webkit-fill-available;
-  /* For modern Android Chrome */
-  height: 100svh;
-  /* For all other engines that support it */
-  height: 100dvh;
+  height: var(--vh-small);
+  /* Static fallback */
+  height: var(--vh-static);
   overflow-x: hidden;
+  
+  /* Improve mobile scrolling */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
+
+/* Specific mobile optimizations */
+@media screen and (max-width: 768px) {
+  html, body {
+    /* Prevent zoom on input focus in iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Prevent horizontal scrolling */
+    overflow-x: hidden;
+    /* Ensure full height on mobile */
+    min-height: var(--vh-dynamic);
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Hide address bar on initial load for iOS Safari */
+  @supports (-webkit-touch-callout: none) {
+    body {
+      min-height: var(--vh-dynamic);
+      min-height: -webkit-fill-available;
+    }
+  }
 }
 
 * {
@@ -58,4 +98,21 @@ a {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Animation for mobile safe area bottom component */
+@keyframes mobileBottomFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* CSS class for mobile safe area bottom component */
+.mobile-safe-area-bottom {
+  animation: mobileBottomFadeIn 0.3s ease-out;
 }
