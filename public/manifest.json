@@ -1,6 +1,6 @@
 {
-  "name": "VoizReport",
-  "short_name": "VoizReport",
+  "name": "Voiz.Report",
+  "short_name": "Voiz.Report",
   "description": "Voice-powered reporting made easy",
   "start_url": "/",
   "display": "standalone",

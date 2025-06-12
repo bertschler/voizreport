@@ -312,7 +312,7 @@ export default function Home() {
       <PageLayout
         header={
           <MobileHeader
-            title="VoizReport"
+            title="Voiz.Report"
             subtitle="Voice-powered reporting"
             onSettingsClick={handleSettingsClick}
           />

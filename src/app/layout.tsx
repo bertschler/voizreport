@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VoizReport",
+  title: "Voiz.Report",
   description: "Voice-powered reporting made easy",
   manifest: "/manifest.json",
   appleWebApp: {
