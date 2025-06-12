@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import JotaiProvider from "./providers/JotaiProvider";
@@ -19,17 +19,18 @@ export const metadata: Metadata = {
   title: "VoizReport",
   description: "Voice-powered reporting made easy",
   manifest: "/manifest.json",
-  themeColor: "#1f2937",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "VoizReport",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    viewportFit: "cover",
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1f2937",
 };
 
 export default function RootLayout({

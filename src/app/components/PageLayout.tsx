@@ -72,20 +72,6 @@ export default function PageLayout({
       
       {/* Mobile Browser Address Bar Safe Area - Bottom Padding Component */}
       <MobileSafeAreaBottom />
-      
-      {/* Also add a simple test div that should always be visible */}
-      <div style={{
-        height: '40px',
-        backgroundColor: '#00ff00',
-        color: 'black',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '12px',
-        flexShrink: 0
-      }}>
-        TEST: This should always show (40px green)
-      </div>
     </div>
   );
 }
@@ -94,59 +80,27 @@ export default function PageLayout({
 function MobileSafeAreaBottom() {
   const isMobile = useMobileDetection();
 
-  // Debug logging
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      console.log('🔍 MobileSafeAreaBottom Debug:', {
-        isMobile,
-        userAgent: navigator.userAgent,
-        innerWidth: window.innerWidth,
-        innerHeight: window.innerHeight,
-        documentHeight: document.documentElement.clientHeight
-      });
-    }
-  }, [isMobile]);
-
   // Don't render on desktop
   if (!isMobile) {
-    console.log('🚫 Not rendering MobileSafeAreaBottom - desktop detected');
     return null;
   }
 
-  console.log('✅ Rendering MobileSafeAreaBottom - mobile detected');
-
   return (
     <div 
-      className="mobile-safe-area-bottom"
       style={{
-        height: '80px', // Fixed height - simple and reliable
-        minHeight: '60px', // Minimum height
-        maxHeight: '100px', // Maximum height  
+        height: '80px',
+        minHeight: '60px',
+        backgroundColor: '#f8fafc', // Subtle background that matches app
         background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%)',
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)', // Safe area padding with fallback
-        flexShrink: 0, // Prevent it from shrinking
-        // Force the height with important and additional properties for debugging
-        border: '2px solid red', // Temporary debug border
-        backgroundColor: '#ff000020' // Temporary debug background
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        flexShrink: 0
       }}
     >
-      {/* Debug text */}
-      <div style={{ 
-        position: 'absolute', 
-        top: '5px', 
-        left: '5px', 
-        fontSize: '10px', 
-        color: '#666',
-        zIndex: 1000
-      }}>
-        Mobile Bottom: 80px
-      </div>
-      
       {/* Optional: Voice sine wave visualization */}
       <VoiceSineWave />
     </div>
