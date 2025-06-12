@@ -17,13 +17,13 @@ export const getFormFieldsUpdatedTool = (template?: ReportTemplate) => {
   return {
     type: 'function',
     name: 'form_fields_updated',
-    description: 'Call this function when a field in the form is set or updated. Pass all fields with the current values (or empty if not set yet).',
+    description: 'Call this function whenever a field in the form is set or updated or slightly modified. Pass *all fields* with the current values, even if they are empty. Call this function many times, after any field change or even after minor field changes. This is immediate feedback to the user which is crucial.',
     parameters: {
       type: 'object',
       properties: {
         extracted_data: {
           type: 'object',
-          description: 'All the form data that has been collected so far during the conversation',
+          description: 'All the form data that has been collected so far during the conversation. Pass all fields with the current values, even if they are empty.',
           properties: extractedDataProperties,
           required: requiredFields
         },

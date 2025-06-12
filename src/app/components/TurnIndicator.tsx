@@ -75,8 +75,6 @@ export function TurnIndicator() {
     if (!isSessionActive) {
       return {
         ...baseIndicatorStyles,
-        background: 'linear-gradient(45deg, #d1d5db, #9ca3af)',
-        boxShadow: '0 0 4px rgba(156, 163, 175, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
       };
     }
 
@@ -94,7 +92,7 @@ export function TurnIndicator() {
       case 'idle':
         return {
           ...baseIndicatorStyles,
-          background: 'linear-gradient(45deg, #6b7280, #4b5563)',
+          background: 'linear-gradient(45deg, #3b82f6, #1d4ed8)',
         };
       default:
         return {
@@ -132,9 +130,7 @@ export function TurnIndicator() {
         <div 
           style={{
             ...getIndicatorStyles(),
-            ...(isActive ? {
-              animation: 'sophisticatedPulse 2s ease-in-out infinite',
-            } : {})
+            animation: 'sophisticatedPulse 2s ease-in-out infinite',
           }}
         />
         <span style={{ 
